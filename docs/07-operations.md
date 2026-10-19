@@ -127,6 +127,7 @@ ct hooks list / add <分前> <スクリプト> [ラベル] / rm <#> / edit
 | ~~20~~ | ~~`01-generate-questions-hard.sh`~~ | **一時停止中**（同上） | ✅ |
 | 40 | `refresh-exam-guide-monthly.sh` | 公式試験ガイドの更新（30日以内はスキップ） | ✅ WebFetch |
 | 45 | `refresh-service-catalog-monthly.sh` | サービスカタログ更新（30日以内スキップ・`-n 12` で有界） | ✅ WebFetch |
+| 47 | `10-check-site-content.sh` | サイト掲載内容（問題以外）の現行性チェック（30日スキップ・検知のみ） | 一部 ✅ WebFetch |
 | 50 | `05-check-daily-services.sh` | 日めくり記事の廃止照合＋体裁チェック | 一部 ✅ |
 | 55 | `04-generate-daily-services.sh` | 日めくり記事の生成 | ✅ |
 | 58 | `09-check-linebreaks.sh` | 改行整形（Haiku） | ✅ |
@@ -519,10 +520,45 @@ S3 `mugenknock-error-logs/canary-logs/` にアップロードする。
 内容:
 1. 前日夜間スクリプトの成果サマリー（生成数・検証数）
 2. カナリアテスト結果（S3 の最新）
-3. AWS資格公式情報の変更チェック（WebFetch）
+3. AWS公式情報チェック（下記）
 4. サイト稼働状況（問題数・未検証数・未解決通報数）
 
 二重送信は S3 マーカーで冪等化されている。
+
+### AWS 情報の現行性チェック（3本立て）
+
+レポートの「5. AWS公式情報チェック」は、見る対象と頻度の違う3つで構成する。
+**いずれも検知と報告だけで、サイトのコードは自動で書き換えない。**
+
+| 観点 | 対象 | 頻度 | 実装 |
+|---|---|---|---|
+| 資格試験の変更 | `constants.ts` の試験コード・問題数・試験時間・合格点、資格の新設/廃止 | 週次・月曜 | `99-send-report.sh` 内（coming-soon + training blog を Haiku で走査→該当時のみ設定値と突き合わせ） |
+| サービスの変更 | 既存**問題**に影響する廃止・改称・新規受付停止 | 週次・木曜 | `99-send-report.sh` 内（What's New / News Blog の RSS をキーワード抽出→ Haiku で選別） |
+| サイト掲載内容の現行性 | **問題以外**のサイト静的データ（サービス図鑑・チートシート） | 月次 | `10-check-site-content.sh` |
+
+週次の2つが走査窓7日なので、**週次のまま**にしてある（月1にすると23日ぶんを取りこぼす）。
+月次なのは、走査窓を持たない「今のサイトの中身と今のAWSを突き合わせる」3本目だけ。
+
+#### `10-check-site-content.sh`（月次・2026-10-19 追加）
+
+30日以内に実行済みならスキップするので、毎晩起動しても実質月1回。
+状態は `scripts/state/site_content_check.json`（`last_run_at` と項目ごとの確認日）。
+
+- **A. サービス図鑑**（`src/data/awsServiceCatalog.ts`）
+  公式確認済みの `state/service-catalog.json`（SSM 由来）と突き合わせる。**決定的なので claude を呼ばない。**
+  図鑑側は略称（`S3` / `EC2` / `IAM`）、カタログ側は正式名なので、`shortName` と `serviceCode` も
+  別名として索引に入れて突き合わせる（これをしないと「Amazon Simple Storage Service が未掲載」が大量に誤検知される）。
+  報告するのは ①図鑑に残っているが `status` が active でないもの ②`examRelevance` が high/medium なのに未掲載のもの。
+- **B. チートシート**（`src/views/CheatSheet.tsx` の `CHEAT_DATA`・374項目）
+  公式ドキュメントと照らして、制限値・既定値・サービス名など**変わりうる事実**のズレを検知する。
+  量が多いので毎回 `SITE_CHECK_N`（既定12）件だけを、確認が古い順（未確認を最優先）に巡回する。
+  言い回しや教え方は指摘させない（事実のみ）。
+
+出力は `prompts/night-prompts/logs/site-content_<日時>.md`。
+`99-send-report.sh` が最新の1本を読んで要点をメールに載せる（45日より古ければ「未実行の疑い」として警告する）。
+実行順は **`99-send-report.sh` より前**に置くこと。
+
+環境変数: `SITE_CHECK_FORCE=1`（鮮度スキップを無視）/ `SITE_CHECK_N`（巡回件数）/ `SITE_CHECK_MAX_AGE_DAYS`。
 
 ### おひねり（Stripe 決済）の運用 — specs/006
 
