@@ -1468,33 +1468,36 @@ export default function ExerciseSession() {
                       {isSelected && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'white' }} />}
                     </div>
                   )}
-                  <span
-                    onClick={!answered && strikeEnabled ? (e) => toggleStrikethrough(choice, e) : undefined}
-                    style={{
-                      flex: 1, minWidth: 0, overflowWrap: 'break-word', wordBreak: 'break-word', lineHeight: 1.55, whiteSpace: 'pre-wrap',
-                      textDecoration: strikeEnabled && struckChoices.has(choice) && !answered ? 'line-through' : 'none',
-                      textDecorationColor: 'var(--color-danger)',
-                      textDecorationThickness: '2px',
-                      cursor: !answered && strikeEnabled ? 'pointer' : 'default',
-                      userSelect: 'none',
-                    }}
-                  >
-                    <strong style={{ marginRight: 2 }}>{CHOICE_LABELS[idx]}.</strong> {stripLabel(choice)}
-                  </span>
-                  {(() => {
-                    const verdict = getChoiceVerdict(choice);
-                    if (!verdict) return null;
-                    const ok = verdict === 'correct';
-                    const label = ok
-                      ? (isSelected ? t('exerciseSession.verdictCorrectChosen') : t('exerciseSession.verdictCorrect'))
-                      : t('exerciseSession.verdictWrongChosen');
-                    return (
-                      <span style={{ flexShrink: 0, alignSelf: 'center', display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: ok ? 'var(--color-success)' : 'var(--color-danger)', whiteSpace: 'nowrap' }}>
-                        {ok ? <IconCircleCheck size={16} /> : <IconCircleX size={16} />}
-                        {label}
-                      </span>
-                    );
-                  })()}
+                  {/* 正誤ラベルは本文の下に置く（右に並べると本文の幅が削られ、折り返しが増える） */}
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                    <span
+                      onClick={!answered && strikeEnabled ? (e) => toggleStrikethrough(choice, e) : undefined}
+                      style={{
+                        flex: 1, minWidth: 0, overflowWrap: 'break-word', wordBreak: 'break-word', lineHeight: 1.55, whiteSpace: 'pre-wrap',
+                        textDecoration: strikeEnabled && struckChoices.has(choice) && !answered ? 'line-through' : 'none',
+                        textDecorationColor: 'var(--color-danger)',
+                        textDecorationThickness: '2px',
+                        cursor: !answered && strikeEnabled ? 'pointer' : 'default',
+                        userSelect: 'none',
+                      }}
+                    >
+                      <strong style={{ marginRight: 2 }}>{CHOICE_LABELS[idx]}.</strong> {stripLabel(choice)}
+                    </span>
+                    {(() => {
+                      const verdict = getChoiceVerdict(choice);
+                      if (!verdict) return null;
+                      const ok = verdict === 'correct';
+                      const label = ok
+                        ? (isSelected ? t('exerciseSession.verdictCorrectChosen') : t('exerciseSession.verdictCorrect'))
+                        : t('exerciseSession.verdictWrongChosen');
+                      return (
+                        <span style={{ flexShrink: 0, alignSelf: 'flex-start', marginTop: 'var(--spacing-xs)', display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: ok ? 'var(--color-success)' : 'var(--color-danger)', whiteSpace: 'nowrap' }}>
+                          {ok ? <IconCircleCheck size={16} /> : <IconCircleX size={16} />}
+                          {label}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
               </button>
             );
