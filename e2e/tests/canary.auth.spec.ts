@@ -63,8 +63,14 @@ test('マイページ /aws/mypage と記録 /aws/stats が表示される', asyn
   await page.goto('/aws/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
   await page.goto('/aws/stats', { waitUntil: 'networkidle' });
-  for (const name of [/苦手分析/, /解答履歴/, /正答率の推移/, /演習量/]) {
-    await expect(page.getByRole('tab', { name })).toBeVisible({ timeout: 10_000 });
+  // 目標資格が未設定のアカウントでは、タブの代わりに設定の案内が出る（どちらかが出れば画面は正常）
+  const tabs = page.getByRole('tab', { name: /苦手分析/ });
+  const noTarget = page.getByText(/目標資格を設定すると/);
+  await expect(tabs.or(noTarget).first()).toBeVisible({ timeout: 10_000 });
+  if (await tabs.isVisible()) {
+    for (const name of [/解答履歴/, /正答率の推移/, /演習量/]) {
+      await expect(page.getByRole('tab', { name })).toBeVisible();
+    }
   }
   monitor.printReport('マイページ・記録');
   assertNoRealErrors(monitor, 'マイページ・記録');

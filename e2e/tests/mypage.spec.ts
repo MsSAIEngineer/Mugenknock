@@ -33,6 +33,9 @@ test.describe('記録', () => {
     if (page.url().includes('/login')) {
       test.skip(true, '認証が必要');
     }
+    if (await page.getByText(/目標資格を設定すると/).isVisible().catch(() => false)) {
+      test.skip(true, '目標資格が未設定のアカウント（タブは出ない仕様）');
+    }
   });
 
   for (const name of ['苦手分析', '解答履歴', '正答率の推移', '演習量']) {
