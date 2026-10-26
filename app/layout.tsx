@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Suspense, useEffect } from 'react';
-import { Open_Sans } from 'next/font/google';
 import { Amplify } from 'aws-amplify';
 import outputs from '../src/amplify_outputs.json';
 import { AuthProvider } from '../src/contexts/AuthContext';
@@ -13,12 +12,6 @@ import '../src/index.css';
 Amplify.configure(outputs);
 // API_ENDPOINT 宛 fetch に Cognito idToken を自動付与（/users/me の越権防止をサーバ側で成立させる）
 installApiAuth();
-
-const openSans = Open_Sans({
-  subsets: ['latin'],
-  weight: ['300', '400', '700'],
-  display: 'swap',
-});
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // エラービーコン（グローバルエラーハンドラ）
@@ -46,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }, []);
 
   return (
-    <html lang="ja" className={openSans.className}>
+    <html lang="ja">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

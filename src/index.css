@@ -199,14 +199,21 @@ html {
 body {
   margin: 0;
   overflow-x: hidden;
-  font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  /* Web フォントは読み込まない（軽さ優先・ビルド時の Google Fonts 取得失敗を避ける）。
+     欧文は OS の UI フォント、和文は OS ごとの標準ゴシックを明示する。
+     以前は next/font の Open Sans を <html> に当てていたが、この指定に上書きされて使われていなかった */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+    'Noto Sans JP', 'Yu Gothic UI', 'Meiryo', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg-main);
   color: var(--color-text-main);
   line-height: 1.5;
+}
+
+/* フォーム部品はブラウザ既定でフォントを継承しないので、本文と揃える */
+button, input, select, textarea {
+  font-family: inherit;
 }
 
 input[type="checkbox"],

@@ -504,3 +504,6 @@ adsbygoogle.js）と `src/components/ui/AdPlaceholder.tsx`（未使用）も削�
   - 資格レベル色は `--level-*`（ライト/ダーク別値）。`constants.ts` の `EXAM_LEVEL_COLORS` はこれを参照する。
     レベル色の塗りに載せる文字は `--color-on-level`。半透明は hex にアルファを足さず `tint(color, pct)` を使う
   - ポイント・しっかり対策のティールは `--color-points`
+- Web フォントは読み込まない。`body` の `font-family` で欧文は OS の UI フォント、和文は
+  ヒラギノ / Noto Sans JP / Yu Gothic UI / メイリオを指定する（`next/font` は Google Fonts 取得失敗で
+  Cloudflare のビルドを落としたことがあり、しかも `body` 指定に上書きされて使われていなかったため廃止）
