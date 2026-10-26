@@ -115,7 +115,7 @@
 実装が終わったら、ユーザーの個別指示を待たずに `develop` へ commit し、`git push github develop` してよい。
 
 **自動で行う条件（すべて満たしてから）**:
-1. 実装とローカル検証が済んでいる。`npx tsc --noEmit` が通り、UI の変更はブラウザで動作確認済み。
+1. 実装とローカル検証が済んでいる。`npx tsc --noEmit` と `npm run lint:tokens`（デザイントークン違反が増えていないか）が通り、UI の変更はブラウザで動作確認済み。
 2. docs の更新が要る変更は、同じコミットに docs を含めている。
 3. コミットは**自分の変更だけ**。`git diff` で中身を確認し、ファイル名を指定して add する
    （`git add -A` / `git add <dir>` は使わない）。夜間バッチが自動更新する
@@ -322,6 +322,11 @@ Cloudflare Pages 上でも**1.5〜2分**（直近10回の実測 84〜137秒。cl
 ## 余白・間隔・サイズの標準（デザイントークン必須）
 
 画面間のデザイン不統一を防ぐため、**余白・gap・padding・フォントサイズ・影・角丸はインラインの生px値を避け、必ず `src/index.css` のトークンを使う**。
+
+### 機械チェック（2026-10-26〜）
+`npm run lint:tokens`（`scripts/check-design-tokens.mjs`）が、スケール外の余白・生のフォントサイズ・生の角丸・生の色コードを数える。
+既存の違反はファイルごとの件数を `scripts/design-token-baseline.json` に記録してあり、**増えたら失敗**する。
+直して減らしたら `node scripts/check-design-tokens.mjs --update` で基準を下げる（基準を上げる目的で --update しない）。
 
 ### スペーシングスケール（4px基準）
 `gap` / `margin` / `padding` はこのスケールのトークンのみ使う。`10px` `7px` `14px` `6px` `5px` `13px` など**スケール外の生px値は禁止**（最も近いトークンに丸める）。

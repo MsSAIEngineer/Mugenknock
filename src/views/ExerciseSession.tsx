@@ -1489,7 +1489,7 @@ export default function ExerciseSession() {
                       ? (isSelected ? t('exerciseSession.verdictCorrectChosen') : t('exerciseSession.verdictCorrect'))
                       : t('exerciseSession.verdictWrongChosen');
                     return (
-                      <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)', marginTop: 2, fontSize: 'var(--font-size-xs)', fontWeight: 700, color: ok ? 'var(--color-success)' : 'var(--color-danger)', whiteSpace: 'nowrap' }}>
+                      <span style={{ flexShrink: 0, alignSelf: 'center', display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: ok ? 'var(--color-success)' : 'var(--color-danger)', whiteSpace: 'nowrap' }}>
                         {ok ? <IconCircleCheck size={16} /> : <IconCircleX size={16} />}
                         {label}
                       </span>

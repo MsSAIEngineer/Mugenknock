@@ -477,7 +477,7 @@ export default function ServiceEncyclopedia() {
       {/* Detail modal */}
       {selected && (
         <div
-          data-kbscope="1"
+          data-kbscope="1" role="dialog" aria-modal="true"
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
           onClick={e => { if (e.target === e.currentTarget) setSelected(null); }}
         >

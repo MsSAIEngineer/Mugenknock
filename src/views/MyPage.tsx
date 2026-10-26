@@ -824,7 +824,7 @@ export default function MyPage() {
               const achievedDays = weekCountsTarget.filter(c => goal > 0 && c >= goal).length;
               return (
                 <div
-                  data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+                  data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
                   onClick={() => setShowWeeklyDetail(false)}
                 >
                   <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: 20, width: '100%', maxWidth: 440, boxShadow: 'var(--box-shadow-md)' }} onClick={e => e.stopPropagation()}>
@@ -886,7 +886,7 @@ export default function MyPage() {
             {/* 設定編集ポップアップ */}
             {showSettingsEdit && (
               <div
-                data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+                data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
                 onClick={() => setShowSettingsEdit(false)}
                 onTouchStart={e => e.stopPropagation()}
                 onTouchMove={e => e.stopPropagation()}
@@ -1467,7 +1467,7 @@ export default function MyPage() {
       {/* ── 問題詳細モーダル ── */}
       {questionModal && (
         <div
-          data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 'var(--spacing-lg)' }}
+          data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 'var(--spacing-lg)' }}
           onClick={() => setQuestionModal(null)}
         >
           <div

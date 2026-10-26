@@ -45,6 +45,10 @@
 - モバイル: 下部タブバー（ホーム / トレーニング / マイページ）
 - ヘッダー（ロゴ・お知らせベル・アカウント）、パンくず、フッター
 - キーボードナビゲーション、問い合わせモーダル、AI（ChatGPT/Gemini/Claude）へのリンク
+- 画面の見出し（h1）: スマホはヘッダー左に画面名を表示、PC はパンくずに出るので読み上げ用に視覚的に隠す（資格ダッシュボードは自前の h1）
+- サイドバーの開閉はパンくずバー左のメニューボタン（≡）だけ。開いていても×にしない
+- `<main>` は縦の flex で、中身が短い画面でもフッターを下端に置く
+- オーバーレイ（`data-kbscope`）は `role="dialog" aria-modal="true"`。Cookie バナーは `role="region"`
 
 ### ブレークポイント
 
@@ -513,6 +517,10 @@ adsbygoogle.js）と `src/components/ui/AdPlaceholder.tsx`（未使用）も削�
   - 資格レベル色は `--level-*`（ライト/ダーク別値）。`constants.ts` の `EXAM_LEVEL_COLORS` はこれを参照する。
     レベル色の塗りに載せる文字は `--color-on-level`。半透明は hex にアルファを足さず `tint(color, pct)` を使う
   - ポイント・しっかり対策のティールは `--color-points`
+- 動き: 常時ループする演出は1画面に1つまで（ホームの日めくりカードの光のみ）。ランディングの開始ボタンの脈動は廃止。
+  OS の「視差効果を減らす」設定では `index.css` の全体ルールで止める。`button, a` の transition は色と影だけ
+- キーボードフォーカスは `:focus-visible` で常に見せる（インラインの `outline: 'none'` より優先）
+- トークン違反は `npm run lint:tokens` で検査（増えたら失敗。CLAUDE.md 参照）
 - Web フォントは読み込まない。`body` の `font-family` で欧文は OS の UI フォント、和文は
   ヒラギノ / Noto Sans JP / Yu Gothic UI / メイリオを指定する（`next/font` は Google Fonts 取得失敗で
   Cloudflare のビルドを落としたことがあり、しかも `body` 指定に上書きされて使われていなかったため廃止）

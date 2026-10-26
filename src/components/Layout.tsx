@@ -15,7 +15,7 @@ import { setKbMode } from '../utils/keyboardMode';
 import {
   IconHome,
   IconUser, IconChart,
-  IconDumbbell, IconFire, IconMegaphone, IconBell, IconMenu, IconClose, IconChevronLeft, IconMail, IconInfo,
+  IconDumbbell, IconFire, IconMegaphone, IconBell, IconMenu, IconMail, IconInfo,
   IconSparkles, IconBot, IconUserCircle, IconBookOpen, IconBook, IconLayoutGrid, IconSwatchBook,
   IconSun, IconMoon, IconMore, IconChevronDown,
   EXAM_ICON_COMPONENTS,
@@ -636,12 +636,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     '/architecture':         [{ label: t('nav.home'), path: '/aws/' }, { label: lang === 'ja' ? 'Webサイトの構成図' : 'Site Architecture' }],
   };
 
+  // 画面の見出し（h1）。スマホはヘッダー左に表示（以前は空で、今どの画面か分からなかった）、
+  // PC はパンくずに画面名が出るので読み上げ用に視覚的に隠す。自前で h1 を持つ資格ダッシュボードは除く
+  const pageTitle: string | null = pathname === '/aws/exam-dashboard' ? null
+    : (pathname === '/aws' || pathname === '/aws/') ? t('nav.home')
+    : pathname === '/aws/mypage' ? t('nav.mypage')
+    : pathname === '/aws/others' ? (lang === 'ja' ? 'その他' : 'More')
+    : (breadcrumbs[pathname]?.slice(-1)[0]?.label ?? null);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'inherit' }}>
 
       {/* ── Cookie 同意バナー ── */}
       {!cookieConsent && (
-        <div style={{
+        <div role="region" aria-label={lang === 'ja' ? 'Cookie の利用について' : 'Cookie notice'} style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
           background: 'var(--color-bg-elevated)',
           borderTop: '1px solid var(--color-border)',
@@ -660,7 +668,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </span>
           <button
             onClick={acceptCookies}
-            style={{ flexShrink: 0, padding: '6px 18px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 'var(--border-radius-full)', fontWeight: 700, fontSize: 'var(--font-size-xs)', cursor: 'pointer' }}
+            style={{ flexShrink: 0, padding: '6px 18px', background: 'var(--color-primary)', color: 'var(--color-on-primary)', border: 'none', borderRadius: 'var(--border-radius-full)', fontWeight: 700, fontSize: 'var(--font-size-xs)', cursor: 'pointer' }}
           >
             {lang === 'ja' ? '同意して閉じる' : 'Accept'}
           </button>
@@ -670,7 +678,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* ── 連絡先モーダル ── */}
       {showContact && (
         <div
-          data-kbscope="1"
+          data-kbscope="1" role="dialog" aria-modal="true"
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-md)' }}
           onClick={e => { if (e.target === e.currentTarget) { setShowContact(false); } }}
           onTouchStart={e => e.stopPropagation()}
@@ -747,7 +755,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* ── SPポイント説明モーダル ── */}
       {showPointsInfo && (
         <div
-          data-kbscope="1"
+          data-kbscope="1" role="dialog" aria-modal="true"
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-md)' }}
           onClick={e => { if (e.target === e.currentTarget) setShowPointsInfo(false); }}
           onTouchStart={e => e.stopPropagation()}
@@ -820,6 +828,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         gap: 'var(--spacing-md)', zIndex: 200, flexShrink: 0,
         borderBottom: '1px solid var(--color-border)',
       }}>
+
+        {pageTitle && (
+          <h1 style={isMobile
+            ? { margin: 0, paddingLeft: 'var(--spacing-sm)', fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }
+            : { position: 'absolute', width: 1, height: 1, margin: -1, padding: 0, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }}>
+            {pageTitle}
+          </h1>
+        )}
 
         {/* サービス名（モバイルではロゴアイコンを非表示。ホームへの導線は下部タブバーが担う） */}
         {!isMobile && (
@@ -929,8 +945,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-main)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = open ? 'var(--color-bg-main)' : 'none'; e.currentTarget.style.color = open ? 'var(--color-text-main)' : 'var(--color-text-sub)'; }}
             title={open ? t('nav.closeMenu') : t('nav.openMenu')}
+            aria-label={open ? t('nav.closeMenu') : t('nav.openMenu')}
+            aria-expanded={open}
           >
-            {open ? <IconClose /> : <IconMenu />}
+            {/* 開いていても「×」にしない。×はページを閉じる操作に見えて意味が伝わらなかった */}
+            <IconMenu />
           </button>
         )}
         {/* デスクトップ: パンくずエリア */}
@@ -1019,7 +1038,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* デスクトップのみ: サイドバー */}
         {!isMobile && (
-          <nav style={{
+          <nav aria-label={lang === 'ja' ? 'サイドメニュー' : 'Side menu'} style={{
             width: open ? 'var(--sidebar-width)' : 0,
             minWidth: open ? 'var(--sidebar-width)' : 0,
             background: 'var(--color-bg-white)',
@@ -1030,18 +1049,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             position: 'relative', zIndex: 999,
           }}>
             <div style={{ width: 'var(--sidebar-width)', paddingTop: 'var(--spacing-sm)', display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <button onClick={toggle} style={{
-                width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                color: 'var(--color-text-light)', padding: '8px 24px',
-                display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                fontSize: 'var(--font-size-xs)', transition: 'all 0.2s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-text-sub)'; e.currentTarget.style.background = 'var(--color-bg-main)'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-text-light)'; e.currentTarget.style.background = 'none'; }}
-                title={t('nav.closeMenu')}
-              >
-                <IconChevronLeft />
-              </button>
+              {/* サイドバーの開閉はヘッダー左のメニューボタンだけにする（以前はここにも「<」があり、同じ操作が2つあった） */}
 
 
               {navItems.filter(item => !(item as any).bottom).map(({ path, labelKey, Icon }) => {
@@ -1202,6 +1210,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           onTouchCancel={isMobile ? handleTouchCancel : undefined}
           style={{
             flex: 1, overflow: 'auto',
+            // 中身が短い画面でもフッターを下端に置く（以前は画面の途中に浮き、下に空白が残った）
+            display: 'flex', flexDirection: 'column',
             background: 'var(--color-bg-main)',
             width: '100%',
             WebkitOverflowScrolling: 'touch',
@@ -1212,8 +1222,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             willChange: swipeOffset !== 0 ? 'transform' : undefined,
           }}
         >
-          {children}
+          <div style={{ flex: '1 0 auto', minWidth: 0 }}>{children}</div>
           <footer style={{
+            flexShrink: 0,
             borderTop: '1px solid color-mix(in srgb, var(--color-text-light) 40%, transparent)',
             padding: '16px var(--spacing-lg)',
             display: 'flex',
@@ -1249,7 +1260,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── モバイル: 下部タブバー ── */}
       {isMobile && (
-        <nav style={{
+        <nav aria-label={lang === 'ja' ? 'メインメニュー' : 'Main menu'} style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
           height: 56,
           background: 'var(--color-bg-white)',

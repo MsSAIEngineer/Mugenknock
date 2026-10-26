@@ -244,7 +244,7 @@ export default function ExamSelectOverlay({
       onTouchMove={e => e.stopPropagation()}
     >
       <div
-        data-kbscope="1"
+        data-kbscope="1" role="dialog" aria-modal="true" aria-label={ja ? "目標資格を選択" : "Choose target exam"}
         style={{
           background: 'var(--color-bg-white)',
           borderRadius: 'var(--border-radius-lg)',

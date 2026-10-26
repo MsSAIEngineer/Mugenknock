@@ -357,9 +357,26 @@ code {
   border-width: 2px;
 }
 
-/* Global Transitions */
+/* Global Transitions — all にするとレイアウト系プロパティまで補間されて重いので、色と影だけ */
 button, a {
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+/* キーボード操作のフォーカスを常に見えるようにする。インラインで outline:'none' を書いた要素が
+   約40か所あり、それに勝たせるため !important（マウス操作では :focus-visible は付かない） */
+:focus-visible {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px;
+}
+
+/* OS の「視差効果を減らす」設定を尊重する。個別の matchMedia 判定に加えて全体でも止める */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 button:active:not(:disabled) {
@@ -503,12 +520,6 @@ button:active:not(:disabled) {
   to   { opacity: 1; transform: none; }
 }
 
-@keyframes portalPulseRing {
-  0%   { box-shadow: 0 4px 18px rgba(255,153,0,0.28), 0 0 0 0 rgba(255,153,0,0.45); }
-  60%  { box-shadow: 0 4px 18px rgba(255,153,0,0.28), 0 0 0 14px rgba(255,153,0,0); }
-  100% { box-shadow: 0 4px 18px rgba(255,153,0,0.28), 0 0 0 0 rgba(255,153,0,0); }
-}
-
 .portal-logo-float {
   display: inline-flex;
   align-items: center;
@@ -524,9 +535,7 @@ button:active:not(:disabled) {
   box-shadow: var(--box-shadow-md) !important;
 }
 
-.portal-cta-pulse {
-  animation: portalPulseRing 2.8s ease-in-out 1.2s infinite;
-}
+
 
 /* ── レスポンシブ ── */
 

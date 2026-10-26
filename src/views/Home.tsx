@@ -579,7 +579,7 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
 
   return (
     <div
-      data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
       onClick={e => { if (e.target === e.currentTarget) onClose?.(); }}
       onTouchStart={e => e.stopPropagation()}
       onTouchMove={e => e.stopPropagation()}
@@ -951,17 +951,13 @@ function TodayServiceSection({ lang, userId, authReady, onNavigateEncyclopedia, 
           0%,100% { box-shadow: 0 0 14px 2px rgba(82,130,255,.3), 0 0 40px 6px rgba(82,130,255,.1); }
           50%      { box-shadow: 0 0 26px 6px rgba(82,130,255,.6), 0 0 60px 14px rgba(82,130,255,.22); }
         }
-        @keyframes ds-float {
-          0%,100% { transform: translateY(0); }
-          50%      { transform: translateY(-8px); }
-        }
-        @keyframes ds-tap {
-          0%,100% { opacity: 1; transform: translateY(0); }
-          50%      { opacity: .65; transform: translateY(-5px); }
-        }
       `}</style>
+      {/* 注意を引く動きはカード外周の光（ds-pulse）1つだけにする。「?」の浮遊と案内文の点滅は廃止 */}
       <div
         onClick={handleReveal}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleReveal(); } }}
         style={{
           marginBottom: 'var(--spacing-md)',
           borderRadius: 'var(--border-radius-md)',
@@ -989,12 +985,10 @@ function TodayServiceSection({ lang, userId, authReady, onNavigateEncyclopedia, 
             fontSize: 52, fontWeight: 900, lineHeight: 1, color: 'white',
             textShadow: '0 4px 24px rgba(255,255,255,.25)',
             filter: 'drop-shadow(0 0 12px rgba(255,255,255,.2))',
-            animation: 'ds-float 3.2s ease-in-out infinite',
           }}>?</div>
           <div style={{
             marginTop: 10, fontSize: 'var(--font-size-sm2)', fontWeight: 600,
             color: 'rgba(255,255,255,.85)',
-            animation: 'ds-tap 1.5s ease-in-out infinite',
             textShadow: '0 2px 8px rgba(0,0,0,.5)',
           }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -2877,7 +2871,7 @@ export default function Home() {
       {/* ── サクッと演習 設定モーダル ── */}
       {showQuickModal && (
         <div
-          data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
           onClick={e => { if (e.target === e.currentTarget) setShowQuickModal(false); }}
           onTouchStart={e => e.stopPropagation()}
           onTouchMove={e => e.stopPropagation()}
@@ -3177,7 +3171,7 @@ export default function Home() {
       {/* ── しっかり対策 設定モーダル ── */}
       {showFocusedModal && (
         <div
-          data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
           onClick={e => { if (e.target === e.currentTarget) setShowFocusedModal(false); }}
           onTouchStart={e => e.stopPropagation()}
           onTouchMove={e => e.stopPropagation()}

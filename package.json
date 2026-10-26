@@ -26,6 +26,7 @@
     "build": "next build",
     "start": "next start",
     "test": "echo 'No tests configured'",
+    "lint:tokens": "node scripts/check-design-tokens.mjs",
     "e2e": "bash e2e/run.sh",
     "e2e:canary": "bash e2e/run.sh canary",
     "e2e:canary:prod": "bash e2e/run.sh canary prod",
