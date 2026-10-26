@@ -1690,12 +1690,12 @@ export default function ExerciseSession() {
             : selectedAnswers.length > 0;
         return createPortal(
         isMobile ? (
-          <div style={{ position: 'fixed', bottom: 56, left: 0, right: 0, zIndex: 150, padding: '8px 16px', display: 'flex', gap: 8 }}>
+          <div style={{ position: 'fixed', bottom: 56, left: 0, right: 0, zIndex: 150, padding: 'var(--spacing-sm) var(--spacing-md)', display: 'flex', gap: 'var(--spacing-sm)', background: 'var(--color-bg-white)', borderTop: '1px solid var(--color-border)', boxShadow: 'var(--box-shadow-up)' }}>
             {!answered ? (
               <button
                 onClick={() => submitAnswer()}
                 disabled={!canSubmit}
-                style={{ flex: 1, height: 44, border: 'none', borderRadius: 22, background: !canSubmit ? 'var(--color-text-light)' : 'var(--color-accent)', color: 'var(--color-btn-primary-text)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !canSubmit ? 'default' : 'pointer', opacity: !canSubmit ? 0.5 : 1 }}
+                style={{ flex: 1, height: 44, border: 'none', borderRadius: 22, background: !canSubmit ? 'var(--color-bg-main)' : 'var(--color-accent)', color: !canSubmit ? 'var(--color-text-light)' : 'var(--color-btn-primary-text)', boxShadow: !canSubmit ? 'inset 0 0 0 1px var(--color-border)' : 'none', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !canSubmit ? 'default' : 'pointer' }}
               >
                 {t('exerciseSession.answer')}
               </button>
@@ -1714,7 +1714,7 @@ export default function ExerciseSession() {
               <button
                 onClick={() => submitAnswer()}
                 disabled={!canSubmit}
-                style={{ height: 44, padding: '0 24px', border: 'none', borderRadius: 22, background: !canSubmit ? 'var(--color-text-light)' : 'var(--color-accent)', color: 'var(--color-btn-primary-text)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !canSubmit ? 'default' : 'pointer', opacity: !canSubmit ? 0.5 : 1, whiteSpace: 'nowrap', boxShadow: 'var(--box-shadow-pop)', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                style={{ height: 44, padding: '0 24px', border: 'none', borderRadius: 22, background: !canSubmit ? 'var(--color-bg-main)' : 'var(--color-accent)', color: !canSubmit ? 'var(--color-text-light)' : 'var(--color-btn-primary-text)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !canSubmit ? 'default' : 'pointer', whiteSpace: 'nowrap', boxShadow: !canSubmit ? 'inset 0 0 0 1px var(--color-border), var(--box-shadow-pop)' : 'var(--box-shadow-pop)', display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
                 {t('exerciseSession.answer')}
                 <KeyHint />
@@ -1722,7 +1722,7 @@ export default function ExerciseSession() {
             ) : (
               <button
                 onClick={nextQuestion}
-                style={{ height: 44, padding: '0 24px', border: '1.5px solid var(--color-primary)', borderRadius: 22, background: 'var(--color-bg-white)', color: 'var(--color-primary)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'var(--box-shadow-pop)', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                style={{ height: 44, padding: '0 24px', border: 'none', borderRadius: 22, background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'var(--box-shadow-pop)', display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
                 {currentIndex + 1 >= totalCount ? t('exerciseSession.showResult') : t('exerciseSession.next')}
                 <KeyHint />
@@ -1763,6 +1763,8 @@ export default function ExerciseSession() {
           </Card>
         </div>
       )}
+      {/* 画面下に固定した回答/次へボタンが、最後の内容（解説・コラム）に重ならないための余白 */}
+      <div aria-hidden="true" style={{ height: isMobile ? 72 : 80 }} />
     </div>
   );
 }

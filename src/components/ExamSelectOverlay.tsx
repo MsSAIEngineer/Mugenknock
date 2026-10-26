@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { resetExercisePrefsOnExamChange } from '../utils/preferences';
 import { API_ENDPOINT, EXAM_CONFIGS, EXAM_DOMAINS, DOMAIN_WEIGHTS, PASS_SCORES, isNonAwsExam, levelLabel, COMPANION_EXAM, companionLabel, officialExamsForCompanion, EXAM_LEVEL_COLORS, tint } from '@/constants';
-import { EXAM_ICON_COMPONENTS, IconBook, IconBookOpenCheck, IconCircleCheck, IconExternalLink, IconFileText } from '@/components/Icons';
+import { EXAM_ICON_COMPONENTS, IconCircleCheck, IconExternalLink, IconFileText } from '@/components/Icons';
+import Button from '@/components/ui/Button';
 import { useHorizontalScrollHint } from '@/hooks/useHorizontalScrollHint';
 
 import MarkdownText from '@/components/ui/MarkdownText';
@@ -185,7 +186,6 @@ export default function ExamSelectOverlay({
   const [domainOpen, setDomainOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const cardStripRef = useRef<HTMLDivElement>(null);
-  const confirmBtnRef = useRef<HTMLButtonElement>(null);
   const [burst, setBurst] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -499,95 +499,42 @@ export default function ExamSelectOverlay({
           })()}
         </div>
 
-        {/* フッター：決定ボタン */}
+        {/* フッター：決定ボタン。初回の最重要操作なので、文字入りの主ボタンにする
+            （以前は 44px のアイコンボタン＋動き続ける矢印で、何を押せばよいか分かりにくかった） */}
         {previewExam && (() => {
           const exam = previewExam;
           const isCurrentTarget = targetExam === exam;
           return (
-            <div style={{ flexShrink: 0, borderTop: `2px solid ${tint(levelColor, 20)}`, background: tint(levelColor, 3), padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, minHeight: 64 }}>
-              <style>{`
-                @keyframes examStudyingFade { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: none; } }
-                @keyframes eso-onboarding-pulse {
-                  0%, 100% { box-shadow: 0 0 0 0 ${tint(levelColor, 40)}, var(--box-shadow-pop); }
-                  50%       { box-shadow: 0 0 0 8px ${tint(levelColor, 0)}, var(--box-shadow-pop); }
-                }
-                @keyframes eso-onboarding-arrow { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(7px); } }
-              `}</style>
-              {/* 初回オンボーディング：小さな決定ボタンへ矢印で誘導（ボタンのすぐ左に配置） */}
-              {onboarding && !confirming && !isCurrentTarget && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: levelColor }}>{ja ? '目標資格を決定' : 'Confirm'}</span>
-                  <span style={{ display: 'inline-flex', animation: 'eso-onboarding-arrow 0.9s ease-in-out infinite', color: levelColor, fontSize: 22, lineHeight: 1 }}>➜</span>
+            <div style={{ flexShrink: 0, borderTop: `2px solid ${tint(levelColor, 20)}`, background: tint(levelColor, 3), padding: 'var(--spacing-sm) var(--spacing-md)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 'var(--spacing-md)', minHeight: 64 }}>
+              {(isCurrentTarget || confirming) ? (
+                <div role="status" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: 'var(--color-success)' }}>
+                  <IconCircleCheck size={18} />{ja ? `${exam} を学習中` : `Studying ${exam}`}
                 </div>
-              )}
-              {(isCurrentTarget || confirming) && (
-                <div style={{ fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: 'var(--color-success)', animation: confirming ? 'examStudyingFade 0.4s ease 0.5s both' : undefined }}>✓ {ja ? '学習中' : 'Studying'}</div>
-              )}
-              {/* confirming 中は isCurrentTarget になっても静的ボタンへ差し替えない。
-                  呼び出し元(Home)が targetExamChanged イベントで即座に targetExam を更新すると
-                  フリップ演出が途中で切れるため（MyPage 経由と挙動が揃わない）、演出完了まで維持する */}
-              {(isCurrentTarget && !confirming) ? (
-                <button disabled style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: levelColor, color: 'var(--color-on-level)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', boxShadow: 'var(--box-shadow-pop)', flexShrink: 0, transition: 'none' }}>
-                  <IconBookOpenCheck size={22} />
-                </button>
               ) : (
-                <button
-                  ref={confirmBtnRef}
+                <Button
                   data-kbnav="confirm"
-                  onClick={() => {
+                  onClick={(e) => {
                     if (confirming) return;
                     setConfirming(true);
                     resetExercisePrefsOnExamChange(uid, localStorage.getItem(`targetExam_${uid}`), exam);
                     localStorage.setItem(`targetExam_${uid}`, exam);
                     window.dispatchEvent(new CustomEvent('targetExamChanged', { detail: exam }));
-                    // 押下直後にフリップとパーティクル放散を同時開始
+                    // 押した操作への応答としてだけパーティクルを出す
                     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
                     if (!reduceMotion) {
-                      const r = confirmBtnRef.current?.getBoundingClientRect();
-                      if (r) setBurst({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+                      const r = e.currentTarget.getBoundingClientRect();
+                      setBurst({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
                     }
-                    // フリップ(0.55s)→「学習中」フェードイン(0.5s遅延)→反映
-                    setTimeout(() => { onSelect(exam); setConfirming(false); }, 1100);
-                    // 非オンボーディング（マイページからの目標資格変更等）では、確定アニメ完了の
-                    // 約1秒後にオーバレイを自動で閉じる。オンボーディングは導線が異なるため onSelect 側で制御し除外。
-                    if (!onboarding && onClose) setTimeout(() => onClose(), 2100);
+                    // 「学習中」を一瞬見せてから反映する
+                    setTimeout(() => { onSelect(exam); setConfirming(false); }, 700);
+                    // 非オンボーディング（マイページからの目標資格変更等）では、反映の約1秒後にオーバレイを自動で閉じる。
+                    // オンボーディングは導線が異なるため onSelect 側で制御し除外。
+                    if (!onboarding && onClose) setTimeout(() => onClose(), 1700);
                   }}
                   disabled={confirming}
-                  aria-label={ja ? '決定' : 'Confirm'}
-                  style={{
-                    width: 44, height: 44, flexShrink: 0, padding: 0, border: 'none',
-                    background: 'transparent', cursor: confirming ? 'default' : 'pointer',
-                    perspective: 600, transition: 'none',
-                  }}
                 >
-                  {/* オセロのようにひっくり返る3Dフリップ（表=決定 / 裏=学習中） */}
-                  <div style={{
-                    position: 'relative', width: '100%', height: '100%',
-                    transformStyle: 'preserve-3d',
-                    transition: 'transform 0.55s cubic-bezier(.45,.05,.3,1)',
-                    transform: confirming ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                  }}>
-                    {/* 表面：決定 */}
-                    <span style={{
-                      position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%',
-                      border: `2px solid ${levelColor}`, background: 'var(--color-bg-white)', color: levelColor,
-                      boxShadow: 'var(--box-shadow-pop)',
-                      animation: (onboarding && !confirming) ? 'eso-onboarding-pulse 1.6s ease-in-out infinite' : undefined,
-                    }}>
-                      <IconBook size={22} />
-                    </span>
-                    {/* 裏面：学習中 */}
-                    <span style={{
-                      position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
-                      transform: 'rotateY(180deg)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%',
-                      background: levelColor, color: 'var(--color-on-level)', boxShadow: 'var(--box-shadow-pop)',
-                    }}>
-                      <IconBookOpenCheck size={22} />
-                    </span>
-                  </div>
-                </button>
+                  {ja ? `${exam} を目標にする` : `Set ${exam} as target`}
+                </Button>
               )}
             </div>
           );

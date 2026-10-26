@@ -912,11 +912,11 @@ export default function ExamSession() {
 
       {createPortal(
         isMobile ? (
-          <div style={{ position: 'fixed', bottom: 56, left: 0, right: 0, zIndex: 150, padding: '8px 12px', display: 'flex', gap: 8 }}>
+          <div style={{ position: 'fixed', bottom: 56, left: 0, right: 0, zIndex: 150, padding: 'var(--spacing-sm) var(--spacing-md)', display: 'flex', gap: 'var(--spacing-sm)', background: 'var(--color-bg-white)', borderTop: '1px solid var(--color-border)', boxShadow: 'var(--box-shadow-up)' }}>
             <button
               disabled={currentIndex === questions.length - 1}
               onClick={handleNext}
-              style={{ flex: 1, height: 44, border: 'none', borderRadius: 22, background: currentIndex === questions.length - 1 ? 'var(--color-text-light)' : 'var(--color-accent)', color: 'var(--color-btn-primary-text)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: currentIndex === questions.length - 1 ? 'default' : 'pointer', opacity: currentIndex === questions.length - 1 ? 0.5 : 1 }}
+              style={{ flex: 1, height: 44, border: 'none', borderRadius: 22, background: currentIndex === questions.length - 1 ? 'var(--color-bg-main)' : 'var(--color-accent)', color: currentIndex === questions.length - 1 ? 'var(--color-text-light)' : 'var(--color-btn-primary-text)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: currentIndex === questions.length - 1 ? 'default' : 'pointer' }}
             >
               {lang === 'ja' ? '次の問題へ' : 'Next'}
             </button>

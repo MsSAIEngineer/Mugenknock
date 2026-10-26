@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import Button from '../components/ui/Button';
 import { IconLock, IconBean, ServiceIcon, isServiceIconKey, ServiceIconImg, IconExternalLink, IconSearch } from '../components/Icons';
 import { CATALOG, getDailyService, ServiceEntry } from '../data/awsServiceCatalog';
 import { API_ENDPOINT } from '../constants';
@@ -360,6 +361,13 @@ export default function ServiceEncyclopedia() {
         })}
       </div>
 
+      {/* 解放済みタブが空のときは、空白にせず次の行動を示す */}
+      {!q && activeTab === 'unlocked' && unlockedCount === 0 && (
+        <div style={{ padding: 'var(--spacing-lg)', textAlign: 'center', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+          {ja ? 'まだ解放したサービスはありません。ホームを開いた日に1つずつ解放されます。' : 'No services unlocked yet. One unlocks each day you open Home.'}
+          <Button variant="outline" size="sm" onClick={() => setActiveTab('all')}>{ja ? '一覧を見る' : 'Browse all'}</Button>
+        </div>
+      )}
       {/* カテゴリ別サービス一覧（検索時はタブを無視して全カテゴリ横断） */}
       {displayCatalog.map(cat => {
         const displayServices = q

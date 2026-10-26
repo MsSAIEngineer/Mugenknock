@@ -131,6 +131,10 @@ authLoading 解除
 
 ### 注意点
 
+- 目標資格の選択（`ExamSelectOverlay`）の決定は、文字入りの主ボタン「<資格> を目標にする」。
+  押すとパーティクルを出し「<資格> を学習中」に変わって反映する（以前のアイコンだけのフリップボタンと、動き続ける矢印は廃止）
+- 予想スコアが未算出（未演習）のときは、大きな「—」ではなく「演習すると予想スコアが表示されます」と出す
+- 右カラムの「苦手分析」は、未解放のときは縦に伸ばさない
 - `uid` は `user?.userId ?? 'guest'`。**認証確定前は `'guest'` で localStorage を読んでいる**ため、
   `user` 確定時に正しい uid で再読込する `useEffect` が必要（既にある）
 - 演習開始時は `autoScoreAndClearDrafts(userId, [quick, focused])` で**プライマリ枠2種のみ**確定。
@@ -219,6 +223,10 @@ state が無ければ `localStorage` のドラフトから復元。それも無�
      → POST /sessions/:id/answers（非同期・待たない）
      → PUT /sessions/:id/progress でドラフト保存
 ```
+
+回答/次へボタンは画面下に固定（PCは右下、スマホは下部タブの上の帯）。どちらもオレンジの主ボタンで、
+回答できない間は灰色の塗り（半透明にしない。下の選択肢が透けて文字が重なったため）。
+スマホの帯は白背景＋上向きの影。本文の最後に固定ボタンぶんの余白を入れ、解説・コラムに重ならないようにする。
 
 ### 完了時
 
@@ -335,6 +343,7 @@ Home の「苦手分析」カード（デスクトップ）は `navigate('/aws/m
 - 母数: `GET /daily-service?list=1`（`isServiceUnlockable` を満たすものだけ）
 - 解放状況: `GET /users/me/encyclopedia-unlocks`（ログイン時）/ `localStorage`（ゲスト）
 - 未解放は伏せ字表示、解放済みはアイコン・説明・豆知識・公式ドキュメントリンク
+- 「解放済み」タブが0件のときは、空白にせず「まだ解放したサービスはありません」と「一覧を見る」ボタンを出す
 - 詳細は必要時に `GET /daily-service?serviceId=` で取得
 
 **アイコン解決**は `ServiceIconImg`（`src/components/Icons.tsx`）が

@@ -347,8 +347,15 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
           <div ref={scoreTabRef}>
             <style>{`@keyframes scoreNodePop { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: scale(1); } }`}</style>
             <div style={{ marginBottom: 16 }}>
-              <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--color-primary)', letterSpacing: '-1px' }}>{estimatedScore ?? '—'}</span>
+              {/* 未演習のときは大きな「—」が青い線に見えて壊れた表示に見えたので、文で示す */}
+              {estimatedScore == null ? (
+                <span style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-sub)' }}>
+                  {ja ? '演習すると予想スコアが表示されます' : 'Practice to see your estimated score'}
+                </span>
+              ) : (<>
+              <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--color-primary)', letterSpacing: '-1px' }}>{estimatedScore}</span>
               <span style={{ fontSize: 'var(--font-size-sm2)', color: 'var(--color-text-light)', marginLeft: 6 }}>/1000</span>
+              </>)}
               {passScore !== null && (
                 <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginLeft: 10 }}>
                   {ja ? `合格ライン: ${passScore}` : `Pass: ${passScore}`}
@@ -2447,7 +2454,8 @@ export default function Home() {
       {!isMobile && user && targetExam && (
         <Card
           padding="var(--spacing-md)"
-          style={{ marginTop: 'var(--spacing-md)', cursor: 'pointer', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+          // 未解放のときは中身が1行だけなので伸ばさない（空の大きな枠が壊れて見えた）
+          style={{ marginTop: 'var(--spacing-md)', cursor: 'pointer', flex: effectiveFocusedUnlocked ? 1 : undefined, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
           onClick={() => navigate('/aws/mypage', { state: { tab: 'analysis' } })}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
