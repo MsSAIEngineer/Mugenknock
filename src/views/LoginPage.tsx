@@ -6,7 +6,7 @@ import { I18n } from 'aws-amplify/utils';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import Button from '../components/ui/Button';
-import { EXAM_LEVEL_COLORS } from '../constants';
+import { EXAM_LEVEL_COLORS, levelText } from '../constants';
 
 I18n.putVocabularies(translations);
 I18n.setLanguage('ja');
@@ -118,7 +118,7 @@ export default function LoginPage() {
               <span style={{
                 fontSize: 'var(--font-size-2xs)',
                 fontWeight: 600,
-                color: LEVEL_COLOR[badge.level],
+                color: levelText(LEVEL_COLOR[badge.level]),
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
               }}>

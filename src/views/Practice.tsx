@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from '@/compat/react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { API_ENDPOINT, EXAM_CONFIGS, EXAM_DOMAINS, EXAM_TYPES, PASS_SCORES, qDomainName, domainsToIndices, storedDomainsToNames, tagIdMatches, isNonAwsExam, COMPANION_EXAM, companionLabel, EXAM_LEVEL_COLORS, officialExamsForCompanion } from '../constants';
+import { API_ENDPOINT, EXAM_CONFIGS, EXAM_DOMAINS, EXAM_TYPES, PASS_SCORES, qDomainName, domainsToIndices, storedDomainsToNames, tagIdMatches, isNonAwsExam, COMPANION_EXAM, companionLabel, EXAM_LEVEL_COLORS, levelText, officialExamsForCompanion } from '../constants';
 import Button from '../components/ui/Button';
 import PageLayout from '../components/ui/PageLayout';
 import { getCached, setCached, SHORT_TTL, getCachedPersist, setCachedPersist } from '../utils/cache';
@@ -571,12 +571,12 @@ export default function Practice() {
                 <span style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, fontSize: 'var(--font-size-sm)', fontWeight: includeCompanion ? 600 : 400, color: 'var(--color-text-main)' }}>
                   <span>
                     {ja ? (
-                      <><span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{`基礎知識（${companionLabel(COMPANION_EXAM[examType])}）`}</span>を含める</>
+                      <><span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{`基礎知識（${companionLabel(COMPANION_EXAM[examType])}）`}</span>を含める</>
                     ) : (
-                      <>Include <span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{companionLabel(COMPANION_EXAM[examType])}</span></>
+                      <>Include <span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{companionLabel(COMPANION_EXAM[examType])}</span></>
                     )}
                   </span>
-                  {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanion ? EXAM_LEVEL_COLORS.Additional : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
+                  {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanion ? levelText(EXAM_LEVEL_COLORS.Additional) : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
                 </span>
               </label>
               <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: 2, marginLeft: 26 }}>

@@ -25,7 +25,7 @@
     "spacing": 4
   },
   "src/components/ExamSelectOverlay.tsx": {
-    "hexColor": 2,
+    "hexColor": 1,
     "spacing": 19,
     "borderRadius": 4,
     "fontSize": 1

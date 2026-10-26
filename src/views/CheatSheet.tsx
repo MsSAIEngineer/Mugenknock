@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { EXAM_LEVEL, EXAM_LEVEL_COLORS, API_ENDPOINT, levelLabel, tint } from '../constants';
+import { EXAM_LEVEL, EXAM_LEVEL_COLORS, API_ENDPOINT, levelLabel, tint, levelText, levelOn } from '../constants';
 import { EXAM_ICON_COMPONENTS, IconSearch, IconCopy, IconCheck } from '../components/Icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -1360,11 +1360,11 @@ export default function CheatSheet() {
                 }}
               >
                 {EIcon && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4, color: isSelected ? 'var(--color-on-level)' : 'var(--color-text-light)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4, color: isSelected ? levelOn(levelColor) : 'var(--color-text-light)' }}>
                     <EIcon size={18} />
                   </div>
                 )}
-                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: isSelected ? 'var(--color-on-level)' : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
+                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: isSelected ? levelOn(levelColor) : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
               </button>
             );
           })}
@@ -1397,7 +1397,7 @@ export default function CheatSheet() {
               <button
                 key={l.exam}
                 onClick={() => switchExam(l.exam)}
-                style={{ padding: '3px 10px', borderRadius: 'var(--border-radius-md)', border: `1.5px solid ${examColor}`, background: 'var(--color-bg-white)', color: examColor, fontSize: 'var(--font-size-2xs)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                style={{ padding: '3px 10px', borderRadius: 'var(--border-radius-md)', border: `1.5px solid ${examColor}`, background: 'var(--color-bg-white)', color: levelText(examColor), fontSize: 'var(--font-size-2xs)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
               >{l.label} →</button>
             ))}
           </div>
@@ -1425,7 +1425,7 @@ export default function CheatSheet() {
             <h2 style={{
               fontSize: 'var(--font-size-sm)',
               fontWeight: 700,
-              color: secColor,
+              color: levelText(secColor),
               margin: '0 0 var(--spacing-sm)',
               paddingBottom: 6,
               borderBottom: `2px solid ${tint(secColor, 19)}`,
@@ -1435,7 +1435,7 @@ export default function CheatSheet() {
             }}>
               <span style={{ display: 'inline-block', width: 3, height: 14, background: secColor, borderRadius: 2 }} />
               {/* 検索時はどの資格の記事かを示すバッジを表示 */}
-              {q && <span style={{ fontSize: 'var(--font-size-2xs)', fontWeight: 700, color: 'var(--color-on-level)', background: secColor, borderRadius: 'var(--border-radius-sm)', padding: '1px 8px', flexShrink: 0 }}>{section.exam}</span>}
+              {q && <span style={{ fontSize: 'var(--font-size-2xs)', fontWeight: 700, color: levelOn(secColor), background: secColor, borderRadius: 'var(--border-radius-sm)', padding: '1px 8px', flexShrink: 0 }}>{section.exam}</span>}
               {section.title}
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(400px, 100%), 1fr))', gap: 'var(--spacing-sm)' }}>
@@ -1494,7 +1494,7 @@ export default function CheatSheet() {
           left: '50%',
           transform: 'translateX(-50%)',
           background: 'var(--color-points)',
-          color: 'var(--color-on-level)',
+          color: 'var(--color-on-points)',
           padding: '8px 20px',
           borderRadius: 'var(--border-radius-full)',
           fontSize: 'var(--font-size-sm)',

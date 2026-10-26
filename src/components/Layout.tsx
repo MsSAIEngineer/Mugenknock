@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from '@/compat/react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { API_ENDPOINT, EXAM_TYPES, EXAM_CONFIGS, EXAM_LEVEL, EXAM_LEVEL_COLORS, isNonAwsExam } from '../constants';
+import { API_ENDPOINT, EXAM_TYPES, EXAM_CONFIGS, EXAM_LEVEL, EXAM_LEVEL_COLORS, levelText, isNonAwsExam } from '../constants';
 import { getPoints, fetchPointsFromServer } from '../utils/points';
 import { loadTargetExamFromServer } from '../utils/preferences';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
@@ -639,8 +639,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     '/architecture':         [{ label: t('nav.home'), path: '/aws/' }, { label: lang === 'ja' ? 'Webサイトの構成図' : 'Site Architecture' }],
   };
 
-  // 画面の見出し（h1）。スマホはヘッダー左に表示（以前は空で、今どの画面か分からなかった）、
-  // PC はパンくずに画面名が出るので読み上げ用に視覚的に隠す。自前で h1 を持つ資格ダッシュボードは除く
+  // 画面の見出し（h1）。読み上げ用で、見た目には出さない（スマホは下部タブ、PC はサイドバーとパンくずで
+  // 今の画面が分かるため、表示すると重複する）。自前で h1 を持つ資格ダッシュボードは除く
   const pageTitle: string | null = pathname === '/aws/exam-dashboard' ? null
     : (pathname === '/aws' || pathname === '/aws/') ? t('nav.home')
     : pathname === '/aws/mypage' ? t('nav.mypage')
@@ -833,9 +833,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       }}>
 
         {pageTitle && (
-          <h1 style={isMobile
-            ? { margin: 0, paddingLeft: 'var(--spacing-sm)', fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }
-            : { position: 'absolute', width: 1, height: 1, margin: -1, padding: 0, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }}>
+          <h1 style={{ position: 'absolute', width: 1, height: 1, margin: -1, padding: 0, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }}>
             {pageTitle}
           </h1>
         )}
@@ -998,7 +996,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     ? `【基礎知識】${targetExam}`
                     : (isMobile ? `AWS ${targetExam}` : ((EXAM_CONFIGS[targetExam]?.fullName ?? targetExam).replace('AWS Certified ', '')));
                   const ExamIcon = EXAM_ICON_COMPONENTS[targetExam];
-                  return <>{'設定目標：'}<span style={{ color: examColor, display: 'inline-flex', alignItems: 'center', gap: 3, verticalAlign: 'middle' }}>{ExamIcon && <ExamIcon size={13} />}{name}</span></>;
+                  return <>{'設定目標：'}<span style={{ color: levelText(examColor), display: 'inline-flex', alignItems: 'center', gap: 3, verticalAlign: 'middle' }}>{ExamIcon && <ExamIcon size={13} />}{name}</span></>;
                 })()}
                 {examDate && (() => {
                   const days = daysUntilExam(examDate);

@@ -14,7 +14,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import {
   API_ENDPOINT, EXAM_TYPES, EXAM_CONFIGS, EXAM_DOMAINS,
   DOMAIN_WEIGHTS, PASS_SCORES, qDomainName, DOMAIN_RATE_WARNING,
-  EXAM_LEVEL, EXAM_LEVEL_COLORS, tint,
+  EXAM_LEVEL, EXAM_LEVEL_COLORS, tint, levelText,
   tagIdMatches, domainsToIndices, storedDomainsToNames, isNonAwsExam, COMPANION_EXAM, companionLabel, officialExamsForCompanion,
 } from '../constants';
 import { readDomainResults, readDomainHistory } from '../utils/domainStats';
@@ -658,7 +658,7 @@ function OnboardingModal({ lang, uid, onComplete }: {
 
           {grouped.map(({ lv, exams }) => (
             <div key={lv} style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: OB_LEVEL_COLOR[lv], marginBottom: 8 }}>
+              <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: levelText(OB_LEVEL_COLOR[lv]), marginBottom: 8 }}>
                 {lv === 'Additional' ? (ja ? '🧩 基礎知識（AWS認定外）' : '🧩 Original (not AWS certifications)') : lv}
               </div>
               {lv === 'Additional' && (
@@ -680,7 +680,7 @@ function OnboardingModal({ lang, uid, onComplete }: {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ fontWeight: 700, fontSize: 'var(--font-size-sm2)', color: 'var(--color-text-main)' }}>{cfg.examCode}</span>
                           {nonAws && (
-                            <span style={{ fontSize: 9, fontWeight: 800, color: OB_LEVEL_COLOR.Additional, border: `1px dashed ${OB_LEVEL_COLOR.Additional}`, borderRadius: 'var(--border-radius-sm)', padding: '0 5px' }}>非公式</span>
+                            <span style={{ fontSize: 9, fontWeight: 800, color: levelText(OB_LEVEL_COLOR.Additional), border: `1px dashed ${OB_LEVEL_COLOR.Additional}`, borderRadius: 'var(--border-radius-sm)', padding: '0 5px' }}>非公式</span>
                           )}
                         </div>
                         <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{OB_SHORT[exam]}</div>
@@ -2125,9 +2125,9 @@ export default function Home() {
   const primaryLoading = primaryMode === 'focused' ? focusedLoading : quickLoading;
   const primaryLoadPct = primaryMode === 'focused' ? focusedLoadPct : quickLoadPct;
   const primaryBg = primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)';
-  const primaryColor = primaryMode === 'focused' ? 'var(--color-on-level)' : 'var(--color-btn-primary-text)';
+  const primaryColor = primaryMode === 'focused' ? 'var(--color-on-points)' : 'var(--color-btn-primary-text)';
   const primarySpinnerBorder = primaryMode === 'focused' ? '2px solid rgba(255,255,255,0.3)' : '2px solid rgba(0,0,0,0.2)';
-  const primarySpinnerTop = primaryMode === 'focused' ? 'var(--color-on-level)' : 'var(--color-btn-primary-text)';
+  const primarySpinnerTop = primaryMode === 'focused' ? 'var(--color-on-points)' : 'var(--color-btn-primary-text)';
   const discardPrimaryDraft = primaryMode === 'focused' ? discardFocusedDraft : discardQuickDraft;
   const startPrimary = primaryMode === 'focused' ? startFocusedExercise : startQuickExercise;
 
@@ -2670,7 +2670,7 @@ export default function Home() {
                     <button
                       disabled={!targetExam || focusedLoading}
                       onClick={() => { if (targetExam && !focusedLoading) startFocusedExercise(); }}
-                      style={{ flex: 1, height: 44, border: 'none', background: 'var(--color-points)', color: 'var(--color-on-level)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: (!targetExam || focusedLoading) ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
+                      style={{ flex: 1, height: 44, border: 'none', background: 'var(--color-points)', color: 'var(--color-on-points)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: (!targetExam || focusedLoading) ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
                     >
                       {focusedLoading ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -2687,7 +2687,7 @@ export default function Home() {
                   )}
                   <button
                     onClick={() => setShowFocusedMenu(v => !v)}
-                    style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-on-level)' : 'var(--color-btn-primary-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-on-points)' : 'var(--color-btn-primary-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     aria-label={primaryMode === 'quick' ? (ja ? 'しっかり対策' : 'Focused practice') : (ja ? 'サクッと演習' : 'Quick practice')}
                   >
                     <IconChevronUp size={16} />
@@ -2835,7 +2835,7 @@ export default function Home() {
                   <button
                     disabled={!targetExam || focusedLoading}
                     onClick={() => { if (targetExam && !focusedLoading) startFocusedExercise(); }}
-                    style={{ flex: 1, height: 44, border: 'none', background: 'var(--color-points)', color: 'var(--color-on-level)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !targetExam || focusedLoading ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
+                    style={{ flex: 1, height: 44, border: 'none', background: 'var(--color-points)', color: 'var(--color-on-points)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !targetExam || focusedLoading ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
                   >
                     {focusedLoading ? (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -2847,7 +2847,7 @@ export default function Home() {
                 )}
                 <button
                   onClick={() => setShowFocusedMenu(v => !v)}
-                  style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-on-level)' : 'var(--color-btn-primary-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-on-points)' : 'var(--color-btn-primary-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                   aria-label={primaryMode === 'quick' ? (ja ? 'しっかり対策' : 'Focused practice') : (ja ? 'サクッと演習' : 'Quick practice')}
                 >
                   <IconChevronUp size={16} />
@@ -2929,12 +2929,12 @@ export default function Home() {
                       <span style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, fontSize: 'var(--font-size-sm)', fontWeight: includeCompanionPref(draftPrefs) ? 700 : 500, color: 'var(--color-text-main)' }}>
                         <span>
                           {ja ? (
-                            <><span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{`基礎知識（${companionLabel(COMPANION_EXAM[targetExam])}）`}</span>を含める</>
+                            <><span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{`基礎知識（${companionLabel(COMPANION_EXAM[targetExam])}）`}</span>を含める</>
                           ) : (
-                            <>Include <span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{companionLabel(COMPANION_EXAM[targetExam])}</span></>
+                            <>Include <span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{companionLabel(COMPANION_EXAM[targetExam])}</span></>
                           )}
                         </span>
-                        {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanionPref(draftPrefs) ? EXAM_LEVEL_COLORS.Additional : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
+                        {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanionPref(draftPrefs) ? levelText(EXAM_LEVEL_COLORS.Additional) : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
                       </span>
                     </label>
                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: 2 }}>
@@ -3229,12 +3229,12 @@ export default function Home() {
                       <span style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, fontSize: 'var(--font-size-sm)', fontWeight: includeCompanionPref(draftFocusedPrefs) ? 700 : 500, color: 'var(--color-text-main)' }}>
                         <span>
                           {ja ? (
-                            <><span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{`基礎知識（${companionLabel(COMPANION_EXAM[targetExam])}）`}</span>を含める</>
+                            <><span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{`基礎知識（${companionLabel(COMPANION_EXAM[targetExam])}）`}</span>を含める</>
                           ) : (
-                            <>Include <span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{companionLabel(COMPANION_EXAM[targetExam])}</span></>
+                            <>Include <span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{companionLabel(COMPANION_EXAM[targetExam])}</span></>
                           )}
                         </span>
-                        {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanionPref(draftFocusedPrefs) ? EXAM_LEVEL_COLORS.Additional : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
+                        {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanionPref(draftFocusedPrefs) ? levelText(EXAM_LEVEL_COLORS.Additional) : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
                       </span>
                     </label>
                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: 2 }}>

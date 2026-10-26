@@ -26,18 +26,33 @@
   --color-success: #037f0c;
   --color-warning: #ff9900;
 
-  /* 資格レベル色。constants.ts の EXAM_LEVEL_COLORS はこの変数を参照する。
-     ライトは白地で 4.5:1 以上、ダークは暗色カードで 4.5:1 前後になる明るさに分ける。
+  /* 資格レベル色。constants.ts の EXAM_LEVEL_COLORS / levelText() / levelOn() から参照する。
+     --level-*      … 塗り・線・アイコン・グラフ用の明るい色（監査前の色）
+     --level-*-text … 文字用。白地で 4.5:1 以上になる濃さ
+     --level-*-on   … --level-* の塗りに載せる文字（白か濃色のうち読める方）
      半透明にするときは hex にアルファを足さず、constants.ts の tint() を使う */
-  --level-foundational: #47782a;
-  --level-business: #c0256a;
+  --level-foundational: #6b9e3a;
+  --level-business: #db2777;
   --level-associate: var(--color-primary);
-  --level-professional: #7c4ddb;
-  --level-specialty: #0a74a8;
-  --level-additional: #0f766e;
-  --color-on-level: #ffffff;   /* レベル色の塗りの上に載せる文字 */
-  /* ポイント（p）・しっかり対策のティール */
-  --color-points: #007a7a;
+  --level-professional: #8b5cf6;
+  --level-specialty: #0ea5e9;
+  --level-additional: #14b8a6;
+  --level-foundational-text: #47782a;
+  --level-business-text: #c0256a;
+  --level-associate-text: var(--color-primary);
+  --level-professional-text: #7c4ddb;
+  --level-specialty-text: #0a74a8;
+  --level-additional-text: #0f766e;
+  --level-foundational-on: #16191f;
+  --level-business-on: #ffffff;
+  --level-associate-on: #ffffff;
+  --level-professional-on: #ffffff;
+  --level-specialty-on: #16191f;
+  --level-additional-on: #16191f;
+  /* ポイント（p）・しっかり対策の青緑。明るさを優先した本人判断で、小さい文字では 3.3:1（AA 未満）
+     （2026-10-26。一度 #007a7a に暗くしたが、暗く濁って見えるため戻した） */
+  --color-points: #009E9E;
+  --color-on-points: #ffffff;
 
   /* Spacing scale (4px base) — 余白・gap・paddingは必ずこのスケールを使う */
   --spacing-xs: 4px;
@@ -135,8 +150,19 @@
   --level-professional: #a78bfa;
   --level-specialty: #38bdf8;
   --level-additional: #2dd4bf;
-  --color-on-level: #0d1117;
+  --level-foundational-text: var(--level-foundational);
+  --level-business-text: var(--level-business);
+  --level-professional-text: var(--level-professional);
+  --level-specialty-text: var(--level-specialty);
+  --level-additional-text: var(--level-additional);
+  --level-foundational-on: #0d1117;
+  --level-business-on: #0d1117;
+  --level-associate-on: #0d1117;
+  --level-professional-on: #0d1117;
+  --level-specialty-on: #0d1117;
+  --level-additional-on: #0d1117;
   --color-points: #2dd4bf;
+  --color-on-points: #0d1117;
   --color-feedback-correct-bg: #0d2114;
   --color-feedback-incorrect-bg: #2d0a07;
   --color-hint-bg: #2d2207;

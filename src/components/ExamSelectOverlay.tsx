@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { resetExercisePrefsOnExamChange } from '../utils/preferences';
-import { API_ENDPOINT, EXAM_CONFIGS, EXAM_DOMAINS, DOMAIN_WEIGHTS, PASS_SCORES, isNonAwsExam, levelLabel, COMPANION_EXAM, companionLabel, officialExamsForCompanion, EXAM_LEVEL_COLORS, tint } from '@/constants';
+import { API_ENDPOINT, EXAM_CONFIGS, EXAM_DOMAINS, DOMAIN_WEIGHTS, PASS_SCORES, isNonAwsExam, levelLabel, COMPANION_EXAM, companionLabel, officialExamsForCompanion, EXAM_LEVEL_COLORS, tint, levelText, levelOn } from '@/constants';
 import { EXAM_ICON_COMPONENTS, IconCircleCheck, IconExternalLink, IconFileText } from '@/components/Icons';
 import Button from '@/components/ui/Button';
 import { useHorizontalScrollHint } from '@/hooks/useHorizontalScrollHint';
@@ -366,16 +366,16 @@ export default function ExamSelectOverlay({
                 }}
               >
                 {isSelected && (
-                  <div style={{ position: 'absolute', top: 4, right: 4, color: isPreviewing ? '#fff' : levelColor, lineHeight: 0 }}>
+                  <div style={{ position: 'absolute', top: 4, right: 4, color: isPreviewing ? levelOn(levelColor) : levelText(levelColor), lineHeight: 0 }}>
                     <IconCircleCheck size={14} />
                   </div>
                 )}
                 {ExamIcon && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4, color: isPreviewing ? 'var(--color-on-level)' : isSelected ? levelColor : 'var(--color-text-light)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4, color: isPreviewing ? levelOn(levelColor) : isSelected ? levelText(levelColor) : 'var(--color-text-light)' }}>
                     <ExamIcon size={18} />
                   </div>
                 )}
-                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: isPreviewing ? 'var(--color-on-level)' : isSelected ? levelColor : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
+                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: isPreviewing ? levelOn(levelColor) : isSelected ? levelText(levelColor) : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
               </button>
             );
           })}
@@ -405,8 +405,8 @@ export default function ExamSelectOverlay({
                 {COMPANION_EXAM[exam] && (
                   <p style={{ margin: '0 0 8px', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)' }}>
                     {ja
-                      ? <>※<span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{`基礎知識（${companionLabel(COMPANION_EXAM[exam])}）`}</span>を含みます</>
-                      : <>※Includes <span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{companionLabel(COMPANION_EXAM[exam])}</span> fundamentals</>}
+                      ? <>※<span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{`基礎知識（${companionLabel(COMPANION_EXAM[exam])}）`}</span>を含みます</>
+                      : <>※Includes <span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{companionLabel(COMPANION_EXAM[exam])}</span> fundamentals</>}
                   </p>
                 )}
                 {isNonAwsExam(exam) && officialExamsForCompanion(exam).length > 0 && (
@@ -473,7 +473,7 @@ export default function ExamSelectOverlay({
                                 <div key={d}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-sub)', marginBottom: 3 }}>
                                     <span>{d}</span>
-                                    <span style={{ fontWeight: 700, color: levelColor, flexShrink: 0, marginLeft: 8 }}>{pct}%</span>
+                                    <span style={{ fontWeight: 700, color: levelText(levelColor), flexShrink: 0, marginLeft: 8 }}>{pct}%</span>
                                   </div>
                                   <div style={{ height: 4, background: 'var(--color-border)', borderRadius: 2 }}>
                                     <div style={{ width: `${pct}%`, height: '100%', background: levelColor, borderRadius: 2 }} />
@@ -490,8 +490,8 @@ export default function ExamSelectOverlay({
                 )}
                 {passComments[exam] && (
                   <div style={{ marginTop: 12, padding: '10px 12px', background: tint(levelColor, 7), borderLeft: `3px solid ${levelColor}`, borderRadius: '0 6px 6px 0' }}>
-                    <div style={{ fontSize: 'var(--font-size-2xs)', color: levelColor, fontWeight: 700, marginBottom: 4 }}>{ja ? '運営者コメント' : 'From the team'}</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', lineHeight: 1.7 }}><MarkdownText text={passComments[exam]} color={levelColor} /></div>
+                    <div style={{ fontSize: 'var(--font-size-2xs)', color: levelText(levelColor), fontWeight: 700, marginBottom: 4 }}>{ja ? '運営者コメント' : 'From the team'}</div>
+                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', lineHeight: 1.7 }}><MarkdownText text={passComments[exam]} color={levelText(levelColor)} /></div>
                   </div>
                 )}
               </div>

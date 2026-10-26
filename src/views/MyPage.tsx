@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from '@/compat/react-router-dom';
-import { API_ENDPOINT, EXAM_DOMAINS, EXAM_DOMAIN_SERVICES, EXAM_TYPES, EXAM_CONFIGS, DOMAIN_RATE_WARNING, DOMAIN_RATE_CAUTION, PASS_SCORES, EXAM_LEVEL, EXAM_LEVEL_COLORS, tint, tagIdMatches, toDomainIndex, isNonAwsExam } from '../constants';
+import { API_ENDPOINT, EXAM_DOMAINS, EXAM_DOMAIN_SERVICES, EXAM_TYPES, EXAM_CONFIGS, DOMAIN_RATE_WARNING, DOMAIN_RATE_CAUTION, PASS_SCORES, EXAM_LEVEL, EXAM_LEVEL_COLORS, tint, levelText, levelOn, tagIdMatches, toDomainIndex, isNonAwsExam } from '../constants';
 import { syncPreferencesToServer, syncTargetExamToServer, collectExamDatesFromLocal } from '../utils/preferences';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { useAuth } from '../contexts/AuthContext';
@@ -261,8 +261,8 @@ export default function MyPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                     <HexBadge panelColor={panelColor} ExamIcon={ExamIcon} />
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 'var(--font-size-h3)', color: panelColor, lineHeight: 1.3 }}>{mainNode}</div>
-                      {level && <div style={{ fontWeight: 700, fontSize: 'var(--font-size-h3)', color: panelColor, lineHeight: 1.3 }}>{level}</div>}
+                      <div style={{ fontWeight: 700, fontSize: 'var(--font-size-h3)', color: levelText(panelColor), lineHeight: 1.3 }}>{mainNode}</div>
+                      {level && <div style={{ fontWeight: 700, fontSize: 'var(--font-size-h3)', color: levelText(panelColor), lineHeight: 1.3 }}>{level}</div>}
                     </div>
                   </div>
                 );
@@ -310,7 +310,7 @@ export default function MyPage() {
                                     ].map(({ label, value }) => (
                                       <div key={label}>
                                         <div style={{ fontSize: 'var(--font-size-3xs)', color: 'var(--color-text-light)', marginBottom: 1 }}>{label}</div>
-                                        <div style={{ fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: panelColor }}>{value}</div>
+                                        <div style={{ fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: levelText(panelColor) }}>{value}</div>
                                       </div>
                                     ))}
                                   </div>
@@ -408,7 +408,7 @@ export default function MyPage() {
                                       return (
                                         <div key={d} style={{ flex: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'flex-end' }}>
                                           <div style={{ width: '100%', maxWidth: 6, margin: '0 auto', height: barAnimated ? barH : 0, background: achieved ? examColor : tint(examColor, 33), borderRadius: '3px 3px 0 0', transition: count > 0 ? `height 0.45s cubic-bezier(0.4,0,0.2,1) ${staggerIdx * 0.07}s` : 'none' }} />
-                                          <span style={{ position: 'absolute', bottom: barH + 2, left: '50%', transform: 'translateX(-50%)', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: count > 0 ? (achieved ? examColor : 'var(--color-text-sub)') : 'var(--color-text-light)', opacity: barAnimated ? 1 : 0, transition: count > 0 ? `opacity 0.2s ease ${0.3 + staggerIdx * 0.07}s` : 'none' }}>{count}</span>
+                                          <span style={{ position: 'absolute', bottom: barH + 2, left: '50%', transform: 'translateX(-50%)', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: count > 0 ? (achieved ? levelText(examColor) : 'var(--color-text-sub)') : 'var(--color-text-light)', opacity: barAnimated ? 1 : 0, transition: count > 0 ? `opacity 0.2s ease ${0.3 + staggerIdx * 0.07}s` : 'none' }}>{count}</span>
                                         </div>
                                       );
                                     })}
@@ -418,7 +418,7 @@ export default function MyPage() {
                                   {weekDays.map((d) => {
                                     const isToday = d === jstToday();
                                     const dayLabel = new Date(d + 'T12:00:00').toLocaleDateString(ja ? 'ja-JP' : 'en-US', { weekday: 'short' });
-                                    return (<div key={d} style={{ flex: 1, textAlign: 'center', fontSize: 'var(--font-size-2xs)', color: isToday ? examColor : 'var(--color-text-light)', fontWeight: isToday ? 700 : 400 }}>{dayLabel}</div>);
+                                    return (<div key={d} style={{ flex: 1, textAlign: 'center', fontSize: 'var(--font-size-2xs)', color: isToday ? levelText(examColor) : 'var(--color-text-light)', fontWeight: isToday ? 700 : 400 }}>{dayLabel}</div>);
                                   })}
                                 </div>
                               </>
@@ -515,14 +515,14 @@ export default function MyPage() {
                               {achieved && (
                                 <div style={{
                                   position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontSize: 'var(--font-size-base)', fontWeight: 800, color: examColor,
+                                  fontSize: 'var(--font-size-base)', fontWeight: 800, color: levelText(examColor),
                                   opacity: circleAnimated ? 1 : 0,
                                   transform: circleAnimated ? 'scale(1)' : 'scale(0.4)',
                                   transition: `opacity 0.2s ease ${0.5 + i * 0.1}s, transform 0.25s ease ${0.5 + i * 0.1}s`,
                                 }}>✓</div>
                               )}
                             </div>
-                            <span style={{ fontSize: 'var(--font-size-3xs)', color: isToday ? examColor : 'var(--color-text-light)', fontWeight: isToday ? 700 : 400 }}>{dayLabel}</span>
+                            <span style={{ fontSize: 'var(--font-size-3xs)', color: isToday ? levelText(examColor) : 'var(--color-text-light)', fontWeight: isToday ? 700 : 400 }}>{dayLabel}</span>
                           </div>
                         );
                       })}
@@ -578,7 +578,7 @@ export default function MyPage() {
                           return (
                             <div key={d} style={{ flex: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'flex-end' }}>
                               <div style={{ width: '100%', maxWidth: 6, margin: '0 auto', height: popupBarAnimated ? barH : 0, background: achieved ? examColor : tint(examColor, 33), borderRadius: '3px 3px 0 0', transition: count > 0 ? `height 0.45s cubic-bezier(0.4,0,0.2,1) ${staggerIdx * 0.07}s` : 'none' }} />
-                              <span style={{ position: 'absolute', bottom: barH + 2, left: '50%', transform: 'translateX(-50%)', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: count > 0 ? (achieved ? examColor : 'var(--color-text-sub)') : 'var(--color-text-light)', opacity: popupBarAnimated ? 1 : 0, transition: count > 0 ? `opacity 0.2s ease ${0.3 + staggerIdx * 0.07}s` : 'none' }}>{count}</span>
+                              <span style={{ position: 'absolute', bottom: barH + 2, left: '50%', transform: 'translateX(-50%)', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: count > 0 ? (achieved ? levelText(examColor) : 'var(--color-text-sub)') : 'var(--color-text-light)', opacity: popupBarAnimated ? 1 : 0, transition: count > 0 ? `opacity 0.2s ease ${0.3 + staggerIdx * 0.07}s` : 'none' }}>{count}</span>
                             </div>
                           );
                         })}
@@ -590,7 +590,7 @@ export default function MyPage() {
                         const isToday = d === jstToday();
                         const dayLabel = new Date(d + 'T12:00:00').toLocaleDateString(ja ? 'ja-JP' : 'en-US', { weekday: 'short' });
                         return (
-                          <div key={d} style={{ flex: 1, textAlign: 'center', fontSize: 'var(--font-size-2xs)', color: isToday ? examColor : 'var(--color-text-light)', fontWeight: isToday ? 700 : 400 }}>{dayLabel}</div>
+                          <div key={d} style={{ flex: 1, textAlign: 'center', fontSize: 'var(--font-size-2xs)', color: isToday ? levelText(examColor) : 'var(--color-text-light)', fontWeight: isToday ? 700 : 400 }}>{dayLabel}</div>
                         );
                       })}
                     </div>
@@ -598,7 +598,7 @@ export default function MyPage() {
                     {/* サマリー */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', borderTop: '1px solid var(--color-border)', paddingTop: 12, marginTop: 18 }}>
                       <span>{ja ? '7日間合計' : '7-day total'}: <strong style={{ color: 'var(--color-text-main)' }}>{weekTotal}{ja ? '問' : ''}</strong></span>
-                      <span>{ja ? '達成日数' : 'Achieved'}: <strong style={{ color: examColor }}>{achievedDays}/7{ja ? '日' : ''}</strong></span>
+                      <span>{ja ? '達成日数' : 'Achieved'}: <strong style={{ color: levelText(examColor) }}>{achievedDays}/7{ja ? '日' : ''}</strong></span>
                     </div>
                   </div>
                 </div>
@@ -736,7 +736,7 @@ export default function MyPage() {
                             {ExamIcon && <ExamIcon size={Math.round(size * 0.42)} />}
                           </div>
                         </div>
-                        <div style={{ fontSize: 'var(--font-size-3xs)', fontWeight: 800, color: obtained ? color : 'var(--color-text-light)', lineHeight: 1 }}>{exam}</div>
+                        <div style={{ fontSize: 'var(--font-size-3xs)', fontWeight: 800, color: obtained ? levelText(color) : 'var(--color-text-light)', lineHeight: 1 }}>{exam}</div>
                       </div>
                     );
                   };
@@ -801,7 +801,7 @@ export default function MyPage() {
                         {/* レベルタブ */}
                         <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', flexShrink: 0 }}>
                           {CERT_LEVELS.map(lv => (
-                            <button key={lv.key} onClick={() => setCertOverlayLevel(lv.key)} style={{ flex: 1, padding: '10px 4px', border: 'none', borderBottom: `3px solid ${certOverlayLevel === lv.key ? lv.color : 'transparent'}`, background: 'transparent', cursor: 'pointer', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: certOverlayLevel === lv.key ? lv.color : 'var(--color-text-light)', transition: 'color 0.15s' }}>
+                            <button key={lv.key} onClick={() => setCertOverlayLevel(lv.key)} style={{ flex: 1, padding: '10px 4px', border: 'none', borderBottom: `3px solid ${certOverlayLevel === lv.key ? lv.color : 'transparent'}`, background: 'transparent', cursor: 'pointer', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: certOverlayLevel === lv.key ? levelText(lv.color) : 'var(--color-text-light)', transition: 'color 0.15s' }}>
                               {lv.label}
                             </button>
                           ))}
@@ -818,16 +818,16 @@ export default function MyPage() {
                                 onClick={e => toggleObtainedCert(exam, e.currentTarget)}
                                 style={{ flexShrink: 0, width: 80, padding: '10px 6px 8px', cursor: 'pointer', borderRadius: 10, textAlign: 'center', position: 'relative', border: `2px solid ${obtained ? c : 'var(--color-border)'}`, background: obtained ? c : 'var(--color-bg-card)', animation: justObtained === exam ? 'certObtainPop 0.38s cubic-bezier(.36,.07,.19,.97)' : undefined, transition: 'border-color 0.15s, background 0.15s' }}
                               >
-                                {obtained && <div style={{ position: 'absolute', top: 4, right: 4, color: 'var(--color-on-level)', lineHeight: 0 }}><IconCheck size={14} /></div>}
+                                {obtained && <div style={{ position: 'absolute', top: 4, right: 4, color: levelOn(c), lineHeight: 0 }}><IconCheck size={14} /></div>}
                                 {/* 六角形バッジ */}
                                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, perspective: 200 }}>
-                                  <div style={{ width: 40, height: 46, background: obtained ? 'rgba(255,255,255,0.25)' : c + '33', clipPath: HEX, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: justObtained === exam ? 'certHexSpin 0.52s ease' : undefined }}>
+                                  <div style={{ width: 40, height: 46, background: obtained ? 'rgba(255,255,255,0.25)' : tint(c, 20), clipPath: HEX, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: justObtained === exam ? 'certHexSpin 0.52s ease' : undefined }}>
                                     <div style={{ width: 34, height: 39, background: obtained ? 'rgba(255,255,255,0.85)' : 'var(--color-bg-card)', clipPath: HEX, display: 'flex', alignItems: 'center', justifyContent: 'center', color: obtained ? c : 'var(--color-text-light)' }}>
                                       {ExamIcon && <ExamIcon size={17} />}
                                     </div>
                                   </div>
                                 </div>
-                                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: obtained ? 'var(--color-on-level)' : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
+                                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: obtained ? levelOn(c) : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
                               </button>
                             );
                           })}

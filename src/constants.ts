@@ -165,6 +165,7 @@ export const EXAM_LEVEL: Record<string, string> = {
 };
 
 // 資格レベル色の唯一の定義。実体は src/index.css の --level-*（ライト/ダークで値が変わる）。
+// これは塗り・線用の明るい色。文字に使うときは levelText()、塗りに文字を載せるときは levelOn() を通す。
 // CSS 変数なので hex にアルファを足す書き方（`${c}33`）はできない。半透明は tint() を使う。
 export const EXAM_LEVEL_COLORS: Record<string, string> = {
   Foundational: 'var(--level-foundational)',
@@ -174,6 +175,14 @@ export const EXAM_LEVEL_COLORS: Record<string, string> = {
   Specialty:    'var(--level-specialty)',
   Additional:   'var(--level-additional)',
 };
+
+// レベル色を文字に使うときの濃い色（白地で 4.5:1 以上）。レベル色以外（--color-primary 等）はそのまま返す
+export const levelText = (color: string): string =>
+  color.startsWith('var(--level-') ? color.replace(/\)$/, '-text)') : color;
+
+// レベル色の塗りの上に載せる文字色。レベル色以外の塗りには白を返す
+export const levelOn = (color: string): string =>
+  color.startsWith('var(--level-') ? color.replace(/\)$/, '-on)') : '#ffffff';
 
 // 色を pct% の不透明度にする。CSS 変数・hex のどちらでも使える。
 export const tint = (color: string, pct: number): string =>
