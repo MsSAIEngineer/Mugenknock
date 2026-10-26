@@ -53,15 +53,21 @@ test('認証ホーム /aws/ が表示される', async ({ page }) => {
   assertNoRealErrors(monitor, '認証ホーム');
 });
 
-// ② マイページが表示され、タブが揃う（認証ユーザー向けUI）
-test('マイページ /aws/mypage が表示されタブが揃う', async ({ page }) => {
+// ② マイページと記録が表示される（認証ユーザー向けUI）
+//   苦手分析・解答履歴はマイページから記録画面（/aws/stats）へ移した（specs/007）
+test('マイページ /aws/mypage と記録 /aws/stats が表示される', async ({ page }) => {
   const monitor = new PageMonitor(page);
   await page.goto('/aws/mypage', { waitUntil: 'networkidle' });
-  await expect(page.getByRole('button', { name: /目標/ })).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByRole('button', { name: /苦手分析|Analysis/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /履歴|History/ })).toBeVisible();
-  monitor.printReport('マイページ');
-  assertNoRealErrors(monitor, 'マイページ');
+  await expect(page.getByText(/目標資格/).first()).toBeVisible({ timeout: 10_000 });
+  // 記録画面は目標資格を localStorage から読むので、先にホームでサーバ保存分をロードさせる（演習テストと同じ）
+  await page.goto('/aws/', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1500);
+  await page.goto('/aws/stats', { waitUntil: 'networkidle' });
+  for (const name of [/苦手分析/, /解答履歴/, /正答率の推移/, /演習量/]) {
+    await expect(page.getByRole('tab', { name })).toBeVisible({ timeout: 10_000 });
+  }
+  monitor.printReport('マイページ・記録');
+  assertNoRealErrors(monitor, 'マイページ・記録');
 });
 
 // ③ 演習を開始して問題・選択肢が表示される（最重要の認証導線）

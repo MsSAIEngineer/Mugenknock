@@ -14,8 +14,8 @@
 | `/aws/exam/setup` | `ExamSetup.tsx` | ❌ | 不要 | 模試の設定 |
 | `/aws/exam/session` | `ExamSession.tsx` | ❌ | 不要 | 模試の解答画面（時間制限） |
 | `/aws/result` | `Result.tsx` | ❌ | 不要 | 採点結果 |
-| `/aws/mypage` | `MyPage.tsx` | ❌ | **要** | 学習状況・苦手分析・ブックマーク |
-| `/aws/stats` | `Stats.tsx` | ❌ | **要** | 成績・履歴 |
+| `/aws/mypage` | `MyPage.tsx` | ❌ | **要** | 自分の設定（目標資格・学習目標・週間達成・取得済資格） |
+| `/aws/stats` | `Stats.tsx` | ❌ | **要** | **記録**（苦手分析・解答履歴・正答率の推移・演習量）。specs/007 |
 | `/aws/encyclopedia` | `ServiceEncyclopedia.tsx` | ❌ | 不要 | AWSサービス図鑑（解放制） |
 | `/aws/cheatsheet` | `CheatSheet.tsx` | ❌ | 不要 | 資格別チートシート（静的データ） |
 | `/aws/exam-dashboard` | `ExamDashboard.tsx` | ❌ | 不要 | 全資格の進捗ダッシュボード |
@@ -41,8 +41,8 @@
 `/login`・`/account`・`/about`・`/architecture` も同様に `layout.tsx` で付ける。新しいルートを足すときは `layout.tsx` も足す。
 
 `Layout.tsx`（1,288行）の責務:
-- デスクトップ: 左サイドナビ（ホーム / トレーニング / マイページ + 図鑑・チートシート・お知らせ・リリースノート）
-- モバイル: 下部タブバー（ホーム / トレーニング / マイページ）
+- デスクトップ: 左サイドナビ（ホーム / トレーニング / 記録 / マイページ + 図鑑・チートシート・お知らせ・リリースノート）
+- モバイル: 下部タブバー（ホーム / トレーニング / 記録 / マイページ + その他）
 - ヘッダー（ロゴ・お知らせベル・アカウント）、パンくず、フッター
 - キーボードナビゲーション、問い合わせモーダル、AI（ChatGPT/Gemini/Claude）へのリンク
 - 画面の見出し（h1）: スマホはヘッダー左に画面名を表示、PC はパンくずに出るので読み上げ用に視覚的に隠す（資格ダッシュボードは自前の h1）
@@ -75,7 +75,8 @@
    実力の現在地   … CombinedDetailModal `inline="score"`
      予想スコアとドメイン別内訳は同じデータの粒度違いなので、サマリー(バー)と
      内訳(ノード)を二重に出さずこの1パネルに統合している
-   推移と記録     … CombinedDetailModal `inline="trend"`
+   予想スコアの推移 … CombinedDetailModal `inline="trend"`（旧「推移と記録」。記録画面の「正答率の推移」と
+                      指標が違うことが分かるよう、指標名を入れた: specs/007）
      セッション別推移・日次最高点・ハイスコア記録を縦に並べる
      日次最高点は「その日の最高値」なので、ホームの現在値より高いのは仕様
 
@@ -94,8 +95,8 @@
    目標演習量
    今日のサービス（日めくり）
    苦手分析（ログイン専用。ゲストは非表示）
-     マイページ苦手分析タブの要約（苦手ドメイン上位2件・頻出ミス問題2件）。
-     20問未満は「あとX問でアンロック」。クリックで /aws/mypage（苦手分析タブ）へ
+     記録画面の苦手分析タブの要約（苦手ドメイン上位2件・頻出ミス問題2件）。
+     20問未満は「あとX問でアンロック」。クリックで /aws/stats（苦手分析タブ）へ
      右カラムを flexDirection:'column' にし、苦手分析カードに flex:1 を付けて
      左カラムの下端（ページ最下部）までパネルの底を揃える（未解放のときは中身が1行なので伸ばさない）
 
@@ -310,33 +311,41 @@ navigate('/aws/result', { state: { results, questions, score, ... } })
 
 ---
 
-## 5.7 MyPage（`/aws/mypage`）— 1,544行・**ログイン必須**
+## 5.7 MyPage（`/aws/mypage`）— **ログイン必須**
+
+**自分の設定を置く画面。** 2026-10-26 にタブ（目標／苦手分析／履歴）をやめて1ページにした（specs/007）。
+苦手分析と解答履歴は記録画面（§5.8）へ移した。
 
 | セクション | データ源 |
 |---|---|
 | 目標資格・受験日・カウントダウン | `GET /users/me/preferences` |
-| 日次目標の達成率 | `GET /users/me/daily-progress` |
-| 演習量・解放状況 | `GET /users/me/question-stats` |
-| **苦手分析**（ドメイン別・直近10/20/30問） | `GET /users/me/stats` の `recentResults` |
-| 頻出ミス問題 | `GET /users/me/weak-questions?minIncorrect=2` |
-| ブックマーク一覧 | `GET /users/me/bookmarks` → 個別 `GET /questions/:id` |
-| 直近セッション | `GET /users/me/sessions?limit=200` |
+| 学習目標（1日の問題数） | `localStorage.dailyGoal_<uid>` ＋ preferences |
+| 週間達成状況（直近7日） | `GET /users/me/sessions?limit=200` を日別集計（取得失敗時は `dailyQCount_*`） |
+| 取得済資格 | preferences の `obtainedCerts` ＋ localStorage（和集合） |
 
-「しっかり対策を開始する」ボタンは `/aws/` へ `{ startFocused: true }` を渡して遷移し、Home 側で自動起動する。
-
-`tab` の初期値は `location.state?.tab`（`'analysis' | 'history'`）で外部から指定できる。
-Home の「苦手分析」カード（デスクトップ）は `navigate('/aws/mypage', { state: { tab: 'analysis' } })` で
-このタブへ直接遷移する。
+**古いリンクの転送**: `location.state.tab` が `'analysis' | 'history'` で来たら（古い JS・古いリンク）、
+`/aws/stats` の同じタブへ `replace` で転送する。
 
 ---
 
-## 5.8 Stats（`/aws/stats`）— **ログイン必須**
+## 5.8 記録（`/aws/stats`）— **ログイン必須**
 
-- スコア推移チャート（`ScoreLineChart`）
-- 活動量チャート（`ActivityChart`）
-- ドメイン別正答率（`STATS_GOOD_RATE=70` / `STATS_FAIR_RATE=50` で色分け）
-- セッション履歴 → 展開して `GET /sessions/:id/answers` で問題別の正誤を表示
-- 履歴からその場でブックマーク操作ができる
+**過去の記録をすべて置く画面。** 旧「統計・分析」。2026-10-26 にナビ（サイドバー・下部タブ）へ出した
+（それまでは模試設定のリンク1か所からしか行けなかった）。タブは4つ。初期タブは `location.state.tab` で指定できる
+（`'analysis' | 'history' | 'trend' | 'volume'`。旧 `'performance'` は `'trend'` とみなす）。既定は苦手分析。
+
+| タブ | 中身 | データ源 |
+|---|---|---|
+| 苦手分析 | 苦手ドメイン（集計の窓: 直近10 / 20 / 30問 / 累計）・間違えやすい問題（2回以上）・問題詳細モーダル。Ctrl/Cmd+Enter でしっかり対策を開始 | `GET /users/me/stats`（`recentResults`・累計）・`/users/me/question-stats`・`/users/me/weak-questions?minIncorrect=2` |
+| 解答履歴 | セッション一覧 → 展開して `GET /sessions/:id/answers` の問題別正誤。その場でブックマーク操作 | `GET /users/me/sessions?limit=200` |
+| 正答率の推移 | セッションごとの正答率チャート（`ScoreLineChart`・70%で色分け）・模試の合否 | 同上 |
+| 演習量 | 1回以上解いた問題数／総数・日ごとの演習量（7/14/30日/全期間、`ActivityChart`） | `/users/me/question-stats`・sessions |
+
+- 苦手分析の本体は `src/components/records/WeakAnalysis.tsx`。ホームの苦手分析カードはその要約。
+- ドメイン別の正答率はこの苦手分析タブだけに置く。以前は「ノック成績」タブに累計の正答率が別にあり、
+  マイページ（直近N問）と数字が食い違っていたため、窓の「累計」に統合した。
+- 目標資格は `localStorage.targetExam_<uid>` から読み、`targetExamChanged` イベントで更新する
+  （直接 URL で開いたとき、Layout がサーバから読み込んでイベントを出す）。
 
 ---
 

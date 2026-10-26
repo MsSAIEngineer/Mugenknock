@@ -27,7 +27,7 @@
   "src/components/ExamSelectOverlay.tsx": {
     "hexColor": 2,
     "spacing": 19,
-    "borderRadius": 5,
+    "borderRadius": 4,
     "fontSize": 1
   },
   "src/components/FeatureUnlockModal.tsx": {
@@ -96,7 +96,7 @@
   },
   "src/views/ExamDashboard.tsx": {
     "hexColor": 15,
-    "borderRadius": 5,
+    "borderRadius": 4,
     "spacing": 27
   },
   "src/views/ExamSession.tsx": {
@@ -125,10 +125,10 @@
     "spacing": 2
   },
   "src/views/MyPage.tsx": {
-    "hexColor": 4,
-    "spacing": 84,
-    "borderRadius": 23,
-    "fontSize": 2
+    "hexColor": 1,
+    "spacing": 50,
+    "borderRadius": 5,
+    "fontSize": 1
   },
   "src/views/Others.tsx": {
     "spacing": 8
@@ -156,8 +156,8 @@
     "hexColor": 2
   },
   "src/views/Stats.tsx": {
-    "spacing": 21,
-    "borderRadius": 9,
+    "spacing": 20,
+    "borderRadius": 7,
     "hexColor": 2
   }
 }

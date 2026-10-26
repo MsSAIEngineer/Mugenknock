@@ -26,6 +26,8 @@ type BreadcrumbItem = { label: string; path?: string };
 const NAV_KEYS = [
   { path: '/aws/',             labelKey: 'nav.home',         Icon: IconHome      },
   { path: '/aws/practice',     labelKey: 'nav.practice',     Icon: IconDumbbell  },
+  // 苦手分析・解答履歴・推移・演習量の置き場所（specs/007）。以前はナビから辿れなかった
+  { path: '/aws/stats',        labelKey: 'stats.title',      Icon: IconChart     },
   { path: '/aws/mypage',       labelKey: 'nav.mypage',       Icon: IconUserCircle },
   { path: '/aws/encyclopedia', labelKey: 'nav.encyclopedia', Icon: IconLayoutGrid, bottom: true },
   { path: '/aws/cheatsheet',    labelKey: 'nav.cheatsheet',   Icon: IconSwatchBook, bottom: true },
@@ -36,6 +38,7 @@ const NAV_KEYS = [
 const BOTTOM_TABS = [
   { path: '/aws/',         Icon: IconHome,        ja: 'ホーム',       en: 'Home'     },
   { path: '/aws/practice', Icon: IconDumbbell,    ja: 'トレーニング', en: 'Training' },
+  { path: '/aws/stats',    Icon: IconChart,       ja: '記録',         en: 'Records'  },
   { path: '/aws/mypage',   Icon: IconUserCircle,  ja: 'マイページ',   en: 'My Page'  },
 ];
 

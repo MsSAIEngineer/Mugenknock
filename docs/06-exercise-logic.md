@@ -184,7 +184,7 @@ localStorage.domain_history_<et>_<uid>          … フォールバック
 
 ```
 ドメインの直近正答率 acc を次の優先順で決める:
-  1. recentResults の直近10件（マイページ苦手分析と同じ窓）
+  1. recentResults の直近10件（記録画面の苦手分析の既定の窓と同じ）
   2. 累計 correctCount / (correct + incorrect)
   3. localStorage の domain_history（直近10セッション）
   4. どれも無ければ null

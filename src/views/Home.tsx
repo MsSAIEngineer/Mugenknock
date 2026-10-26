@@ -1613,7 +1613,7 @@ export default function Home() {
   }, [answeredCountReady, focusedUnlocked, uid]);
 
   // ── ホーム「苦手分析」カード（デスクトップ限定・ログイン専用）用 ──
-  // マイページ苦手分析タブと同じデータ源。頻出ミス問題は解放(FOCUSED_UNLOCK_THRESHOLD)まで取得しない。
+  // 記録画面の苦手分析タブ（WeakAnalysis）と同じデータ源。頻出ミス問題は解放(FOCUSED_UNLOCK_THRESHOLD)まで取得しない。
   const [weakQuestions, setWeakQuestions] = useState<WeakQuestion[]>([]);
   const [weakLoaded, setWeakLoaded] = useState(false);
   useEffect(() => {
@@ -1982,7 +1982,7 @@ export default function Home() {
       const domainAcc = new Map<string, number | null>(); // ドメイン名 → 直近正答率（null=データ無し）
       examDomains.forEach((domain, idx) => {
         const stat = domainStats.find(s => tagIdMatches(s.tagId, targetExam, idx));
-        // マイページ苦手分析と同じ「直近10回」にスライス
+        // 記録画面の苦手分析と同じ「直近10回」にスライス
         const recent = (stat?.recentResults ?? []).slice(-10);
         let acc: number | null = null;
         if (recent.length > 0) {
@@ -2257,7 +2257,8 @@ export default function Home() {
           時系列で見るもの(セッション別推移・日次最高点・ハイスコア)をまとめる。 */}
       {!isMobile && targetExam && (
         <Card padding="var(--spacing-md)" style={{ marginBottom: 'var(--spacing-md)' }}>
-          {panelHeading(<IconTrendingUp size={13} />, ja ? '推移と記録' : 'Trend & Records')}
+          {/* 記録画面の「正答率の推移」と区別するため、指標名（予想スコア）を名前に入れる（specs/007） */}
+          {panelHeading(<IconTrendingUp size={13} />, ja ? '予想スコアの推移' : 'Estimated Score Trend')}
           <CombinedDetailModal targetExam={targetExam} {...perfProps} inline="trend" />
         </Card>
       )}
@@ -2442,7 +2443,7 @@ export default function Home() {
       />
 
       {/* ── 苦手分析（デスクトップ・ログイン専用。ゲストは非表示） ──
-          マイページ苦手分析タブの要約。詳細はクリックでマイページへ遷移して見る。
+          記録画面の苦手分析タブの要約。詳細はクリックで記録画面へ遷移して見る。
           flex:1 + 中央寄せで、右カラム最後のパネルとして左カラムの下端まで
           自然に伸ばし、ページ最下部でパネルの底を左カラムに揃える。 */}
       {!isMobile && user && targetExam && (
@@ -2450,7 +2451,7 @@ export default function Home() {
           padding="var(--spacing-md)"
           // 未解放のときは中身が1行だけなので伸ばさない（空の大きな枠が壊れて見えた）
           style={{ marginTop: 'var(--spacing-md)', cursor: 'pointer', flex: effectiveFocusedUnlocked ? 1 : undefined, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-          onClick={() => navigate('/aws/mypage', { state: { tab: 'analysis' } })}
+          onClick={() => navigate('/aws/stats', { state: { tab: 'analysis' } })}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
             <span style={{ color: 'var(--color-text-sub)', display: 'flex', alignItems: 'center' }}>
@@ -3365,7 +3366,7 @@ export default function Home() {
                   </div>
                   <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', lineHeight: 1.5, marginBottom: 8 }}>
                     {ja
-                      ? '各ドメインの直近10回の正答率で苦手を判定（マイページ苦手分析と同じ。未演習は常に対象）'
+                      ? '各ドメインの直近10回の正答率で苦手を判定（記録の苦手分析と同じ。未演習は常に対象）'
                       : "Weakness judged by each domain's last-10 accuracy (same as My Page analysis; unattempted always included)"}
                   </div>
                   {([

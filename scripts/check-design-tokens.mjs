@@ -28,7 +28,7 @@ const RULES = {
     },
   },
   fontSize: { re: /\bfontSize\s*:\s*(\d+)/g, bad: m => Number(m[1]) <= 22 }, // 装飾用の特大サイズは対象外
-  borderRadius: { re: /\bborderRadius\s*:\s*('?\d+(px)?'?)(?=[,\s}])/g, bad: () => true },
+  borderRadius: { re: /\bborderRadius\s*:\s*('?(\d+)(px)?'?)(?=[,\s}])/g, bad: m => m[2] !== '0' },
   hexColor: { re: /'#[0-9a-fA-F]{3,8}'/g, bad: () => true },
 };
 
