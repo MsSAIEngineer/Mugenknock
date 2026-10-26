@@ -12,7 +12,7 @@
         ↓                                   │
  ┌──────────────────────────┐        ┌──────────────┐
  │ API Gateway a0q3656qw4   │        │   GitHub     │
- │  ステージ /dev  /prod     │        │  Ares2023/   │
+ │  ステージ /dev  /prod     │        │ MsSAIEngineer│
  │  変数 lambdaFn で分岐     │        │  Mugenknock  │
  └──────────┬───────────────┘        └──────────────┘
             ↓

@@ -14,7 +14,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import {
   API_ENDPOINT, EXAM_TYPES, EXAM_CONFIGS, EXAM_DOMAINS,
   DOMAIN_WEIGHTS, PASS_SCORES, qDomainName, DOMAIN_RATE_WARNING,
-  EXAM_LEVEL, EXAM_LEVEL_COLORS,
+  EXAM_LEVEL, EXAM_LEVEL_COLORS, tint,
   tagIdMatches, domainsToIndices, storedDomainsToNames, isNonAwsExam, COMPANION_EXAM, companionLabel, officialExamsForCompanion,
 } from '../constants';
 import { readDomainResults, readDomainHistory } from '../utils/domainStats';
@@ -374,7 +374,7 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
                     const active = nodeWindow === w;
                     return (
                       <button key={w} onClick={() => onNodeWindowChange(w)}
-                        style={{ border: 'none', borderLeft: w === 5 ? 'none' : '1px solid var(--color-border)', background: active ? 'var(--color-primary)' : 'transparent', color: active ? 'var(--color-btn-primary-text, #fff)' : 'var(--color-text-sub)', fontSize: 'var(--font-size-xs)', fontWeight: 700, padding: '3px 10px', cursor: 'pointer', transition: 'background 0.15s' }}>
+                        style={{ border: 'none', borderLeft: w === 5 ? 'none' : '1px solid var(--color-border)', background: active ? 'var(--color-primary)' : 'transparent', color: active ? 'var(--color-on-primary)' : 'var(--color-text-sub)', fontSize: 'var(--font-size-xs)', fontWeight: 700, padding: '3px 10px', cursor: 'pointer', transition: 'background 0.15s' }}>
                         {ja ? `直近${w}回` : `Last ${w}`}
                       </button>
                     );
@@ -594,9 +594,7 @@ const OB_LEVEL: Record<string, string> = {
   ANS: 'Specialty', SCS: 'Specialty',
   ML: 'Additional', DB: 'Additional', NW: 'Additional', SEC: 'Additional',
 };
-const OB_LEVEL_COLOR: Record<string, string> = {
-  Foundational: '#6b9e3a', Business: '#db2777', Associate: '#006CE0', Professional: '#8b5cf6', Specialty: '#e67e22', Additional: '#14b8a6',
-};
+const OB_LEVEL_COLOR = EXAM_LEVEL_COLORS;
 const OB_SHORT: Record<string, string> = {
   CLF: 'Cloud Practitioner', AIF: 'AI Practitioner',
   AIB: 'AI Business Strategist',
@@ -669,7 +667,7 @@ function OnboardingModal({ lang, uid, onComplete }: {
                     <button
                       key={exam}
                       onClick={() => handleSelect(exam)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, cursor: 'pointer', textAlign: 'left', background: nonAws ? `${OB_LEVEL_COLOR.Additional}0f` : 'var(--color-bg-card)', border: `2px ${nonAws ? 'dashed' : 'solid'} ${nonAws ? OB_LEVEL_COLOR.Additional : 'var(--color-border)'}`, transition: 'border-color .15s, background .15s' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, cursor: 'pointer', textAlign: 'left', background: nonAws ? tint(OB_LEVEL_COLOR.Additional, 6) : 'var(--color-bg-card)', border: `2px ${nonAws ? 'dashed' : 'solid'} ${nonAws ? OB_LEVEL_COLOR.Additional : 'var(--color-border)'}`, transition: 'border-color .15s, background .15s' }}
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1037,7 +1035,7 @@ function TodayServiceSection({ lang, userId, authReady, onNavigateEncyclopedia, 
                 width: 35, height: 35, borderRadius: '50%',
                 border: '1px solid var(--color-border)',
                 background: 'transparent',
-                color: rerolling ? 'var(--color-text-light)' : '#009E9E',
+                color: rerolling ? 'var(--color-text-light)' : 'var(--color-points)',
                 cursor: rerolling ? 'default' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 opacity: rerolling ? 0.5 : 1, flexShrink: 0,
@@ -2125,10 +2123,10 @@ export default function Home() {
   const resumePrimary = primaryMode === 'focused' ? resumeFocusedExercise : resumeQuickExercise;
   const primaryLoading = primaryMode === 'focused' ? focusedLoading : quickLoading;
   const primaryLoadPct = primaryMode === 'focused' ? focusedLoadPct : quickLoadPct;
-  const primaryBg = primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)';
-  const primaryColor = primaryMode === 'focused' ? '#fff' : 'var(--color-btn-primary-text)';
+  const primaryBg = primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)';
+  const primaryColor = primaryMode === 'focused' ? 'var(--color-on-level)' : 'var(--color-btn-primary-text)';
   const primarySpinnerBorder = primaryMode === 'focused' ? '2px solid rgba(255,255,255,0.3)' : '2px solid rgba(0,0,0,0.2)';
-  const primarySpinnerTop = primaryMode === 'focused' ? '#fff' : '#16191f';
+  const primarySpinnerTop = primaryMode === 'focused' ? 'var(--color-on-level)' : 'var(--color-btn-primary-text)';
   const discardPrimaryDraft = primaryMode === 'focused' ? discardFocusedDraft : discardQuickDraft;
   const startPrimary = primaryMode === 'focused' ? startFocusedExercise : startQuickExercise;
 
@@ -2193,7 +2191,7 @@ export default function Home() {
           <span style={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)' }}>
             {ja ? '目標演習量' : 'Daily Goal'}
           </span>
-          {ja && <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-sub)' }}>※達成で<span style={{ color: '#009E9E', fontWeight: 700 }}>+10p</span>！</span>}
+          {ja && <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-sub)' }}>※達成で<span style={{ color: 'var(--color-points)', fontWeight: 700 }}>+10p</span>！</span>}
           <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: dailyCount >= dailyGoal ? 'var(--color-success)' : 'var(--color-text-sub)' }}>
             {dailyCount >= dailyGoal && <IconCircleCheck size={14} />}
             {dailyCount} / {dailyGoal}{ja ? '問' : 'Q'}
@@ -2202,8 +2200,8 @@ export default function Home() {
         <div style={{ height: 6, borderRadius: 3, background: 'var(--color-border)', overflow: 'hidden' }}>
           {(() => {
             const barColor = dailyCount >= dailyGoal
-              ? 'linear-gradient(90deg, #009E9E, #4dd9d9)'
-              : 'linear-gradient(90deg, #009E9E, #00cccc)';
+              ? 'linear-gradient(90deg, var(--color-points), #4dd9d9)'
+              : 'linear-gradient(90deg, var(--color-points), #00cccc)';
             return (
               <div style={{ height: '100%', width: `${Math.min(100, (dailyCount / dailyGoal) * 100)}%`, borderRadius: 3, background: barColor, transformOrigin: 'left center', animation: 'growWidth 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both' }} />
             );
@@ -2548,7 +2546,7 @@ export default function Home() {
                       <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)', textAlign: 'center', marginBottom: 8 }}>
                         {ja ? 'セッションを上書きして新しく開始します' : 'This will overwrite the current session'}
                       </div>
-                      <Button variant="outline" size="sm" fullWidth style={{ height: 36, borderColor: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)', color: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)' }} onClick={() => { setShowWebQuickMenu(false); discardPrimaryDraft(); startPrimary(); }}>
+                      <Button variant="outline" size="sm" fullWidth style={{ height: 36, borderColor: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)' }} onClick={() => { setShowWebQuickMenu(false); discardPrimaryDraft(); startPrimary(); }}>
                         {ja ? `新規に開始（${primaryMode === 'focused' ? 'しっかり対策' : 'サクッと演習'}）` : `Start New (${primaryMode === 'focused' ? 'Focused' : 'Quick'})`}
                       </Button>
                       <div style={{ marginTop: 6 }}>
@@ -2558,7 +2556,7 @@ export default function Home() {
                             <button
                               disabled={!targetExam || !user || !effectiveFocusedUnlocked}
                               onClick={() => { setShowWebQuickMenu(false); switchMode('focused'); }}
-                              style={{ width: '100%', height: 36, padding: '0 12px', border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : '#009E9E'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : '#009E9E', fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                              style={{ width: '100%', height: 36, padding: '0 12px', border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : 'var(--color-points)'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : 'var(--color-points)', fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                             >
                               {!effectiveFocusedUnlocked && <IconLock size={13} />}
                               {ja ? 'しっかり対策モード' : 'Switch to Focused'}
@@ -2623,7 +2621,7 @@ export default function Home() {
                           <button
                             disabled={!targetExam || !user || !effectiveFocusedUnlocked}
                             onClick={() => { setShowFocusedMenu(false); switchMode('focused'); }}
-                            style={{ width: '100%', height: 36, padding: '0 12px', border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : '#009E9E'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : '#009E9E', fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                            style={{ width: '100%', height: 36, padding: '0 12px', border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : 'var(--color-points)'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : 'var(--color-points)', fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                           >
                             {!effectiveFocusedUnlocked && <IconLock size={13} />}
                             {ja ? 'しっかり対策モード' : 'Switch to Focused'}
@@ -2669,7 +2667,7 @@ export default function Home() {
                     <button
                       disabled={!targetExam || focusedLoading}
                       onClick={() => { if (targetExam && !focusedLoading) startFocusedExercise(); }}
-                      style={{ flex: 1, height: 44, border: 'none', background: '#009E9E', color: '#fff', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: (!targetExam || focusedLoading) ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
+                      style={{ flex: 1, height: 44, border: 'none', background: 'var(--color-points)', color: 'var(--color-on-level)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: (!targetExam || focusedLoading) ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
                     >
                       {focusedLoading ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -2686,7 +2684,7 @@ export default function Home() {
                   )}
                   <button
                     onClick={() => setShowFocusedMenu(v => !v)}
-                    style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-on-level)' : 'var(--color-btn-primary-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     aria-label={primaryMode === 'quick' ? (ja ? 'しっかり対策' : 'Focused practice') : (ja ? 'サクッと演習' : 'Quick practice')}
                   >
                     <IconChevronUp size={16} />
@@ -2699,7 +2697,7 @@ export default function Home() {
                 if (primaryMode === 'focused') { const fp = loadFocusedPrefs(uid); savedFocusedPrefsRef.current = fp; setDraftFocusedPrefs({ ...fp }); setShowFocusedModal(true); }
                 else { const p = loadQuickPrefs(uid); const d = { ...p, domains: storedDomainsToNames(targetExam ?? 'SAA', p.domains) }; savedQuickPrefsRef.current = d; setDraftPrefs(d); setShowQuickModal(true); }
               }}
-              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, width: 132, border: `1.5px solid ${primaryMode === 'focused' ? '#009E9E' : 'var(--color-primary)'}`, borderRadius: 'var(--border-radius-full)', background: 'var(--color-bg-white)', cursor: 'pointer', color: primaryMode === 'focused' ? '#009E9E' : 'var(--color-primary)', fontWeight: 600, fontSize: 'var(--font-size-base)' }}
+              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, width: 132, border: `1.5px solid ${primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)'}`, borderRadius: 'var(--border-radius-full)', background: 'var(--color-bg-white)', cursor: 'pointer', color: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)', fontWeight: 600, fontSize: 'var(--font-size-base)' }}
             >
               {ja ? '設定' : 'Settings'}
             </button>
@@ -2718,7 +2716,7 @@ export default function Home() {
                 <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', textAlign: 'center', marginBottom: 10 }}>
                   {ja ? 'セッションを上書きして開始します' : 'This will overwrite the current session'}
                 </div>
-                <Button variant="outline" fullWidth style={{ height: 44, borderColor: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)', color: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)' }} onClick={() => { setShowNewPanel(false); discardPrimaryDraft(); startPrimary(); }}>
+                <Button variant="outline" fullWidth style={{ height: 44, borderColor: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)' }} onClick={() => { setShowNewPanel(false); discardPrimaryDraft(); startPrimary(); }}>
                   {ja ? `新規に開始（${primaryMode === 'focused' ? 'しっかり対策' : 'サクッと演習'}）` : `Start New (${primaryMode === 'focused' ? 'Focused' : 'Quick'})`}
                 </Button>
                 <div style={{ marginTop: 8 }}>
@@ -2728,7 +2726,7 @@ export default function Home() {
                       <button
                         disabled={!targetExam || !user || !effectiveFocusedUnlocked}
                         onClick={() => { setShowNewPanel(false); switchMode('focused'); }}
-                        style={{ width: '100%', height: 44, border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : '#009E9E'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : '#009E9E', fontWeight: 600, fontSize: 'var(--font-size-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                        style={{ width: '100%', height: 44, border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : 'var(--color-points)'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : 'var(--color-points)', fontWeight: 600, fontSize: 'var(--font-size-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                       >
                         {!effectiveFocusedUnlocked && <IconLock size={15} />}
                         {ja ? 'しっかり対策モード' : 'Switch to Focused'}
@@ -2762,7 +2760,7 @@ export default function Home() {
                     <button
                       disabled={!targetExam || !user || !effectiveFocusedUnlocked}
                       onClick={() => { setShowFocusedMenu(false); switchMode('focused'); }}
-                      style={{ width: '100%', height: 44, border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : '#009E9E'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : '#009E9E', fontWeight: 600, fontSize: 'var(--font-size-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                      style={{ width: '100%', height: 44, border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : 'var(--color-points)'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : 'var(--color-points)', fontWeight: 600, fontSize: 'var(--font-size-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                     >
                       {!effectiveFocusedUnlocked && <IconLock size={15} />}
                       {ja ? 'しっかり対策モード' : 'Switch to Focused'}
@@ -2834,7 +2832,7 @@ export default function Home() {
                   <button
                     disabled={!targetExam || focusedLoading}
                     onClick={() => { if (targetExam && !focusedLoading) startFocusedExercise(); }}
-                    style={{ flex: 1, height: 44, border: 'none', background: '#009E9E', color: '#fff', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !targetExam || focusedLoading ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
+                    style={{ flex: 1, height: 44, border: 'none', background: 'var(--color-points)', color: 'var(--color-on-level)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !targetExam || focusedLoading ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
                   >
                     {focusedLoading ? (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -2846,7 +2844,7 @@ export default function Home() {
                 )}
                 <button
                   onClick={() => setShowFocusedMenu(v => !v)}
-                  style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-on-level)' : 'var(--color-btn-primary-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                   aria-label={primaryMode === 'quick' ? (ja ? 'しっかり対策' : 'Focused practice') : (ja ? 'サクッと演習' : 'Quick practice')}
                 >
                   <IconChevronUp size={16} />
@@ -2859,7 +2857,7 @@ export default function Home() {
                 if (primaryMode === 'focused') { const fp = loadFocusedPrefs(uid); savedFocusedPrefsRef.current = fp; setDraftFocusedPrefs({ ...fp }); setShowFocusedModal(true); }
                 else { const p = loadQuickPrefs(uid); const d = { ...p, domains: storedDomainsToNames(targetExam ?? 'SAA', p.domains) }; savedQuickPrefsRef.current = d; setDraftPrefs(d); setShowQuickModal(true); }
               }}
-              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, border: `1.5px solid ${primaryMode === 'focused' ? '#009E9E' : 'var(--color-primary)'}`, borderRadius: '50%', background: 'transparent', cursor: 'pointer', color: primaryMode === 'focused' ? '#009E9E' : 'var(--color-primary)' }}
+              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, border: `1.5px solid ${primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)'}`, borderRadius: '50%', background: 'transparent', cursor: 'pointer', color: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)' }}
               aria-label={ja ? '設定' : 'Settings'}
             >
               <IconSettings size={18} />
@@ -3155,7 +3153,7 @@ export default function Home() {
                           <IconSave size={22} />
                         </span>
                         {/* 裏面：保存済（オレンジ塗り・白アイコン） */}
-                        <span style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--color-accent)', color: '#fff', boxShadow: 'var(--box-shadow-pop)' }}>
+                        <span style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)', boxShadow: 'var(--box-shadow-pop)' }}>
                           <IconSaveCheck size={22} />
                         </span>
                       </div>
@@ -3180,7 +3178,7 @@ export default function Home() {
             {/* ヘッダー固定 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '20px 24px 0', flexShrink: 0 }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 'var(--font-size-h3)', fontWeight: 700, color: '#009E9E' }}>
+                <h3 style={{ margin: 0, fontSize: 'var(--font-size-h3)', fontWeight: 700, color: 'var(--color-points)' }}>
                   {ja ? 'しっかり対策 設定' : 'Focused Practice Settings'}
                 </h3>
                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: 2 }}>
@@ -3485,7 +3483,7 @@ export default function Home() {
                           <IconSave size={22} />
                         </span>
                         {/* 裏面：保存済（オレンジ塗り・白アイコン） */}
-                        <span style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--color-accent)', color: '#fff', boxShadow: 'var(--box-shadow-pop)' }}>
+                        <span style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)', boxShadow: 'var(--box-shadow-pop)' }}>
                           <IconSaveCheck size={22} />
                         </span>
                       </div>

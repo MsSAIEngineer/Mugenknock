@@ -166,7 +166,7 @@
 
 | リモート名 | URL | 用途 |
 |-----------|-----|------|
-| `github` | `git@github.com:Ares2023/Mugenknock.git` | GitHub（Cloudflare Pages 連携） |
+| `github` | `git@github.com:MsSAIEngineer/Mugenknock.git` | GitHub（Cloudflare Pages 連携） |
 
 ---
 
@@ -374,6 +374,18 @@ Cloudflare Pages 上でも**1.5〜2分**（直近10回の実測 84〜137秒。cl
 
 **演習を開始する系のボタン**（モード切替・出題数選択・開始ボタン）は AWS マネジメントコンソールを
 意識して `full`（pill）を維持する。バッジ・フィルタチップなど非開始系は上表に従う。
+
+### 色（2026-10-26 確定）
+主色は AWS Cloudscape 系のブルー（`--color-primary`）、アクセントはオレンジ。ターコイズはロゴだけに使う。
+
+- 色は `src/index.css` のトークンを使い、`'#009E9E'` のような生の色コードを書かない。
+- **文字色は背景に対して WCAG 2.2 AA（4.5:1）を満たす。** トークンの値はこれを満たすように決めてある。
+  新しい色を足すときはコントラスト比を計算してから決める。
+- オレンジの塗り（主ボタン）に載せる文字は `--color-btn-primary-text`（濃色）。白にしない。
+- 資格レベル色は `EXAM_LEVEL_COLORS`（`constants.ts`）だけを使い、画面ごとに色表を書かない。
+  実体は CSS 変数（`--level-*`）なので、`${color}33` のように hex のアルファを足せない。半透明は `tint(color, pct)`。
+  レベル色の塗りに載せる文字は `--color-on-level`。
+- 正誤・状態を色だけで示さない。アイコンか文字を添える。
 
 ## 出題ドメイン配分の方針（確定）
 

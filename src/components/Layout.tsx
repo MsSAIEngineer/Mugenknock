@@ -756,7 +756,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: isMobile ? '20px 18px' : '24px 28px', width: '100%', maxWidth: 380, boxShadow: 'var(--box-shadow-md)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ color: '#009E9E', display: 'flex', alignItems: 'center' }}><IconSparkles size={18} /></span>
+                <span style={{ color: 'var(--color-points)', display: 'flex', alignItems: 'center' }}><IconSparkles size={18} /></span>
                 <span style={{ fontWeight: 700, fontSize: 'var(--font-size-base)', color: 'var(--color-text-main)' }}>
                   {lang === 'ja' ? 'SPとは？' : 'What is SP?'}
                 </span>
@@ -785,7 +785,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       <div style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)', marginTop: 1 }}>{row.exams}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, flexShrink: 0 }}>
-                      <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: '#009E9E', fontVariantNumeric: 'tabular-nums' }}>+{row.pts}</span>
+                      <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--color-points)', fontVariantNumeric: 'tabular-nums' }}>+{row.pts}</span>
                       <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)' }}>{lang === 'ja' ? 'SP/問' : 'SP/q'}</span>
                     </div>
                   </div>
@@ -803,7 +803,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   {lang === 'ja' ? '日めくりサービスの更新' : 'Daily service reroll'}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, flexShrink: 0 }}>
-                  <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: '#009E9E', fontVariantNumeric: 'tabular-nums' }}>30</span>
+                  <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--color-points)', fontVariantNumeric: 'tabular-nums' }}>30</span>
                   <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)' }}>SP</span>
                 </div>
               </div>
@@ -865,21 +865,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   100% { opacity: 0; transform: translateY(-22px) scale(0.9); }
                 }
               `}</style>
-              <div onClick={() => setShowPointsInfo(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none', position: 'relative', border: '1.5px solid #009E9E', borderRadius: 6, padding: '3px 8px 3px 6px', background: 'rgba(0,158,158,0.05)', cursor: 'pointer' }}>
-                <span style={{ color: '#009E9E', display: 'flex', alignItems: 'center' }}><IconSparkles size={17} /></span>
-                <span style={{ color: '#009E9E', fontWeight: 800, fontSize: 'var(--font-size-sm)', minWidth: '3ch', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{points}<span style={{ fontSize: 'var(--font-size-2xs)', fontWeight: 600, marginLeft: 1 }}>p</span></span>
+              <button type="button" onClick={() => setShowPointsInfo(true)} aria-label={lang === 'ja' ? `ポイント ${points}p（獲得方法を見る）` : `${points} points (how to earn)`} style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none', position: 'relative', border: '1.5px solid var(--color-points)', borderRadius: 6, padding: '3px 8px 3px 6px', background: 'color-mix(in srgb, var(--color-points) 5%, transparent)', cursor: 'pointer', font: 'inherit' }}>
+                <span style={{ color: 'var(--color-points)', display: 'flex', alignItems: 'center' }}><IconSparkles size={17} /></span>
+                <span style={{ color: 'var(--color-points)', fontWeight: 800, fontSize: 'var(--font-size-sm)', minWidth: '3ch', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{points}<span style={{ fontSize: 'var(--font-size-2xs)', fontWeight: 600, marginLeft: 1 }}>p</span></span>
                 {ptsDelta !== null && (
                   <span style={{
                     position: 'absolute', right: -32, top: -2,
                     fontSize: 'var(--font-size-xs)', fontWeight: 800,
-                    color: ptsDelta > 0 ? '#009E9E' : 'var(--color-danger)',
+                    color: ptsDelta > 0 ? 'var(--color-points)' : 'var(--color-danger)',
                     whiteSpace: 'nowrap', pointerEvents: 'none',
                     animation: 'pts-delta-fly 1.8s ease-out forwards',
                   }}>
                     {ptsDelta > 0 ? `+${ptsDelta}p` : `${ptsDelta}p`}
                   </span>
                 )}
-              </div>
+              </button>
             </>
           )}
           {authLoading ? (
@@ -887,6 +887,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           ) : (
             <button
               onClick={() => navigate('/account')}
+              aria-label={user ? (lang === 'ja' ? 'アカウント' : 'Account') : (lang === 'ja' ? 'ログイン' : 'Log in')}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: user ? 'var(--color-primary-light)' : 'transparent',
@@ -1225,7 +1226,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             marginTop: 'var(--spacing-xl)',
           }}>
             <span>© {new Date().getFullYear()} 無限ノック</span>
-            <span style={{ width: '100%', textAlign: 'center', fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)', opacity: 0.7 }}>
+            <span style={{ width: '100%', textAlign: 'center', fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)' }}>
               {lang === 'ja'
                 ? 'AWSはAmazon Web Services, Inc.の商標です。本サービスはAmazonと無関係の非公式サービスです。'
                 : 'AWS is a trademark of Amazon Web Services, Inc. This is an unofficial service unaffiliated with Amazon.'}

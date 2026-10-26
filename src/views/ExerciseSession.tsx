@@ -26,7 +26,7 @@ const WAKARANAI = 'わからない';
 // ♡(ブックマーク)ONの色。ポップな変化を出すためピンク。
 const HEART_ACTIVE_COLOR = '#ec4899';
 // 👍👎の色。「しっかり対策」開始ボタンと同じ青緑で揃える。
-const REACTION_ACTIVE_COLOR = '#009E9E';
+const REACTION_ACTIVE_COLOR = 'var(--color-points)';
 // DBによっては correctAnswers に "B. テキスト" のようなラベル接頭辞が付いている場合がある
 const stripLabel = (s: string) => s.replace(/^[A-E]\.\s*/, '');
 
@@ -472,7 +472,7 @@ export default function ExerciseSession() {
       {withActions && (
         <>
           {/* 👍👎 … ログイン専用。合計数は出さず、自分の選択状態のみ示す。
-              色は「しっかり対策」開始ボタンと同じ青緑(#009E9E)に揃える。 */}
+              色は「しっかり対策」開始ボタンと同じ青緑(var(--color-points))に揃える。 */}
           <IconActionButton
             onClick={() => toggleReaction('up')}
             disabled={!userId}
@@ -1223,6 +1223,17 @@ export default function ExerciseSession() {
     return { ...base, borderColor: 'var(--color-border)', background: 'var(--color-bg-main)', color: 'var(--color-text-sub)' };
   };
 
+  // 回答後に各選択肢へ付ける正誤ラベル。色だけに頼らず、アイコンと文字でも示す（WCAG 1.4.1）
+  const getChoiceVerdict = (choice: string): 'correct' | 'wrong' | null => {
+    if (!answered || !currentQuestion) return null;
+    const displayQ = (currentQuestion.correctAnswers ? currentQuestion : detail) ?? currentQuestion;
+    if (!displayQ.correctAnswers) return null;
+    const shuffledIdx = shuffledChoices.indexOf(choice);
+    const origIdx = shuffledIdx >= 0 ? origIndices[shuffledIdx] : -1;
+    if (toIdxArr(displayQ.correctAnswerIndices).includes(origIdx)) return 'correct';
+    return selectedAnswers.includes(choice) ? 'wrong' : null;
+  };
+
   if (showAbortConfirm) {
     return createPortal(
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000,
@@ -1470,6 +1481,20 @@ export default function ExerciseSession() {
                   >
                     <strong style={{ marginRight: 2 }}>{CHOICE_LABELS[idx]}.</strong> {stripLabel(choice)}
                   </span>
+                  {(() => {
+                    const verdict = getChoiceVerdict(choice);
+                    if (!verdict) return null;
+                    const ok = verdict === 'correct';
+                    const label = ok
+                      ? (isSelected ? t('exerciseSession.verdictCorrectChosen') : t('exerciseSession.verdictCorrect'))
+                      : t('exerciseSession.verdictWrongChosen');
+                    return (
+                      <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)', marginTop: 2, fontSize: 'var(--font-size-xs)', fontWeight: 700, color: ok ? 'var(--color-success)' : 'var(--color-danger)', whiteSpace: 'nowrap' }}>
+                        {ok ? <IconCircleCheck size={16} /> : <IconCircleX size={16} />}
+                        {label}
+                      </span>
+                    );
+                  })()}
                 </div>
               </button>
             );
@@ -1714,7 +1739,7 @@ export default function ExerciseSession() {
         <div style={{ marginTop: 'var(--spacing-xl)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)' }}>
             <span style={{
-              background: 'var(--color-accent-hover)', color: 'white',
+              background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)',
               fontSize: 'var(--font-size-2xs)', fontWeight: 700, letterSpacing: '1.5px',
               padding: '3px 10px', borderRadius: 'var(--border-radius-sm)',
             }}>COLUMN</span>

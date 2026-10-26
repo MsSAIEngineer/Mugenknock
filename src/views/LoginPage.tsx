@@ -6,6 +6,7 @@ import { I18n } from 'aws-amplify/utils';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import Button from '../components/ui/Button';
+import { EXAM_LEVEL_COLORS } from '../constants';
 
 I18n.putVocabularies(translations);
 I18n.setLanguage('ja');
@@ -20,7 +21,7 @@ const amplifyTheme: Theme = {
           20:  { value: '#C5DFFF' },
           40:  { value: '#7DB8FF' },
           60:  { value: '#3A91FF' },
-          80:  { value: '#006CE0' },
+          80:  { value: '#0066D6' },
           90:  { value: '#0055B3' },
           100: { value: '#003D80' },
         },
@@ -59,11 +60,7 @@ const POSITIONS: [number, number, number][] = [
   [87, 38,   -5],
 ];
 
-const LEVEL_COLOR: Record<string, string> = {
-  Foundational: '#6b9e3a',
-  Associate:    '#006CE0',
-  Professional: '#8b5cf6',
-};
+const LEVEL_COLOR = EXAM_LEVEL_COLORS;
 
 const STRINGS: Record<string, { ja: string; en: string }> = {
   'login.tagline': {
@@ -103,6 +100,7 @@ export default function LoginPage() {
           return (
             <div
               key={badge.code}
+              aria-hidden="true"
               style={{
                 position: 'absolute',
                 top: `${top}%`,

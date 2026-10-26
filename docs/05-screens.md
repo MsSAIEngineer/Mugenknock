@@ -33,7 +33,12 @@
 
 ### レイアウト
 
-`app/aws/layout.tsx` が `src/components/Layout.tsx` を適用する。`/aws/*` 以外は素の画面。
+`app/aws/layout.tsx` が `src/components/Layout.tsx` を適用する（クライアント側は `app/aws/AwsShell.tsx`）。`/aws/*` 以外は素の画面。
+
+**タブ名（`<title>`）**: ルートの `app/layout.tsx` は `'use client'` で metadata を書けないため、
+`app/aws/layout.tsx`（サーバーコンポーネント）が `template: '%s | 無限ノック'` を持ち、
+各ルートの `layout.tsx` が画面名だけを `title` に書く（例: `app/aws/practice/layout.tsx` → 「トレーニング | 無限ノック」）。
+`/login`・`/account`・`/about`・`/architecture` も同様に `layout.tsx` で付ける。新しいルートを足すときは `layout.tsx` も足す。
 
 `Layout.tsx`（1,288行）の責務:
 - デスクトップ: 左サイドナビ（ホーム / トレーニング / マイページ + 図鑑・チートシート・お知らせ・リリースノート）
@@ -149,6 +154,9 @@ authLoading 解除
 前提知識を含める（対応資格があり、全ドメイン選択時のみ表示・既定ON）。
 設定は `localStorage.exercisePrefs_<uid>` に保存され kvSync で同期される。
 
+目標資格が未設定のとき（ゲストが直接 URL を開いた場合など）は、設定欄の代わりに
+「まだ目標資格が選ばれていません」と「目標資格を選ぶ」ボタン（ホームへ遷移し、選択オーバーレイが開く）を出す。模試タブも同じ。
+
 開始時のフロー:
 ```
 GET /questions?examType=&idsOnly=true&domain=&<filters>&userId=
@@ -207,6 +215,7 @@ state が無ければ `localStorage` のドラフトから復元。それも無�
 ```
 選択 → 採点（correctAnswerIndices と比較）
      → 即時に正誤・解説・choiceExplanations を表示
+       （各選択肢の右に「✓ 正解」「✓ 正解（あなたの回答）」「✗ あなたの回答」を出す。色だけで正誤を示さない）
      → POST /sessions/:id/answers（非同期・待たない）
      → PUT /sessions/:id/progress でドラフト保存
 ```
@@ -236,7 +245,7 @@ navigate('/aws/result', { state: { results, questions, score, ... } })
     ONにした瞬間だけピンクのパーティクルバースト（`ConfirmBurst` 流用）
   - **👍👎（リアクション）** — `PUT /questions/:id/reaction`。ログイン専用・1ユーザー1問1票
     （`UserQuestionStats(userId,questionId)` の単一属性上書きで構造的に保証）。
-    ONにした瞬間だけポップ演出、色は「しっかり対策」開始ボタンと同じ青緑(`#009E9E`)。
+    ONにした瞬間だけポップ演出、色は「しっかり対策」開始ボタンと同じ青緑(`--color-points`)。
     詳細は `docs/04-api.md` §4.3b、`specs/002-question-reactions/`
   - **⋮** — 「この問題を通報」（`ReportModal` → `POST /questions/:id/report`）／
     「ここまでで採点」（`setShowAbortConfirm`）のメニューを開く
@@ -377,7 +386,7 @@ DB 側は `CheatSheetDeletions` テーブルが「削除予定フラグ」のオ
   なく、文中の強調したい説明的なフレーズ（理由・条件・ポイントの部分文）が対象。
 
 **1. 行頭が `用語：説明` の形（全角コロン、括弧の外側）の場合** — `用語`部分だけが強調される:
-- **ティール（`#009E9E`）＋タップでコピー**: `用語`にASCII英字を含む（例: `SHAP値：...`）、
+- **ティール（`--color-points`）＋タップでコピー**: `用語`にASCII英字を含む（例: `SHAP値：...`）、
   または `EXTRA_COPYABLE_TERMS`（`CheatSheet.tsx` 冒頭の日本語重要語リスト）に載っている場合。
   「試験で調べたくなる・コピーしてAIに聞きたくなる語」が対象。
 - **黒太字（コピー不可）**: 上記に該当しないが「用語として綺麗な形」（30字以内・句読点や改行を含まない・
@@ -489,3 +498,9 @@ adsbygoogle.js）と `src/components/ui/AdPlaceholder.tsx`（未使用）も削�
 - 余白・フォントサイズ・影・角丸は `src/index.css` のトークン（`--spacing-*` / `--font-size-*` /
   `--box-shadow-*` / `--border-radius-*`）を使う。**スケール外の生px値は禁止**
 - 画面種別の指示（「Web版」「スマホ版」）は該当ブランチにのみ適用する
+- 色はトークンを使う。文字色は背景に対して WCAG 2.2 AA（4.5:1）を満たす値にしてある
+  - オレンジの主ボタンの文字は濃色（`--color-btn-primary-text: #16191f`）。白は 2.1:1 で読めない
+  - 補足文の薄いグレーは `--color-text-light: #656871`（白地 5.6:1）
+  - 資格レベル色は `--level-*`（ライト/ダーク別値）。`constants.ts` の `EXAM_LEVEL_COLORS` はこれを参照する。
+    レベル色の塗りに載せる文字は `--color-on-level`。半透明は hex にアルファを足さず `tint(color, pct)` を使う
+  - ポイント・しっかり対策のティールは `--color-points`

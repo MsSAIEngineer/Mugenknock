@@ -6,7 +6,7 @@ import { IconLockOpen, IconTarget, IconBrain, IconSparkles } from './Icons';
 import Button from './ui/Button';
 import Confetti from './Confetti';
 
-const ACCENT = '#009E9E'; // 「しっかり対策」と同じティール系アクセント
+const ACCENT = 'var(--color-points)'; // 「しっかり対策」と同じティール系アクセント
 
 /**
  * 一定数の演習を重ねて「しっかり対策」「苦手ドメイン分析」が解放されたときに
@@ -156,7 +156,7 @@ export default function FeatureUnlockModal({
               }}>
                 <div style={{
                   flexShrink: 0, width: 40, height: 40, borderRadius: 'var(--border-radius-md)',
-                  background: 'rgba(0,158,158,.12)', color: ACCENT,
+                  background: 'color-mix(in srgb, var(--color-points) 12%, transparent)', color: ACCENT,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   {f.icon}

@@ -164,14 +164,20 @@ export const EXAM_LEVEL: Record<string, string> = {
   SEC: 'Additional',
 };
 
+// 資格レベル色の唯一の定義。実体は src/index.css の --level-*（ライト/ダークで値が変わる）。
+// CSS 変数なので hex にアルファを足す書き方（`${c}33`）はできない。半透明は tint() を使う。
 export const EXAM_LEVEL_COLORS: Record<string, string> = {
-  Foundational: '#6b9e3a',
-  Business:     '#db2777',
-  Associate:    '#006CE0',
-  Professional: '#8b5cf6',
-  Specialty:    '#0ea5e9',
-  Additional:   '#14b8a6',
+  Foundational: 'var(--level-foundational)',
+  Business:     'var(--level-business)',
+  Associate:    'var(--level-associate)',
+  Professional: 'var(--level-professional)',
+  Specialty:    'var(--level-specialty)',
+  Additional:   'var(--level-additional)',
 };
+
+// 色を pct% の不透明度にする。CSS 変数・hex のどちらでも使える。
+export const tint = (color: string, pct: number): string =>
+  `color-mix(in srgb, ${color} ${pct}%, transparent)`;
 
 // レベルの表示ラベル。内部キー 'Additional'（非AWSカード）は「基礎知識」と表示する。
 // 他のレベルは従来どおり英語表記のまま。

@@ -555,10 +555,11 @@ export default function Practice() {
       {tab === 'exercise' && (
         <>
           {!targetExam ? (
-            <div style={{ padding: 24, background: 'var(--color-primary-light)', border: '1px solid var(--color-primary)', borderRadius: 'var(--border-radius-md)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)', textAlign: 'center' }}>
-              {ja
-                ? (isMobile ? '上部メニューから試験を選択してください' : '左のメニューから試験を選択してください')
-                : (isMobile ? 'Select your target exam from the top menu' : 'Select your target exam from the left sidebar')}
+            // 目標資格の選択はホームのオーバーレイで行う。以前の「左のメニューから選択」は、
+            // そのメニューが存在せず行き止まりになっていた
+            <div style={{ padding: 'var(--spacing-lg)', background: 'var(--color-primary-light)', border: '1px solid var(--color-primary)', borderRadius: 'var(--border-radius-md)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+              {ja ? 'まだ目標資格が選ばれていません。' : 'You haven\'t chosen a target exam yet.'}
+              <Button onClick={() => navigate('/aws/')}>{ja ? '目標資格を選ぶ' : 'Choose a target exam'}</Button>
             </div>
           ) : (<>
           {/* 基礎知識(オリジナル資格)の混在（対応資格があり、ドメイン絞り込みをしていない時のみ表示） */}
@@ -773,8 +774,9 @@ export default function Practice() {
       {tab === 'exam' && (
         <>
           {!targetExam ? (
-            <div style={{ padding: 24, background: 'var(--color-primary-light)', border: '1px solid var(--color-primary)', borderRadius: 'var(--border-radius-md)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)', textAlign: 'center' }}>
-              {ja ? 'サイドメニューから試験を選択してください' : 'Select your target exam from the sidebar'}
+            <div style={{ padding: 'var(--spacing-lg)', background: 'var(--color-primary-light)', border: '1px solid var(--color-primary)', borderRadius: 'var(--border-radius-md)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+              {ja ? 'まだ目標資格が選ばれていません。' : 'You haven\'t chosen a target exam yet.'}
+              <Button onClick={() => navigate('/aws/')}>{ja ? '目標資格を選ぶ' : 'Choose a target exam'}</Button>
             </div>
           ) : (
             <>

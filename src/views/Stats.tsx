@@ -62,7 +62,8 @@ const ScoreLineChart = ({ sessions, passRate, lang }: { sessions: Session[]; pas
     : 0;
 
   return (
-    <svg key={n} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }} role="img">
+    <svg key={n} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }} role="img"
+      aria-label={`セッション別スコア推移（${n}回）`}>
       {gridScores.map(v => (
         <g key={v}>
           <line x1={padL} y1={yOf(v)} x2={W - padR} y2={yOf(v)} stroke="var(--color-border)" strokeWidth={0.7} />
@@ -148,7 +149,10 @@ const ActivityChart = ({ data, lang }: { data: { label: string; count: number; i
   const showEvery = n <= 7 ? 1 : n <= 14 ? 2 : 5;
 
   return (
-    <svg key={chartKey} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }} role="img">
+    <svg key={chartKey} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }} role="img"
+      aria-label={lang === 'ja'
+        ? `日次の解答数（${n}日間・合計${data.reduce((a, d) => a + d.count, 0)}問）`
+        : `Daily answers (${n} days, ${data.reduce((a, d) => a + d.count, 0)} total)`}>
       {[0, Math.round(maxCount / 2), maxCount].filter((v, i, a) => a.indexOf(v) === i).map(v => (
         <g key={v}>
           <line x1={padL} y1={padT + chartH * (1 - v / maxCount)} x2={W - padR} y2={padT + chartH * (1 - v / maxCount)}
@@ -614,7 +618,7 @@ export default function Stats() {
                       ? (lang === 'ja' ? 'しっかり対策' : 'Focused')
                       : (lang === 'ja' ? 'サクッと演習' : 'Quick');
                   const modeBg = s.mode === 'exam' ? 'var(--color-danger-light, #fff0f0)' : s.isFocused ? '#e6f4f4' : 'var(--color-primary-light)';
-                  const modeColor = s.mode === 'exam' ? 'var(--color-danger)' : s.isFocused ? '#009E9E' : 'var(--color-primary)';
+                  const modeColor = s.mode === 'exam' ? 'var(--color-danger)' : s.isFocused ? 'var(--color-points)' : 'var(--color-primary)';
                   const d = new Date(s.endedAt || s.startedAt);
                   const dateLabel = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
                   const isExpanded = expandedSession === s.sessionId;

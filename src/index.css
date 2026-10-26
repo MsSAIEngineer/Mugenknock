@@ -1,6 +1,7 @@
 :root {
   /* Colors */
-  --color-primary: #006CE0;
+  /* 灰色背景(#f2f3f3)でも文字で 4.5:1 を満たす濃さ（旧 #006CE0 は 4.47:1 で僅かに不足） */
+  --color-primary: #0066D6;
   --color-primary-hover: #0055B3;
   --color-primary-light: #E8F3FF;
   --color-secondary: #232f3e;
@@ -8,12 +9,15 @@
   --color-accent: #ff9900;
   --color-accent-hover: #ec7211;
   --color-accent-dark: #cc7a00;
-  --color-btn-primary-text: #fff;
+  /* オレンジ地の文字は濃色にする。白は 2.1:1 で読めない。AWS マネジメントコンソールの
+     オレンジボタンも濃色文字（WCAG 2.2 AA: 4.5:1 以上） */
+  --color-btn-primary-text: #16191f;
   --color-bg-main: #f2f3f3;
   --color-bg-white: #ffffff;
   --color-text-main: #16191f;
   --color-text-sub: #545b64;
-  --color-text-light: #879596;
+  /* Cloudscape の colorTextStatusInactive 相当。旧 #879596 は白地 3.1:1・灰色地 2.8:1 で AA 不足 */
+  --color-text-light: #656871;
   /* Cloudscape visual refresh の colorBorderDividerDefault 相当。
      旧値 #eaeded は classic 世代の色で、背景 #f2f3f3 とのコントラストが低く
      カードの輪郭が消えていた。 */
@@ -21,6 +25,19 @@
   --color-danger: #d13212;
   --color-success: #037f0c;
   --color-warning: #ff9900;
+
+  /* 資格レベル色。constants.ts の EXAM_LEVEL_COLORS はこの変数を参照する。
+     ライトは白地で 4.5:1 以上、ダークは暗色カードで 4.5:1 前後になる明るさに分ける。
+     半透明にするときは hex にアルファを足さず、constants.ts の tint() を使う */
+  --level-foundational: #47782a;
+  --level-business: #c0256a;
+  --level-associate: var(--color-primary);
+  --level-professional: #7c4ddb;
+  --level-specialty: #0a74a8;
+  --level-additional: #0f766e;
+  --color-on-level: #ffffff;   /* レベル色の塗りの上に載せる文字 */
+  /* ポイント（p）・しっかり対策のティール */
+  --color-points: #007a7a;
 
   /* Spacing scale (4px base) — 余白・gap・paddingは必ずこのスケールを使う */
   --spacing-xs: 4px;
@@ -60,7 +77,7 @@
   --color-danger-light: rgba(209, 50, 18, 0.08);
 
   /* Horizontal bar gradients (left=bright, right=base color) */
-  --bar-gradient-primary: linear-gradient(90deg, #006CE0, #3b9eff);
+  --bar-gradient-primary: linear-gradient(90deg, #0066D6, #3b9eff);
   --bar-gradient-success: linear-gradient(90deg, #037f0c, #22c55e);
   --bar-gradient-caution: linear-gradient(90deg, #ca8a04, #fbbf24);
   --bar-gradient-danger:  linear-gradient(90deg, #d13212, #f87171);
@@ -109,10 +126,17 @@
   --color-bg-white: #161b22;
   --color-text-main: #e6edf3;
   --color-text-sub: #8b949e;
-  --color-text-light: #6e7681;
+  --color-text-light: #848d97;
   --color-border: #414d5c;
   --color-secondary: #1c2836;
   --color-primary-light: #071D3A;
+  --level-foundational: #7fb24c;
+  --level-business: #f0569a;
+  --level-professional: #a78bfa;
+  --level-specialty: #38bdf8;
+  --level-additional: #2dd4bf;
+  --color-on-level: #0d1117;
+  --color-points: #2dd4bf;
   --color-feedback-correct-bg: #0d2114;
   --color-feedback-incorrect-bg: #2d0a07;
   --color-hint-bg: #2d2207;

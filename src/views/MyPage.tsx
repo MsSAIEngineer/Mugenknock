@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from '@/compat/react-router-dom';
-import { API_ENDPOINT, EXAM_DOMAINS, EXAM_DOMAIN_SERVICES, EXAM_TYPES, EXAM_CONFIGS, DOMAIN_RATE_WARNING, DOMAIN_RATE_CAUTION, PASS_SCORES, EXAM_LEVEL, EXAM_LEVEL_COLORS, tagIdMatches, toDomainIndex, isNonAwsExam } from '../constants';
+import { API_ENDPOINT, EXAM_DOMAINS, EXAM_DOMAIN_SERVICES, EXAM_TYPES, EXAM_CONFIGS, DOMAIN_RATE_WARNING, DOMAIN_RATE_CAUTION, PASS_SCORES, EXAM_LEVEL, EXAM_LEVEL_COLORS, tint, tagIdMatches, toDomainIndex, isNonAwsExam } from '../constants';
 import { syncPreferencesToServer, syncTargetExamToServer, collectExamDatesFromLocal } from '../utils/preferences';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { useAuth } from '../contexts/AuthContext';
@@ -647,7 +647,7 @@ export default function MyPage() {
                                   <span style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)', color: 'var(--color-primary)' }}>{dailyGoal}</span>
                                   <span style={{ fontSize: 'var(--font-size-sm2)', color: 'var(--color-text-sub)' }}>{ja ? '問 / 日' : 'Q / day'}</span>
                                 </span>
-                                {ja && <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)' }}>※達成で<span style={{ color: '#009E9E', fontWeight: 700 }}>+10p</span>！</span>}
+                                {ja && <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)' }}>※達成で<span style={{ color: 'var(--color-points)', fontWeight: 700 }}>+10p</span>！</span>}
                                 {todayCount >= dailyGoal && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-success)' }}>✓</span>}
                               </div>
                             </>
@@ -685,7 +685,7 @@ export default function MyPage() {
                                       const staggerIdx = weekCountsTarget.slice(0, i).filter(c => c > 0).length;
                                       return (
                                         <div key={d} style={{ flex: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'flex-end' }}>
-                                          <div style={{ width: '100%', maxWidth: 6, margin: '0 auto', height: barAnimated ? barH : 0, background: achieved ? examColor : `${examColor}55`, borderRadius: '3px 3px 0 0', transition: count > 0 ? `height 0.45s cubic-bezier(0.4,0,0.2,1) ${staggerIdx * 0.07}s` : 'none' }} />
+                                          <div style={{ width: '100%', maxWidth: 6, margin: '0 auto', height: barAnimated ? barH : 0, background: achieved ? examColor : tint(examColor, 33), borderRadius: '3px 3px 0 0', transition: count > 0 ? `height 0.45s cubic-bezier(0.4,0,0.2,1) ${staggerIdx * 0.07}s` : 'none' }} />
                                           <span style={{ position: 'absolute', bottom: barH + 2, left: '50%', transform: 'translateX(-50%)', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: count > 0 ? (achieved ? examColor : 'var(--color-text-sub)') : 'var(--color-text-light)', opacity: barAnimated ? 1 : 0, transition: count > 0 ? `opacity 0.2s ease ${0.3 + staggerIdx * 0.07}s` : 'none' }}>{count}</span>
                                         </div>
                                       );
@@ -750,7 +750,7 @@ export default function MyPage() {
                           <span style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)', color: 'var(--color-primary)' }}>{dailyGoal}</span>
                           <span style={{ fontSize: 'var(--font-size-sm2)', color: 'var(--color-text-sub)' }}>{ja ? '問 / 日' : 'Q / day'}</span>
                         </span>
-                        {ja && <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)' }}>※達成で<span style={{ color: '#009E9E', fontWeight: 700 }}>+10p</span>！</span>}
+                        {ja && <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)' }}>※達成で<span style={{ color: 'var(--color-points)', fontWeight: 700 }}>+10p</span>！</span>}
                         {todayCount >= dailyGoal && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-success)' }}>✓</span>}
                       </div>
                     </>
@@ -780,14 +780,14 @@ export default function MyPage() {
                           <div key={d} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                             <div style={{ position: 'relative', width: 36, height: 36 }}>
                               <svg width={36} height={36} viewBox="0 0 36 36">
-                                <circle cx={18} cy={18} r={R} fill="none" stroke={`${examColor}22`} strokeWidth={4} />
+                                <circle cx={18} cy={18} r={R} fill="none" style={{ stroke: tint(examColor, 13) }} strokeWidth={4} />
                                 <circle
                                   cx={18} cy={18} r={R} fill="none"
-                                  stroke={achieved ? examColor : `${examColor}99`} strokeWidth={4} strokeLinecap="round"
+                                  strokeWidth={4} strokeLinecap="round"
                                   strokeDasharray={C}
                                   strokeDashoffset={circleAnimated ? C * (1 - pct) : C}
                                   transform="rotate(-90 18 18)"
-                                  style={{ transition: count > 0 ? `stroke-dashoffset 0.55s cubic-bezier(0.4,0,0.2,1) ${i * 0.1}s` : 'none' }}
+                                  style={{ stroke: achieved ? examColor : tint(examColor, 60), transition: count > 0 ? `stroke-dashoffset 0.55s cubic-bezier(0.4,0,0.2,1) ${i * 0.1}s` : 'none' }}
                                 />
                               </svg>
                               {achieved && (
@@ -855,7 +855,7 @@ export default function MyPage() {
                           const staggerIdx = weekCountsTarget.slice(0, i).filter(c => c > 0).length;
                           return (
                             <div key={d} style={{ flex: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'flex-end' }}>
-                              <div style={{ width: '100%', maxWidth: 6, margin: '0 auto', height: popupBarAnimated ? barH : 0, background: achieved ? examColor : `${examColor}55`, borderRadius: '3px 3px 0 0', transition: count > 0 ? `height 0.45s cubic-bezier(0.4,0,0.2,1) ${staggerIdx * 0.07}s` : 'none' }} />
+                              <div style={{ width: '100%', maxWidth: 6, margin: '0 auto', height: popupBarAnimated ? barH : 0, background: achieved ? examColor : tint(examColor, 33), borderRadius: '3px 3px 0 0', transition: count > 0 ? `height 0.45s cubic-bezier(0.4,0,0.2,1) ${staggerIdx * 0.07}s` : 'none' }} />
                               <span style={{ position: 'absolute', bottom: barH + 2, left: '50%', transform: 'translateX(-50%)', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: count > 0 ? (achieved ? examColor : 'var(--color-text-sub)') : 'var(--color-text-light)', opacity: popupBarAnimated ? 1 : 0, transition: count > 0 ? `opacity 0.2s ease ${0.3 + staggerIdx * 0.07}s` : 'none' }}>{count}</span>
                             </div>
                           );
@@ -966,7 +966,7 @@ export default function MyPage() {
                             <IconSave size={22} />
                           </span>
                           {/* 裏面：保存済 */}
-                          <span style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--color-accent)', color: '#fff', boxShadow: 'var(--box-shadow-pop)' }}>
+                          <span style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)', boxShadow: 'var(--box-shadow-pop)' }}>
                             <IconSaveCheck size={22} />
                           </span>
                         </div>
@@ -1075,7 +1075,7 @@ export default function MyPage() {
                                 key={w}
                                 onClick={() => !disabled && setRecentWindow(w)}
                                 disabled={disabled}
-                                style={{ border: 'none', borderLeft: w === 10 ? 'none' : '1px solid var(--color-border)', background: active ? 'var(--color-primary)' : 'transparent', color: disabled ? 'var(--color-text-light)' : active ? 'var(--color-btn-primary-text, #fff)' : 'var(--color-text-sub)', fontSize: 'var(--font-size-xs)', fontWeight: 700, padding: '5px 14px', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.4 : 1, transition: 'background 0.15s' }}
+                                style={{ border: 'none', borderLeft: w === 10 ? 'none' : '1px solid var(--color-border)', background: active ? 'var(--color-primary)' : 'transparent', color: disabled ? 'var(--color-text-light)' : active ? 'var(--color-on-primary)' : 'var(--color-text-sub)', fontSize: 'var(--font-size-xs)', fontWeight: 700, padding: '5px 14px', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.4 : 1, transition: 'background 0.15s' }}
                               >
                                 {ja ? `直近${w}問` : `Last ${w}`}
                               </button>
@@ -1264,11 +1264,11 @@ export default function MyPage() {
                         </div>
                       </div>
                       {[
-                        { color: '#6b9e3a', exams: ['CLF', 'AIF'] },
-                        { color: '#db2777', exams: ['AIB'] },
-                        { color: '#006CE0', exams: ['SAA', 'DVA', 'SOA', 'DEA', 'MLA'] },
-                        { color: '#8b5cf6', exams: ['SAP', 'DOP', 'AIP'] },
-                        { color: '#0ea5e9', exams: ['ANS', 'SCS'] },
+                        { color: EXAM_LEVEL_COLORS.Foundational, exams: ['CLF', 'AIF'] },
+                        { color: EXAM_LEVEL_COLORS.Business, exams: ['AIB'] },
+                        { color: EXAM_LEVEL_COLORS.Associate, exams: ['SAA', 'DVA', 'SOA', 'DEA', 'MLA'] },
+                        { color: EXAM_LEVEL_COLORS.Professional, exams: ['SAP', 'DOP', 'AIP'] },
+                        { color: EXAM_LEVEL_COLORS.Specialty, exams: ['ANS', 'SCS'] },
                       ].map(row => (
                         <div key={row.color} style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 6 }}>
                           {[...row.exams].sort((a, b) =>
@@ -1286,11 +1286,11 @@ export default function MyPage() {
                 {showCertOverlay && (() => {
                   const HEX = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
                   const CERT_LEVELS = [
-                    { key: 'Foundational', label: 'Foundational', color: '#6b9e3a', exams: ['CLF', 'AIF'] },
-                    { key: 'Business',     label: 'Business',     color: '#db2777', exams: ['AIB'] },
-                    { key: 'Associate',    label: 'Associate',    color: '#006CE0', exams: ['SAA', 'DVA', 'SOA', 'DEA', 'MLA'] },
-                    { key: 'Professional', label: 'Professional', color: '#8b5cf6', exams: ['SAP', 'DOP', 'AIP'] },
-                    { key: 'Specialty',    label: 'Specialty',    color: '#0ea5e9', exams: ['ANS', 'SCS'] },
+                    { key: 'Foundational', label: 'Foundational', color: EXAM_LEVEL_COLORS.Foundational, exams: ['CLF', 'AIF'] },
+                    { key: 'Business',     label: 'Business',     color: EXAM_LEVEL_COLORS.Business, exams: ['AIB'] },
+                    { key: 'Associate',    label: 'Associate',    color: EXAM_LEVEL_COLORS.Associate, exams: ['SAA', 'DVA', 'SOA', 'DEA', 'MLA'] },
+                    { key: 'Professional', label: 'Professional', color: EXAM_LEVEL_COLORS.Professional, exams: ['SAP', 'DOP', 'AIP'] },
+                    { key: 'Specialty',    label: 'Specialty',    color: EXAM_LEVEL_COLORS.Specialty, exams: ['ANS', 'SCS'] },
                   ] as const;
                   const currentLevel = CERT_LEVELS.find(l => l.key === certOverlayLevel) ?? CERT_LEVELS[0];
                   return createPortal(
@@ -1330,7 +1330,7 @@ export default function MyPage() {
                                 onClick={e => toggleObtainedCert(exam, e.currentTarget)}
                                 style={{ flexShrink: 0, width: 80, padding: '10px 6px 8px', cursor: 'pointer', borderRadius: 10, textAlign: 'center', position: 'relative', border: `2px solid ${obtained ? c : 'var(--color-border)'}`, background: obtained ? c : 'var(--color-bg-card)', animation: justObtained === exam ? 'certObtainPop 0.38s cubic-bezier(.36,.07,.19,.97)' : undefined, transition: 'border-color 0.15s, background 0.15s' }}
                               >
-                                {obtained && <div style={{ position: 'absolute', top: 4, right: 4, color: '#fff', lineHeight: 0 }}><IconCheck size={14} /></div>}
+                                {obtained && <div style={{ position: 'absolute', top: 4, right: 4, color: 'var(--color-on-level)', lineHeight: 0 }}><IconCheck size={14} /></div>}
                                 {/* 六角形バッジ */}
                                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, perspective: 200 }}>
                                   <div style={{ width: 40, height: 46, background: obtained ? 'rgba(255,255,255,0.25)' : c + '33', clipPath: HEX, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: justObtained === exam ? 'certHexSpin 0.52s ease' : undefined }}>
@@ -1339,7 +1339,7 @@ export default function MyPage() {
                                     </div>
                                   </div>
                                 </div>
-                                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: obtained ? '#fff' : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
+                                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: obtained ? 'var(--color-on-level)' : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
                               </button>
                             );
                           })}
@@ -1380,7 +1380,7 @@ export default function MyPage() {
                     ? (s.isMini ? (ja ? 'ミニ模試' : 'Mini Exam') : (ja ? '模試' : 'Mock Exam'))
                     : s.isFocused ? (ja ? 'しっかり対策' : 'Focused') : (ja ? 'サクッと演習' : 'Quick');
                   const modeBg = s.mode === 'exam' ? '#fff0f0' : s.isFocused ? '#e6f4f4' : 'var(--color-primary-light)';
-                  const modeColor = s.mode === 'exam' ? 'var(--color-danger)' : s.isFocused ? '#009E9E' : 'var(--color-primary)';
+                  const modeColor = s.mode === 'exam' ? 'var(--color-danger)' : s.isFocused ? 'var(--color-points)' : 'var(--color-primary)';
                   const d = new Date(s.endedAt || s.startedAt);
                   const dateLabel = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
                   const isExpanded = expandedSession === s.sessionId;
@@ -1510,7 +1510,7 @@ export default function MyPage() {
                     return (
                       <div key={i} style={{ fontSize: 'var(--font-size-sm)', padding: '10px 14px', borderRadius: 'var(--border-radius-md)', border: `1.5px solid ${isCorrect ? 'var(--color-success)' : 'var(--color-border)'}`, background: isCorrect ? 'var(--color-feedback-correct-bg)' : 'var(--color-bg-main)', color: isCorrect ? 'var(--color-success)' : 'var(--color-text-sub)', lineHeight: 1.6 }}>
                         <span style={{ fontWeight: 700, marginRight: 6 }}>{String.fromCharCode(65 + i)}.</span>
-                        {c.replace(/^[A-E]\.\s*/, '')}
+                        {isCorrect ? '✓ ' : ''}{c.replace(/^[A-E]\.\s*/, '')}
                       </div>
                     );
                   })}

@@ -157,6 +157,7 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           <button
             onClick={() => navigate(user ? '/account' : '/login')}
+            aria-label={user ? (ja ? 'アカウント' : 'Account') : (ja ? 'ログイン' : 'Log in')}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: user ? 'var(--color-primary-light)' : 'transparent',
@@ -257,7 +258,7 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
                   >
                     <div style={{
                       fontSize: isMobile ? 'var(--font-size-xl)' : 'var(--font-size-h2)',
-                      fontWeight: 900, color: 'var(--color-accent)', letterSpacing: '-1px', lineHeight: 1.1,
+                      fontWeight: 900, color: 'var(--color-accent-dark)', letterSpacing: '-1px', lineHeight: 1.1,
                     }}>
                       {stat.num}
                     </div>
