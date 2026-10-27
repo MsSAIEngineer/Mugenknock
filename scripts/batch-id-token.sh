@@ -10,11 +10,7 @@ _p() { "$AWS" ssm get-parameter --name "$1" --with-decryption --query Parameter.
 USERNAME=$(_p /quiz-app/batch-username)
 PASSWORD=$(_p /quiz-app/batch-password)
 CLIENT_ID=$(_p /quiz-app/batch-client-id)
-if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ] || [ -z "$CLIENT_ID" ]; then
-  # 専用ユーザーを作る前の互換: 従来どおり本人の管理者アカウント＋Web クライアントで入る（作ったら消す）
-  echo "batch-id-token: バッチ専用ユーザーの SSM が無いので従来のアカウントで認証" >&2
-  USERNAME=yuzuki2002110@gmail.com; PASSWORD=$(_p /quiz-app/admin-password); CLIENT_ID=16jjrj5m28o6s2k84og8kh2vh3
-fi
+[ -n "$USERNAME" ] && [ -n "$PASSWORD" ] && [ -n "$CLIENT_ID" ] || { echo "batch-id-token: SSM のバッチ用パラメータが足りない" >&2; exit 1; }
 T=$("$AWS" cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH \
   --auth-parameters "USERNAME=$USERNAME,PASSWORD=$PASSWORD" --client-id "$CLIENT_ID" \
   --query AuthenticationResult.IdToken --output text 2>/dev/null)

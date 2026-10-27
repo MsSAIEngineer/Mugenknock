@@ -36,7 +36,7 @@
 
 | テーブル | 属性 | 型 | 既存データの扱い |
 |---|---|---|---|
-| Questions | `humanReviewRequestedAt` / `reviewReason` | S | 新規。過去分は `--mark-past` で約23問に付ける |
+| Questions | `humanReviewRequestedAt` / `reviewReason` | S | 新規。過去分は `--mark-past` で11問に付けた（2026-10-28） |
 | Questions | `humanReviewedAt` / `humanReviewResult` / `humanReviewReason` / `humanReviewNote` | S | 新規 |
 
 **既存データの移行が必要か**: いいえ（過去分の登録は任意の一度きり）

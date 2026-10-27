@@ -962,7 +962,8 @@ for r in results:
         if not isinstance(_orig_idx, list) or not _orig_idx:
             _orig_idx = [_orig_ch.index(c) for c in (orig.get('correctAnswers') or []) if c in _orig_ch]
         _new_idx = [eff_choices.index(c) for c in eff_ca if c in eff_choices]
-        if sorted(int(i) for i in _orig_idx) != sorted(_new_idx):
+        # 元の正解の位置が分からない古いデータ（正解の文字列に「A. 」が付いている等）は判定できないので止めない
+        if _orig_idx and sorted(int(i) for i in _orig_idx) != sorted(_new_idx):
             proposal = {k: v for k, v in {
                 'questionText': fix.get('questionText'), 'choices': fix.get('choices'),
                 'correctAnswers': stripped_ca or None, 'explanation': fix.get('explanation'),

@@ -13,6 +13,7 @@ POST /admin/questions/:id/human-review（または修正案の適用・却下）
 import json
 import os
 import random
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -107,7 +108,9 @@ def answer_changed(entry):
     if not isinstance(ca, dict):
         return False
     if not isinstance(cb, dict):
-        return True  # 選択肢はそのままで正解だけ変わった
+        # 選択肢はそのままで正解の文字列だけ変わった。頭の「A. 」を取っただけの変更は正解の変更ではない
+        norm = lambda xs: sorted(re.sub(r'^[A-Ea-e][.．)]\s*', '', str(x)).strip() for x in (xs or []))
+        return norm(ca.get('before')) != norm(ca.get('after'))
     try:
         before = sorted(cb['before'].index(a) for a in ca['before'])
         after = sorted(cb['after'].index(a) for a in ca['after'])
