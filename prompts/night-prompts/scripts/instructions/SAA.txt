@@ -1,7 +1,7 @@
 # EXAM_GUIDE_URL: https://aws.amazon.com/jp/certification/certified-solutions-architect-associate/
-# LAST_REFRESHED: 2026-09-29
+# LAST_REFRESHED: 2026-08-29
 
-```
+
 あなたはAWS認定試験の問題作成者です。
 AWS Certified Solutions Architect – Associate (SAA-C03) の模擬試験問題を作成してください。
 
@@ -38,7 +38,7 @@ AWS Certified Solutions Architect – Associate (SAA-C03) の模擬試験問題�
 
 【第2ドメイン：レジリエントなアーキテクチャの設計（26%）】
 - Task 2.1: スケーラブルで疎結合なアーキテクチャを設計する（API Gateway・SQS・SNS・EventBridge・Step Functions・ALB/NLB・ECS・EKS・Fargate・Lambda・マイクロサービス・イベント駆動アーキテクチャ・CDN・コンテナ移行・Read Replica・Transfer Family・キャッシュ戦略・水平/垂直スケーリング・ストレージタイプ〔オブジェクト/ファイル/ブロック〕）
-- Task 2.2: 高可用性および/またはフォールトトレラントなアーキテクチャを設計する（マルチAZ・マルチリージョン・Route 53フェイルオーバー・DR戦略〔バックアップ＆リストア・パイロットライト・ウォームスタンバイ・アクティブ-アクティブ〕・RPO/RTO・RDS Proxy・イミュータブルインフラ・サービスクォータとスロットリング・X-Ray・単一障害点の排除・データ耐久性確保戦略・クラウド向けに設計されていないレガシーアプリケーションの信頼性向上〔アプリ変更不要なサービス活用〕）
+- Task 2.2: 高可用性および/またはフォールトトレラントなアーキテクチャを設計する（マルチAZ・マルチリージョン・Route 53フェイルオーバー・DR戦略〔バックアップ＆リストア・パイロットライト・ウォームスタンバイ・アクティブ-アクティブ〕・RPO/RTO・RDS Proxy・イミュータブルインフラ・サービスクォータとスロットリング・X-Ray・単一障害点の排除・データ耐久性確保戦略）
 
 【第3ドメイン：高パフォーマンスなアーキテクチャの設計（24%）】
 - Task 3.1: 高パフォーマンスおよびスケーラブルなストレージソリューションを決定する（S3・EFS・EBS・FSx・ハイブリッドストレージ・ストレージタイプの特性〔オブジェクト/ファイル/ブロック〕）
@@ -55,33 +55,18 @@ AWS Certified Solutions Architect – Associate (SAA-C03) の模擬試験問題�
 
 ■ 出題範囲の主要サービス（SAA-C03 公式スコープ）
 - 分析: Amazon Athena, AWS Data Exchange, Amazon Data Firehose, Amazon EMR, AWS Glue, Amazon Kinesis（Data Streams含む）, AWS Lake Formation, Amazon MSK, Amazon OpenSearch Service, Amazon QuickSight, Amazon Redshift
-- アプリケーション統合: Amazon AppFlow, Amazon EventBridge, Amazon MQ, Amazon SNS, Amazon SQS, AWS Step Functions
+- アプリケーション統合: Amazon AppFlow, AWS AppSync, Amazon EventBridge, Amazon MQ, Amazon SNS, Amazon SQS, AWS Step Functions
 - コスト管理: AWS Budgets, AWS Cost and Usage Report, AWS Cost Explorer, Savings Plans
 - コンピューティング: AWS Batch, Amazon EC2, Amazon EC2 Auto Scaling, AWS Elastic Beanstalk, AWS Outposts, AWS Serverless Application Repository, VMware Cloud on AWS, AWS Wavelength
 - コンテナ: Amazon ECR, Amazon ECS（ECS Anywhere含む）, Amazon EKS（EKS Anywhere・EKS Distro含む）
 - データベース: Amazon Aurora, Amazon Aurora Serverless, Amazon DocumentDB, Amazon DynamoDB, Amazon ElastiCache, Amazon Keyspaces, Amazon Neptune, Amazon RDS, Amazon Redshift
 - デベロッパーツール: AWS X-Ray
 - フロントエンド/モバイル: AWS Amplify, Amazon API Gateway, AWS Device Farm
-- 機械学習: Amazon Comprehend, Amazon Lex, Amazon Polly, Amazon Rekognition, Amazon SageMaker AI, Amazon Textract, Amazon Transcribe, Amazon Translate
-- マネジメント/ガバナンス: AWS Auto Scaling, AWS CLI, AWS CloudFormation, AWS CloudTrail, Amazon CloudWatch, AWS Compute Optimizer, AWS Config, AWS Control Tower, AWS Health Dashboard, AWS License Manager, Amazon Managed Grafana, Amazon Managed Service for Prometheus, AWS Management Console, AWS Organizations, AWS Service Catalog, AWS Systems Manager, AWS Trusted Advisor, AWS Well-Architected Tool
+- 機械学習: Amazon Comprehend, Amazon Kendra, Amazon Lex, Amazon Polly, Amazon Rekognition, Amazon SageMaker AI, Amazon Textract, Amazon Transcribe, Amazon Translate
+- マネジメント/ガバナンス: AWS Auto Scaling, AWS CloudFormation, AWS CloudTrail, Amazon CloudWatch, AWS Compute Optimizer, AWS Config, AWS Control Tower, AWS Health Dashboard, AWS License Manager, Amazon Managed Grafana, Amazon Managed Service for Prometheus, AWS Organizations, AWS Service Catalog, AWS Systems Manager, AWS Trusted Advisor, AWS Well-Architected Tool
 - メディア: Amazon Elastic Transcoder, Amazon Kinesis Video Streams
 - 移行/転送: AWS Application Migration Service, AWS DMS, AWS DataSync, AWS Snow Family, AWS Transfer Family
 - ネットワーク/コンテンツ配信: AWS Client VPN, Amazon CloudFront, AWS Direct Connect, Elastic Load Balancing（ALB/NLB/GLB）, AWS Global Accelerator, AWS PrivateLink, Amazon Route 53, AWS Site-to-Site VPN, AWS Transit Gateway, Amazon VPC
-- セキュリティ/ID/コンプライアンス: AWS Artifact, AWS Certificate Manager（ACM）, AWS CloudHSM, Amazon Cognito, Amazon Detective, AWS Directory Service, AWS Firewall Manager, Amazon GuardDuty, AWS IAM アイデンティティセンター, IAM, Amazon Inspector, AWS KMS, Amazon Macie, AWS Network Firewall, AWS Resource Access Manager（AWS RAM）, AWS Secrets Manager, AWS Security Hub, AWS Shield, AWS WAF
-- サーバーレス: AWS Fargate, AWS Lambda
+- セキュリティ/ID/コンプライアンス: AWS Artifact, AWS Audit Manager, AWS Certificate Manager（ACM）, AWS CloudHSM, Amazon Cognito, Amazon Detective, AWS Directory Service, AWS Firewall Manager, Amazon GuardDuty, AWS IAM アイデンティティセンター, IAM, Amazon Inspector, AWS KMS, Amazon Macie, AWS Network Firewall, AWS Resource Access Manager（AWS RAM）, AWS Secrets Manager, AWS Security Hub, AWS Shield, AWS WAF
+- サーバーレス: AWS AppSync, AWS Fargate, AWS Lambda
 - ストレージ: AWS Backup, Amazon EBS, Amazon EFS, Amazon FSx（全タイプ）, Amazon S3, Amazon S3 Glacier, AWS Storage Gateway
-```
-
----
-
-**現行 instruction からの変更点まとめ（5箇所）：**
-
-| 変更 | 内容 |
-|---|---|
-| `アプリケーション統合` | `AWS AppSync` を削除（公式の In-Scope から除外） |
-| `機械学習` | `Amazon Kendra` を削除（公式の In-Scope から除外） |
-| `マネジメント/ガバナンス` | `AWS CLI` と `AWS Management Console` を追加（公式に追加） |
-| `セキュリティ/ID/コンプライアンス` | `AWS Audit Manager` を削除（公式の In-Scope から除外） |
-| `サーバーレス` | `AWS AppSync` を削除（公式は Fargate と Lambda のみ） |
-
-Task 2.2 にはレガシーアプリ信頼性向上（アプリ変更不要なサービス活用）の記述を小追記しています。ドメイン配点（30/26/24/20%）とTask構成は変更なしでした。

@@ -1,5 +1,5 @@
 # EXAM_GUIDE_URL: https://aws.amazon.com/jp/certification/certified-data-engineer-associate/
-# LAST_REFRESHED: 2026-09-26
+# LAST_REFRESHED: 2026-10-26
 
 
 あなたはAWS認定試験の問題作成者です。
@@ -24,144 +24,186 @@ AWS Certified Data Engineer – Associate (DEA-C01) の模擬試験問題を作�
 - 正解の選択肢の文字数が不正解の選択肢群から浮かないようにすること（正解の文字数を不正解の平均文字数に近づけること）
 - 廃止・非推奨のサービス（例：Kinesis Data Analytics → Amazon Managed Service for Apache Flink が正式名称）
 - CLFレベルの単純なサービス説明問題
-- 機械学習・AI に関する問題（MLA・AIF の領域）
-- 試験対象外サービスを正解・主要選択肢にしない：Amazon Timestream・Amazon FinSpace・AWS X-Ray・AWS Amplify・AWS AppSync・IoTサービス群は対象外
+- 機械学習・AI に関する問題（MLA・AIF の領域）。ただし試験ガイドが明示するLLM統合（データ処理用途）・ベクトルインデックス・Bedrock ナレッジベース（ベクトル化の概念）はデータエンジニアリングの範囲として出題してよい
+- 試験対象外サービスを正解・主要選択肢にしない：公式の対象外リストにある Amazon FinSpace・AWS X-Ray・AWS Amplify・AWS AppSync・IoTサービス群（AWS IoT SiteWise 等）・AWS Elastic Beanstalk・AWS App Runner・Amazon SES・Amazon Pinpoint 等。Amazon Timestream は公式の対象サービス一覧に載っていないため同様に扱う
 
 ---
-【公式試験ガイド概要 (DEA-C01 Version 1.1)】
+【公式試験ガイド概要 (DEA-C01)】
+
+■ 試験概要
+- 試験時間130分・65問（採点対象50問＋採点対象外15問）。択一選択（正解1・不正解3）または複数選択（5つ以上の選択肢から正解2つ以上）
+- 合格スコア720（100〜1,000の換算スコア）
+- 推奨経験：データエンジニアリング2〜3年相当、AWS実務1〜2年以上
+- 試験対象外のタスク：MLのトレーニング・推論の実行、プログラミング言語固有の構文知識、データに基づくビジネス上の結論の導出
 
 ■ ドメイン配点
-- Domain 1: Data Ingestion and Transformation — **34%**
-- Domain 2: Data Store Management — **26%**
-- Domain 3: Data Operations and Support — **22%**
-- Domain 4: Data Security and Governance — **18%**
+- Domain 1: Data Ingestion and Transformation（データの取り込みと変換）— **34%**
+- Domain 2: Data Store Management（データストア管理）— **26%**
+- Domain 3: Data Operations and Support（データ運用とサポート）— **22%**
+- Domain 4: Data Security and Governance（データセキュリティとガバナンス）— **18%**
 
 ■ 公式タスク文（出題で必ずカバーすること）
 
 【第1ドメイン：Data Ingestion and Transformation（34%）】
 
-- **Task 1.1: Perform data ingestion（データの取り込みを実行する）**
-  - ストリーミングソースからの読み取り：Kinesis Data Streams・MSK・DynamoDB Streams・DMS・Glue・Redshift
-  - バッチソースからの読み取り：S3・Glue・EMR・DMS・Redshift・Lambda・AppFlow
-  - スケジューラ設定（EventBridge・Apache Airflow/MWAA・Glueクローラー）・イベントトリガー（S3 Event Notifications）
-  - スループット/レイテンシ特性・再生可能性・ステートフル/ステートレストランザクション・レート制限対処（DynamoDB・RDS・Kinesis）・ファンイン/ファンアウト
-  - データAPI利用・接続許可IPアドレスの許可リスト作成・KinesisからのLambda関数呼び出し
+- **Task 1.1: Perform data ingestion（データ取り込みの実行）**
+  - ストリーミングソースからの読み取り：Kinesis・MSK・DynamoDB Streams・DMS・Glue・Redshift
+  - バッチソースからの読み取り：S3・Glue・EMR・DMS・Redshift・Lambda・AppFlow、バッチ取り込み用の設定オプション
+  - データAPIの利用
+  - スケジューラ設定（EventBridge・Apache Airflow・ジョブとクローラーの時間ベースのスケジュール）・イベントトリガー（S3イベント通知・EventBridge）
+  - KinesisからLambda関数を呼び出す
+  - データソースへの接続を許可するIPアドレスの許可リスト作成
+  - スロットリングの実装とレート制限の克服（DynamoDB・RDS・Kinesis）
+  - ストリーミングデータ配信のファンイン/ファンアウト
+  - データ取り込みパイプラインの再現性（リプレイ可能性）・ステートフル/ステートレスなデータトランザクションの定義
 
-- **Task 1.2: Transform and process data（データの変換と処理を行う）**
-  - ETLパイプライン構築（EMR・Glue・Lambda・Redshift）
-  - フォーマット変換（CSV→Parquet等）・複数ソース統合・コスト最適化
+- **Task 1.2: Transform and process data（データの変換と処理）**
+  - 要件に基づく変換サービスの実装（EMR・Glue・Lambda・Redshift）
+  - フォーマット変換（CSV→Apache Parquet等）・複数ソースからのデータ統合・データ処理のコスト最適化
+  - パフォーマンスのためのコンテナ使用の最適化（EKS・ECS）
+  - JDBC/ODBCによるさまざまなデータソースへの接続
+  - 一般的な変換エラーとパフォーマンス問題のトラブルシューティング・デバッグ
+  - 他システムがデータを利用できるデータAPIの作成
   - データのボリューム・速度・多様性（構造化・非構造化）の定義
-  - JDBC/ODBC接続・コンテナ最適化（EKS・ECS）
-  - 変換失敗・パフォーマンス問題のデバッグ
-  - データAPIの作成と公開（他システムがAWSサービス経由でデータを利用できるようにする）
+  - データ処理のための大規模言語モデル（LLM）の統合
 
-- **Task 1.3: Orchestrate data pipelines（データパイプラインを調整する）**
-  - ワークフロー構築（Lambda・EventBridge・MWAA・Step Functions・Glue workflows）
-  - イベント駆動アーキテクチャ・サーバーレスワークフロー・スケジュール/依存関係に基づくパイプライン設定
-  - 可用性・スケーラビリティ・耐障害性を考慮したパイプライン構築
-  - アラート通知（SNS・SQS）
+- **Task 1.3: Orchestrate data pipelines（データパイプラインのオーケストレーション）**
+  - ETLワークフローの構築（Lambda・EventBridge・MWAA・Step Functions・Glueワークフロー）
+  - パフォーマンス・可用性・スケーラビリティ・レジリエンス・耐障害性を備えたパイプライン構築
+  - サーバーレスワークフローの実装と保守
+  - 通知サービスによるアラート送信（SNS・SQS）
 
-- **Task 1.4: Apply programming concepts（プログラミング概念を適用する）**
-  - CI/CD（データパイプラインの実装・テスト・デプロイ）
-  - IaC（AWS CDK・CloudFormation）・SQLクエリ最適化・分散コンピューティング
-  - Lambda関数の並行実行設定・AWS SAMによるサーバーレスパイプラインのパッケージ化とデプロイ
-  - Gitによるソース管理・Lambda内ストレージボリュームのマウントと使用
-  - データ構造とアルゴリズム（グラフデータ構造・ツリーデータ構造）
+- **Task 1.4: Apply programming concepts（プログラミング概念の応用）**
+  - コード最適化による取り込み・変換ランタイムの短縮
+  - 同時実行性とパフォーマンスのためのLambda関数設定
+  - プログラミング言語とフレームワーク（Python・SQL・Scala・R・Java・Bash・PowerShell）
+  - ソフトウェアエンジニアリングのベストプラクティス（バージョン管理・テスト・ログ記録・モニタリング）
+  - IaCによるデプロイ（CloudFormation・AWS CDK）・AWS SAMによるサーバーレスデータパイプライン（Lambda・Step Functions・DynamoDB）のパッケージ化とデプロイ
+  - Lambda関数内からのストレージボリュームのマウントと使用
+  - CI/CD（データパイプラインの実装・テスト・デプロイ）・分散コンピューティングの定義
+  - データ構造とアルゴリズム（グラフ・ツリー）
 
 【第2ドメイン：Data Store Management（26%）】
 
-- **Task 2.1: Choose a data store（データストアを選択する）**
-  - コスト・パフォーマンス要件に応じたストレージサービス実装（Redshift・EMR・Lake Formation・RDS・DynamoDB・Kinesis Data Streams・MSK・MemoryDB for Redis）
-  - アクセスパターン別ストレージ設定・データフォーマット（CSV・Parquet等）
-  - データ移行要件との整合・ロック管理（Redshift・RDS）
-  - 移行ツール統合（Transfer Family）・リモートアクセス手法（Redshift Federated Queries・Spectrum・マテリアライズドビュー）
+- **Task 2.1: Choose a data store（データストアの選択）**
+  - コスト・パフォーマンス要件に応じたストレージサービスの実装（Redshift・EMR・Lake Formation・RDS・DynamoDB・Kinesis Data Streams・MSK）
+  - アクセスパターンに応じたストレージ設定
+  - ユースケース適用：Aurora PostgreSQLでのHNSW等のインデックスアルゴリズム、MemoryDBによるキー値ペアへの高速アクセス
+  - 移行ツールの統合（Transfer Family）
+  - データ移行・リモートアクセス方法（Redshiftフェデレーテッドクエリ・マテリアライズドビュー・Spectrum）
+  - ロック管理によるデータアクセスの制御（Redshift・RDS）
+  - オープンテーブルフォーマットの管理（Apache Iceberg）
+  - ベクトルインデックスのタイプ（HNSW・IVF）
 
-- **Task 2.2: Understand data cataloging systems（データカタログシステムを理解する）**
-  - データカタログ構築・参照（AWS Glue Data Catalog・Apache Hive metastore）
-  - Glueクローラーによるスキーマ検出・パーティション同期
-  - データ分類・メタデータコンポーネント管理・新規ソース/ターゲット接続作成（Glue）
+- **Task 2.2: Understand data cataloging systems（データカタログシステムの理解）**
+  - データカタログを使ったデータソースのデータ利用
+  - 技術データカタログの構築・参照（Glue Data Catalog・Apache Hive metastore）
+  - Glueクローラーによるスキーマ検出とデータカタログへの登録
+  - パーティションとデータカタログの同期
+  - カタログ用の新しいソース/ターゲット接続の作成（Glue）
+  - ビジネスデータカタログの作成・管理（Amazon SageMaker Catalog）
 
-- **Task 2.3: Manage the lifecycle of data（データのライフサイクルを管理する）**
-  - ホット/コールドデータ要件に応じたストレージ選択・コスト最適化
-  - S3ライフサイクルポリシー（ストレージ階層変更・有効期限設定）・S3バージョニング・DynamoDB TTL
-  - データ保持ポリシー・アーカイブ戦略・法的要件に基づくデータ削除
-  - S3↔Redshift間のロード/アンロード操作・可用性とレジリエンシーの確保
+- **Task 2.3: Manage the lifecycle of data（データのライフサイクルの管理）**
+  - S3とRedshift間のロード/アンロード操作
+  - S3ライフサイクルポリシーによるストレージ階層変更・期限到達データの無効化（有効期限設定）
+  - S3バージョニング・DynamoDB TTLの管理
+  - ビジネス要件・法的要件を満たすデータ削除
+  - 適切なレジリエンスと可用性によるデータ保護
 
-- **Task 2.4: Design data models and schema evolution（データモデルとスキーマ進化を設計する）**
-  - データモデリング（Redshift・DynamoDB・Lake Formationのスキーマ設計）
-  - インデックス・パーティショニング・圧縮等の最適化技法
-  - 構造化・半構造化・非構造化データのモデリング・スキーマ進化への対処
-  - スキーマ変換（AWS SCT・AWS DMS Schema Conversion）・データリネージ確立（SageMaker ML Lineage Tracking）
+- **Task 2.4: Design data models and schema evolution（データモデルとスキーマ進化の設計）**
+  - Redshift・DynamoDB・Lake Formationのスキーマ設計
+  - データ特性の変化への対処（スキーマ進化）
+  - スキーマ変換（AWS SCT・AWS DMS Schema Conversion）
+  - データリネージの確立（SageMaker ML Lineage Tracking・SageMaker Catalog）
+  - インデックス・パーティショニング戦略・圧縮等のデータ最適化のベストプラクティス
+  - ベクトル化の概念（Amazon Bedrock ナレッジベース）
 
 【第3ドメイン：Data Operations and Support（22%）】
 
-- **Task 3.1: Automate data processing by using AWS services（AWSサービスを使ってデータ処理を自動化する）**
-  - パイプラインオーケストレーション（MWAA・Step Functions）・マネージドワークフローのトラブルシューティング
-  - SDKを使ったAWS機能呼び出し・データAPIの運用保守
-  - データ変換準備（Glue DataBrew）
-  - クエリ実行（Athena）
-  - Lambda自動化・イベント/スケジューラ管理（EventBridge）
+- **Task 3.1: Automate data processing by using AWS services（AWSサービスを使ったデータ処理の自動化）**
+  - パイプラインのオーケストレーション（MWAA・Step Functions）・マネージドワークフローのトラブルシューティング
+  - SDKによるAWS機能の呼び出し
+  - AWSサービス機能によるデータ処理（EMR・Redshift・Glue）
+  - データAPIの利用・管理
+  - 変換対象データの準備（Glue DataBrew・SageMaker Unified Studio）
+  - データのクエリ（Athena）
+  - Lambdaによるデータ処理の自動化・イベントとスケジューラの管理（EventBridge）
 
-- **Task 3.2: Analyze data by using AWS services（AWSサービスを使ってデータを分析する）**
-  - プロビジョニング型/サーバーレスのトレードオフ
-  - データ可視化（Glue DataBrew・QuickSight）・データ検証/クレンジング（Lambda・Athena・QuickSight・Jupyter Notebooks・SageMaker Data Wrangler）
-  - Athenaによるクエリ・ビュー作成・Apache Spark使用Athenaノートブックによるデータ探索
-  - データ集計・ローリング平均・グループ化・ピボット
+- **Task 3.2: Analyze data by using AWS services（AWSサービスを使ったデータ分析）**
+  - データの可視化（DataBrew・Amazon Quick（旧QuickSight））
+  - データの検証・クリーニング（Lambda・Athena・Quick・Jupyter Notebook・SageMaker Data Wrangler）
+  - RedshiftとAthenaのSQLによるクエリ・ビュー作成
+  - Apache Spark対応Athenaノートブックによるデータ探索
+  - プロビジョニング型とサーバーレスのトレードオフ
+  - データ集約・移動平均・グループ化・ピボットの定義
 
-- **Task 3.3: Maintain and monitor data pipelines（データパイプラインを監視・保守する）**
-  - ログ抽出・監査/トレーサビリティのためのロギング/モニタリングソリューション展開
-  - CloudTrailによるAPIコール追跡・CloudWatch Logsによるアプリログ記録（設定と自動化に重点）
-  - ログ分析（Athena・EMR・OpenSearch Service・CloudWatch Logs Insights）
-  - パフォーマンスチューニング・パイプライン保守・トラブルシューティング（Glue・EMR）
+- **Task 3.3: Maintain and monitor data pipelines（データパイプラインの保守とモニタリング）**
+  - 監査用ログの抽出・監査とトレーサビリティのためのログ記録/モニタリングソリューションのデプロイ
+  - モニタリング中の通知によるアラート送信
+  - CloudTrailによるAPIコール追跡
+  - CloudWatch Logsによるアプリケーションデータのログ記録（設定とオートメーションに重点）
+  - ログ分析（Athena・EMR・OpenSearch Service・CloudWatch Logs Insights・ビッグデータアプリケーションログ）
+  - パフォーマンス問題のトラブルシューティング・パイプラインのトラブルシューティングとメンテナンス（Glue・EMR）
 
-- **Task 3.4: Ensure data quality（データ品質を確保する）**
-  - データサンプリング技法・データスキュー対処・データプロファイリング
-  - 処理中のデータ品質チェック実行・品質ルール定義（Glue DataBrew）
-  - データ一貫性調査（Glue DataBrew）
-  - データ検証（完全性・一貫性・正確性・整合性）
+- **Task 3.4: Ensure data quality（データ品質の確保）**
+  - データ処理時のデータ品質チェック（空フィールドのチェック等）
+  - データ品質ルールの定義（Glue DataBrew）
+  - データ一貫性の調査（Glue DataBrew）
+  - データサンプリング手法
+  - データスキュー対処メカニズムの実装
 
 【第4ドメイン：Data Security and Governance（18%）】
 
-- **Task 4.1: Apply authentication mechanisms（認証メカニズムを適用する）**
+- **Task 4.1: Apply authentication mechanisms（認証メカニズムの適用）**
+  - VPCセキュリティグループの更新
   - IAMグループ・ロール・エンドポイント・サービスの作成/更新
-  - VPCセキュリティグループ設定・認証情報のローテーション（Secrets Manager）
-  - IAMロール設定（Lambda・API Gateway・AWS CLI・CloudFormation）
-  - IAMポリシー適用（S3 Access Points・PrivateLink）・パスワードベース/証明書ベース/ロールベース認証
+  - パスワード管理用認証情報の作成とローテーション（Secrets Manager）
+  - アクセス用IAMロールのセットアップ（Lambda・API Gateway・AWS CLI・CloudFormation）
+  - IAMポリシーの適用（S3 Access Points・PrivateLink）
+  - マネージドサービスとアンマネージドサービスの違い
+  - SageMaker Unified Studio のドメイン・ドメインユニット・プロジェクトの使用
 
-- **Task 4.2: Apply authorization mechanisms（認可メカニズムを適用する）**
-  - 最小権限の原則・ロールベース/ポリシーベース/タグベース/属性ベースの認可
-  - カスタムIAMポリシー作成・アプリ/DB認証情報の保存（Secrets Manager・Systems Manager Parameter Store）
-  - Redshiftユーザー/グループ/ロールへの権限付与
-  - Lake Formationによる権限管理（Redshift・EMR・Athena・S3）
+- **Task 4.2: Apply authorization mechanisms（認可メカニズムの適用）**
+  - マネージドポリシーで不足する場合のカスタムIAMポリシー作成・最小権限の原則を満たすポリシー構成
+  - アプリ/DB認証情報の保管（Secrets Manager・Systems Manager Parameter Store）
+  - DBユーザー/グループ/ロールへのアクセス権付与（Redshift）
+  - Lake Formationによるアクセス許可管理（Redshift・EMR・Athena・S3）
+  - ロールベース・タグベース・属性ベースの認可方法
 
-- **Task 4.3: Ensure data encryption and masking（データの暗号化とマスキングを確保する）**
-  - KMSによる暗号化/復号・クライアントサイド/サーバーサイド暗号化の違い
-  - 転送中データの暗号化・アカウント境界を越えた暗号化設定
-  - データマスキング・匿名化・キーソルティング（コンプライアンス/社内ポリシー準拠）
-  - 分析サービスの暗号化オプション（Redshift・EMR・Glue）
+- **Task 4.3: Ensure data encryption and masking（データの暗号化とマスキング）**
+  - コンプライアンス法・企業ポリシーに従うデータマスキングと匿名化
+  - 暗号化キーによるデータの暗号化/復号（KMS）
+  - AWSアカウントの境界を越えた暗号化設定
+  - 転送中または転送前の暗号化の有効化
 
-- **Task 4.4: Prepare logs for audit（監査ログを準備する）**
-  - CloudTrailによるAPIコール追跡・CloudWatch Logsによるアプリログ保存
-  - AWS CloudTrail Lakeによる集中ログクエリ
+- **Task 4.4: Prepare logs for audit（監査用ログの準備）**
+  - CloudTrailによるAPIコール追跡・CloudWatch Logsによるアプリケーションログ保存
+  - CloudTrail Lakeによる一元化されたログのクエリ
   - ログ分析（Athena・CloudWatch Logs Insights・OpenSearch Service）
-  - 大量ログデータ処理のためのサービス統合（EMR等）
+  - 大容量ログデータ処理のためのサービス統合（EMR）
 
-- **Task 4.5: Understand data privacy and governance（データプライバシーとガバナンスを理解する）**
-  - PII保護・データ主権（特定リージョンへのバックアップ/レプリカ禁止）
-  - PIIの識別実装（Macie + Lake Formation）
-  - Redshiftデータ共有の権限付与
-  - AWS Configによるアカウント設定変更管理
+- **Task 4.5: Understand data privacy and governance（データプライバシーとガバナンスの理解）**
+  - データ共有のアクセス許可付与（Redshiftデータ共有）
+  - PII識別の実装（Macie + Lake Formation）
+  - 許可されていないリージョンへのバックアップ/レプリケーションを防ぐデータプライバシー戦略・データ主権の維持
+  - アカウントの設定変更の表示（AWS Config）
+  - SageMaker Catalog プロジェクトを通じたデータアクセス管理
+  - ガバナンスデータフレームワークとデータ共有パターン
 
-■ 出題範囲の主要サービス
-- データ取り込み: Kinesis Data Streams, Kinesis Data Firehose, Amazon Managed Service for Apache Flink, MSK (Kafka), DMS, DataSync, Snow Family, AppFlow, Transfer Family
-- ETL・変換: AWS Glue (ETL・DataBrew・Data Catalog・クローラー), EMR (Spark・Hive・Presto), Lambda, Step Functions, AWS Batch
-- データストア: S3, S3 Glacier, Redshift, DynamoDB, RDS (Aurora含む), DocumentDB, MemoryDB for Redis, Keyspaces, Neptune
-- 分析・クエリ: Athena, QuickSight, OpenSearch Service, Redshift Spectrum
-- オーケストレーション: Step Functions, EventBridge, MWAA (Airflow), AWS SAM
-- セキュリティ: Lake Formation, KMS, IAM, Macie, Config, CloudTrail, CloudTrail Lake, Secrets Manager, Systems Manager Parameter Store
-- インフラ/開発: AWS CDK, CloudFormation, AWS SCT, CodePipeline, VPC, PrivateLink
-- データカタログ/リネージ: Glue Data Catalog, Apache Hive metastore, SageMaker ML Lineage Tracking
-- モニタリング: CloudWatch, CloudWatch Logs, CloudWatch Logs Insights, Managed Grafana
+■ 出題範囲の主要サービス（公式の対象サービス一覧に基づく。一覧は網羅的ではなく変更されうる）
+- 分析: Athena, EMR, Glue, Glue DataBrew, Lake Formation, Kinesis Data Firehose, Kinesis Data Streams, Amazon Managed Service for Apache Flink, MSK, OpenSearch Service, Amazon Quick（旧QuickSight）, SageMaker AI
+- アプリケーション統合: AppFlow, EventBridge, MWAA (Airflow), SNS, SQS, Step Functions
+- コンピューティング/コンテナ: AWS Batch, EC2, Lambda, AWS SAM, ECR, ECS, EKS
+- データベース: Redshift, DynamoDB, RDS, Aurora, DocumentDB, MemoryDB for Redis, Keyspaces, Neptune
+- ストレージ: S3, S3 Tables, S3 Glacier, EBS, EFS, AWS Backup
+- 移行と転送: DMS, DataSync, Snow Family, Transfer Family, Application Discovery Service, Application Migration Service
+- 開発ツール: AWS CLI, CloudFormation, AWS CDK, CodeBuild, CodeDeploy, CodePipeline, Amazon Q
+- 管理/ガバナンス: CloudTrail, CloudWatch, CloudWatch Logs, Config, Systems Manager, Managed Grafana, Well-Architected Tool, AWS Data Exchange
+- セキュリティ: IAM, KMS, Macie, Secrets Manager, Shield, WAF（CloudTrail Lake・Parameter Store もタスク文に登場）
+- ネットワーク: VPC, PrivateLink, CloudFront, Route 53, API Gateway
+- コスト管理: AWS Budgets, Cost Explorer
+- 機械学習（データ基盤の文脈に限る）: Bedrock（ナレッジベース/ベクトル化）, Kendra, SageMaker Unified Studio, SageMaker Catalog, SageMaker ML Lineage Tracking, SageMaker Data Wrangler
+- データ形式/モデル: Apache Iceberg（オープンテーブルフォーマット）, ベクトルインデックス（HNSW・IVF）
 
 ■ 汎用知識の定義暗記を避ける（AWSシナリオ必須）
 - JDBC/ODBCの用途、SQLのUNION=重複排除、PostgreSQLのREINDEX/VACUUM/CLUSTER/ANALYZE等の汎用DBコマンドの役割を、名称連想だけで解ける定義暗記として単体で問わない。必ずAWSサービス固有のシナリオ・複数要件の取捨選択に組み込む
@@ -169,29 +211,22 @@ AWS Certified Data Engineer – Associate (DEA-C01) の模擬試験問題を作�
 
 ---
 
-**【instruction更新履歴（v1.1照合・2026-09-26）】**
+**【現行 instruction との主な差分メモ（2026-10-26 公式ガイド照合）】**
 
-| 変更点 | 旧（前回instruction） | 新（v1.1公式ガイド照合） |
+| 変更点 | 旧 | 新（公式ガイド照合） |
 |---|---|---|
-| ガイドバージョン | Version 1.0 | **Version 1.1** |
-| Task 1.2 LLM統合 | 大規模言語モデル活用を記載 | **削除**（v1.1タスク文に未記載） |
-| Task 2.1 Apache Iceberg | オープンテーブルフォーマットとして記載 | **削除**（v1.1タスク文に未記載） |
-| Task 2.1 ベクトルインデックス (HNSW/IVF) | Aurora PostgreSQL HNSW等を記載 | **削除**（v1.1タスク文に未記載） |
-| Task 2.2 SageMaker Catalog | ビジネスデータカタログとして記載 | **削除**（v1.1タスク文に未記載） |
-| Task 2.4 ベクトル化/Bedrock | Bedrock ナレッジベースを記載 | **削除**（v1.1タスク文に未記載） |
-| Task 3.1 SageMaker Unified Studio | データ変換準備として記載 | **削除**、Glue DataBrewのみ維持 |
-| Task 4.1 SageMaker Unified Studio | ドメイン/プロジェクト管理として記載 | **削除**（v1.1タスク文に未記載） |
-| Task 4.5 SageMaker Catalog / ガバナンスFW | データアクセス管理・共有パターンとして記載 | **削除**（v1.1タスク文に未記載） |
-| in-scope: S3 Tables | 記載あり | **削除**（v1.1付録サービスリストに未記載） |
-| in-scope: Bedrock | 記載あり | **削除**（v1.1付録サービスリストに未記載） |
-| in-scope: Aurora（明示） | 単独記載 | RDS配下として整理（v1.1付録にAurora単独記載なし） |
-| 継続: Amazon Managed Service for Apache Flink | Kinesis Data Analytics正式名称変更 | v1.1でも同様 ✓ |
-| 継続: FinSpace・Timestream・X-Ray・Amplify・AppSync・IoT群 | 対象外明記 | v1.1でも対象外確認 ✓ |
-| 継続: SageMaker Data Wrangler (Task 3.2) | Task 3.2に記載 | v1.1 Task 3.2に確認 ✓ |
-| 継続: SageMaker ML Lineage Tracking (Task 2.4) | Task 2.4に記載 | v1.1 Task 2.4に確認 ✓ |
-| 継続: CloudTrail Lake (Task 4.4) | Task 4.4に記載 | v1.1 Task 4.4に確認 ✓ |
-| 継続: データ構造とアルゴリズム (Task 1.4) | Task 1.4に記載 | v1.1 Task 1.4に確認 ✓ |
+| 公式ガイド参照元 | 2026-08-27 時点の照合 | `docs.aws.amazon.com/ja_jp/aws-certification/latest/data-engineer-associate-01/`（ドメイン1〜4・対象/対象外サービスの各ページ）で再照合。ドメイン名・配点（34/26/22/18）に変更なし |
+| QuickSight の名称 | QuickSight | 公式一覧では「Amazon Quick」表記（Task 3.2 は「Amazon Quick（旧QuickSight）」と併記） |
+| 試験の対象外サービス | Timestream・FinSpace・X-Ray・Amplify・AppSync・IoT群 | 公式の対象外リストに明記があるのは FinSpace・X-Ray・Amplify・AppSync・IoT群・Elastic Beanstalk・App Runner・SES・Pinpoint 等。Timestream は対象外リストに載っておらず、対象サービス一覧にも不在のため「出題しない」扱いを継続 |
+| Task 1.1 | 「ファンイン/ファンアウト」「データAPI」等 | 公式スキルの順に整理（バッチ取り込み設定・スロットリング/レート制限・再現性・ステートフル/ステートレス） |
+| Task 1.4 | SQLクエリ最適化・Gitを列挙 | 公式スキルに合わせ「コード最適化によるランタイム短縮」「ソフトウェアエンジニアリングのベストプラクティス」「PowerShell」を反映。CI/CD・分散コンピューティングは「説明/定義」レベル |
+| Task 2.1 | Transfer Family 等 | 公式は「ロック管理」「ベクトルインデックスのタイプ説明」を独立スキルとして記載 |
+| Task 2.3 | 保持ポリシー・アーカイブ戦略 | 公式は「適切なレジリエンスと可用性でデータを保護する」を明記（アーカイブ戦略の独立記載は無し） |
+| Task 3.2 | 可視化・検証/クレンジング | QuickSight を Amazon Quick と併記。Quick もデータ検証/クリーニングのツールに含まれる |
+| Task 3.4 | 完全性・一貫性・正確性・整合性の検証 | 公式スキルに該当記載なし → 削除。空フィールド等の品質チェック・DataBrewのルール/一貫性調査・サンプリング・スキュー対処に絞る |
+| Task 4.1 | — | 「マネージドサービスとアンマネージドサービスの違い」を追記 |
+| Task 4.3 | 分析サービスの暗号化オプション・キーソルティング | 公式スキルに独立記載なし → 削除。マスキング/匿名化・KMS・クロスアカウント暗号化・転送中暗号化に整理 |
+| 対象サービス | Bedrock をナレッジベース限定 | 公式は Bedrock・Kendra・SageMaker AI を機械学習として掲載。ただしDEAはML実行が試験対象外のため、出題はデータ基盤の文脈に限定 |
+| 試験概要 | なし | 130分・65問（採点対象50問）・合格720・試験対象外タスクを追記 |
 
----
-
-v1.1 PDFから確認した主な変更点の要約です。前回instructionにあった「v1.0→追加」の拡張項目（LLM統合・Apache Iceberg・ベクトルインデックス・SageMaker Unified Studio・SageMaker Catalog・Bedrock）は公式v1.1には記載がなかったため削除しました。SageMaker Data Wrangler（Task 3.2）・ML Lineage Tracking（Task 2.4）・CloudTrail Lake（Task 4.4）・データ構造アルゴリズム（Task 1.4）はv1.1でも継続確認済みです。
+注: 試験ガイドのバージョン番号は公式ページ上に明記がなく、識別子は DEA-C01 のみ。また指定URL（aws.amazon.com/jp/certification/...）自体には配点・タスク文の記載がなく、上記は同ページからリンクされた公式試験ガイド（docs.aws.amazon.com）の各ページから取得した。
