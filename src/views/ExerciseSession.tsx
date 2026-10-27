@@ -125,8 +125,20 @@ const CopyButton = ({ getText }: { getText: () => string }) => {
   );
 };
 
-// 「もっと知りたいとき」の1行。行全体を押すと質問文だけをコピーする（specs/009）。
-const FollowUpRow = ({ text }: { text: string }) => {
+// 解説の後のブロック（ASK AI・COLUMN）の見出し。色付きのラベル＋右へ伸びる線。
+const SectionLabel = ({ bg, color, children }: { bg: string; color: string; children: React.ReactNode }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)' }}>
+    <span style={{
+      background: bg, color,
+      fontSize: 'var(--font-size-2xs)', fontWeight: 700, letterSpacing: '1.5px',
+      padding: '3px 10px', borderRadius: 'var(--border-radius-sm)',
+    }}>{children}</span>
+    <span style={{ flex: 1, height: 1, background: 'color-mix(in srgb, var(--color-text-light) 40%, transparent)' }} />
+  </div>
+);
+
+// ASK AI（もっと知りたいこと）の1行。行全体を押すと質問文だけをコピーする（specs/009）。
+const FollowUpRow = ({ text, first }: { text: string; first: boolean }) => {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(text).then(() => {
@@ -141,8 +153,8 @@ const FollowUpRow = ({ text }: { text: string }) => {
       aria-label={`${text}（質問をコピー）`}
       style={{
         display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', width: '100%', minHeight: 44,
-        padding: 'var(--spacing-sm) var(--spacing-md)', textAlign: 'left', cursor: 'pointer',
-        background: 'var(--color-bg-white)', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius-md)',
+        padding: 'var(--spacing-sm) 0', textAlign: 'left', cursor: 'pointer',
+        background: 'none', border: 'none', borderTop: first ? 'none' : '1px solid var(--color-border)',
         color: 'var(--color-text-main)', fontSize: 'var(--font-size-sm2)', lineHeight: 1.6, fontFamily: 'inherit',
       }}
     >
@@ -1770,20 +1782,17 @@ export default function ExerciseSession() {
         );
       })()}
 
-      {/* もっと知りたいとき（回答後・コラムの上。質問文をコピーして利用者の AI に聞いてもらう。specs/009） */}
+      {/* ASK AI（もっと知りたいこと。回答後・コラムの上。質問文をコピーして利用者の AI に聞いてもらう。specs/009） */}
       {answered && currentQuestion && (() => {
         const displayQ = (currentQuestion.correctAnswers ? currentQuestion : detail) ?? currentQuestion;
         const fus = validFollowUps({ ...displayQ, choices: displayQ.choices ?? currentQuestion.choices });
         if (fus.length === 0) return null;
         return (
           <div style={{ marginTop: 'var(--spacing-xl)' }}>
-            <p style={{ fontWeight: 700, color: 'var(--color-text-main)', margin: '0 0 var(--spacing-xs)', fontSize: 'var(--font-size-base)' }}>もっと知りたいとき</p>
-            <p style={{ color: 'var(--color-text-sub)', margin: '0 0 var(--spacing-sm)', fontSize: 'var(--font-size-xs)' }}>
-              押すと質問をコピーします。お使いの AI に貼って聞いてみてください。
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-              {fus.map((f, i) => <FollowUpRow key={`${currentQuestion.questionId}-${i}`} text={f.text} />)}
-            </div>
+            <SectionLabel bg="var(--color-primary)" color="var(--color-on-primary)">ASK AI</SectionLabel>
+            <Card padding="var(--spacing-xs) var(--spacing-lg)">
+              {fus.map((f, i) => <FollowUpRow key={`${currentQuestion.questionId}-${i}`} text={f.text} first={i === 0} />)}
+            </Card>
           </div>
         );
       })()}
@@ -1791,14 +1800,7 @@ export default function ExerciseSession() {
       {/* コラム（豆知識） */}
       {currentTip && !hideColumn && (
         <div style={{ marginTop: 'var(--spacing-xl)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)' }}>
-            <span style={{
-              background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)',
-              fontSize: 'var(--font-size-2xs)', fontWeight: 700, letterSpacing: '1.5px',
-              padding: '3px 10px', borderRadius: 'var(--border-radius-sm)',
-            }}>COLUMN</span>
-            <span style={{ flex: 1, height: 1, background: 'color-mix(in srgb, var(--color-text-light) 40%, transparent)' }} />
-          </div>
+          <SectionLabel bg="var(--color-accent)" color="var(--color-btn-primary-text)">COLUMN</SectionLabel>
           <Card
             padding="var(--spacing-md) var(--spacing-lg)"
           >
