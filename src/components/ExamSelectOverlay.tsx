@@ -3,8 +3,9 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { resetExercisePrefsOnExamChange } from '../utils/preferences';
-import { API_ENDPOINT, EXAM_CONFIGS, EXAM_DOMAINS, DOMAIN_WEIGHTS, PASS_SCORES, isNonAwsExam, levelLabel, COMPANION_EXAM, companionLabel, officialExamsForCompanion, EXAM_LEVEL_COLORS } from '@/constants';
-import { EXAM_ICON_COMPONENTS, IconBook, IconBookOpenCheck, IconCircleCheck, IconExternalLink, IconFileText } from '@/components/Icons';
+import { API_ENDPOINT, EXAM_CONFIGS, EXAM_DOMAINS, DOMAIN_WEIGHTS, PASS_SCORES, isNonAwsExam, levelLabel, COMPANION_EXAM, companionLabel, officialExamsForCompanion, EXAM_LEVEL_COLORS, tint, levelText, levelOn } from '@/constants';
+import { EXAM_ICON_COMPONENTS, IconCircleCheck, IconExternalLink, IconFileText } from '@/components/Icons';
+import Button from '@/components/ui/Button';
 import { useHorizontalScrollHint } from '@/hooks/useHorizontalScrollHint';
 
 import MarkdownText from '@/components/ui/MarkdownText';
@@ -16,8 +17,8 @@ import MarkdownText from '@/components/ui/MarkdownText';
 const BURST_COUNT = 26;
 
 export function ConfirmBurst({ x, y, color, onDone }: { x: number; y: number; color: string; onDone: () => void }) {
-  // 6桁hexにアルファを付けて濃淡を作る（levelColor は全て #rrggbb 形式）
-  const palette = useMemo(() => [color, color, color, `${color}cc`, `${color}99`, '#ffffff'], [color]);
+  // レベル色の濃淡（levelColor は CSS 変数なので tint で半透明にする）
+  const palette = useMemo(() => [color, color, color, tint(color, 80), tint(color, 60), '#ffffff'], [color]);
   const particles = useMemo(() => Array.from({ length: BURST_COUNT }, (_, i) => {
     const angle = (360 / BURST_COUNT) * i + (Math.random() * 22 - 11);
     const dist = 46 + Math.random() * 78;
@@ -54,7 +55,7 @@ export function ConfirmBurst({ x, y, color, onDone }: { x: number; y: number; co
           width: p.size, height: p.round ? p.size : p.size * 0.5,
           borderRadius: p.round ? '50%' : '2px',
           background: p.color,
-          boxShadow: `0 0 ${p.size}px ${p.color}88`,
+          boxShadow: `0 0 ${p.size}px ${tint(p.color, 53)}`,
           animation: `esoBurst-${p.id} ${p.dur}s cubic-bezier(.25,.6,.4,1) ${p.delay}s both`,
         }} />
       ))}
@@ -64,12 +65,12 @@ export function ConfirmBurst({ x, y, color, onDone }: { x: number; y: number; co
 }
 
 const EXAM_LEVELS = [
-  { key: 'Practitioner', color: '#6b9e3a', exams: ['CLF', 'AIF'] },
-  { key: 'Business',     color: '#db2777', exams: ['AIB'] },
-  { key: 'Associate',    color: '#006CE0', exams: ['SAA', 'DVA', 'SOA', 'DEA', 'MLA'] },
-  { key: 'Professional', color: '#8b5cf6', exams: ['SAP', 'DOP', 'AIP'] },
-  { key: 'Specialty',    color: '#0ea5e9', exams: ['ANS', 'SCS'] },
-  { key: 'Additional',   color: '#14b8a6', exams: ['ML', 'DB', 'NW', 'SEC'] },
+  { key: 'Practitioner', color: EXAM_LEVEL_COLORS.Foundational, exams: ['CLF', 'AIF'] },
+  { key: 'Business',     color: EXAM_LEVEL_COLORS.Business, exams: ['AIB'] },
+  { key: 'Associate',    color: EXAM_LEVEL_COLORS.Associate, exams: ['SAA', 'DVA', 'SOA', 'DEA', 'MLA'] },
+  { key: 'Professional', color: EXAM_LEVEL_COLORS.Professional, exams: ['SAP', 'DOP', 'AIP'] },
+  { key: 'Specialty',    color: EXAM_LEVEL_COLORS.Specialty, exams: ['ANS', 'SCS'] },
+  { key: 'Additional',   color: EXAM_LEVEL_COLORS.Additional, exams: ['ML', 'DB', 'NW', 'SEC'] },
 ] as const;
 
 export const EXAM_DESC: Record<string, string> = {
@@ -185,7 +186,6 @@ export default function ExamSelectOverlay({
   const [domainOpen, setDomainOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const cardStripRef = useRef<HTMLDivElement>(null);
-  const confirmBtnRef = useRef<HTMLButtonElement>(null);
   const [burst, setBurst] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -244,7 +244,7 @@ export default function ExamSelectOverlay({
       onTouchMove={e => e.stopPropagation()}
     >
       <div
-        data-kbscope="1"
+        data-kbscope="1" role="dialog" aria-modal="true" aria-label={ja ? "目標資格を選択" : "Choose target exam"}
         style={{
           background: 'var(--color-bg-white)',
           borderRadius: 'var(--border-radius-lg)',
@@ -361,21 +361,21 @@ export default function ExamSelectOverlay({
                   background: isPreviewing
                     ? levelColor
                     : isSelected
-                    ? `${levelColor}33`
+                    ? tint(levelColor, 20)
                     : 'var(--color-bg-card)',
                 }}
               >
                 {isSelected && (
-                  <div style={{ position: 'absolute', top: 4, right: 4, color: isPreviewing ? '#fff' : levelColor, lineHeight: 0 }}>
+                  <div style={{ position: 'absolute', top: 4, right: 4, color: isPreviewing ? levelOn(levelColor) : levelText(levelColor), lineHeight: 0 }}>
                     <IconCircleCheck size={14} />
                   </div>
                 )}
                 {ExamIcon && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4, color: isPreviewing ? '#fff' : isSelected ? levelColor : 'var(--color-text-light)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4, color: isPreviewing ? levelOn(levelColor) : isSelected ? levelText(levelColor) : 'var(--color-text-light)' }}>
                     <ExamIcon size={18} />
                   </div>
                 )}
-                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: isPreviewing ? '#fff' : isSelected ? levelColor : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
+                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: isPreviewing ? levelOn(levelColor) : isSelected ? levelText(levelColor) : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
               </button>
             );
           })}
@@ -405,8 +405,8 @@ export default function ExamSelectOverlay({
                 {COMPANION_EXAM[exam] && (
                   <p style={{ margin: '0 0 8px', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)' }}>
                     {ja
-                      ? <>※<span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{`基礎知識（${companionLabel(COMPANION_EXAM[exam])}）`}</span>を含みます</>
-                      : <>※Includes <span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{companionLabel(COMPANION_EXAM[exam])}</span> fundamentals</>}
+                      ? <>※<span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{`基礎知識（${companionLabel(COMPANION_EXAM[exam])}）`}</span>を含みます</>
+                      : <>※Includes <span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{companionLabel(COMPANION_EXAM[exam])}</span> fundamentals</>}
                   </p>
                 )}
                 {isNonAwsExam(exam) && officialExamsForCompanion(exam).length > 0 && (
@@ -473,7 +473,7 @@ export default function ExamSelectOverlay({
                                 <div key={d}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-sub)', marginBottom: 3 }}>
                                     <span>{d}</span>
-                                    <span style={{ fontWeight: 700, color: levelColor, flexShrink: 0, marginLeft: 8 }}>{pct}%</span>
+                                    <span style={{ fontWeight: 700, color: levelText(levelColor), flexShrink: 0, marginLeft: 8 }}>{pct}%</span>
                                   </div>
                                   <div style={{ height: 4, background: 'var(--color-border)', borderRadius: 2 }}>
                                     <div style={{ width: `${pct}%`, height: '100%', background: levelColor, borderRadius: 2 }} />
@@ -489,9 +489,9 @@ export default function ExamSelectOverlay({
                 </div>
                 )}
                 {passComments[exam] && (
-                  <div style={{ marginTop: 12, padding: '10px 12px', background: `${levelColor}12`, borderLeft: `3px solid ${levelColor}`, borderRadius: '0 6px 6px 0' }}>
-                    <div style={{ fontSize: 'var(--font-size-2xs)', color: levelColor, fontWeight: 700, marginBottom: 4 }}>{ja ? '運営者コメント' : 'From the team'}</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', lineHeight: 1.7 }}><MarkdownText text={passComments[exam]} color={levelColor} /></div>
+                  <div style={{ marginTop: 12, padding: '10px 12px', background: tint(levelColor, 7), borderLeft: `3px solid ${levelColor}`, borderRadius: '0 6px 6px 0' }}>
+                    <div style={{ fontSize: 'var(--font-size-2xs)', color: levelText(levelColor), fontWeight: 700, marginBottom: 4 }}>{ja ? '運営者コメント' : 'From the team'}</div>
+                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', lineHeight: 1.7 }}><MarkdownText text={passComments[exam]} color={levelText(levelColor)} /></div>
                   </div>
                 )}
               </div>
@@ -499,95 +499,42 @@ export default function ExamSelectOverlay({
           })()}
         </div>
 
-        {/* フッター：決定ボタン */}
+        {/* フッター：決定ボタン。初回の最重要操作なので、文字入りの主ボタンにする
+            （以前は 44px のアイコンボタン＋動き続ける矢印で、何を押せばよいか分かりにくかった） */}
         {previewExam && (() => {
           const exam = previewExam;
           const isCurrentTarget = targetExam === exam;
           return (
-            <div style={{ flexShrink: 0, borderTop: `2px solid ${levelColor}33`, background: `${levelColor}08`, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, minHeight: 64 }}>
-              <style>{`
-                @keyframes examStudyingFade { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: none; } }
-                @keyframes eso-onboarding-pulse {
-                  0%, 100% { box-shadow: 0 0 0 0 ${levelColor}66, var(--box-shadow-pop); }
-                  50%       { box-shadow: 0 0 0 8px ${levelColor}00, var(--box-shadow-pop); }
-                }
-                @keyframes eso-onboarding-arrow { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(7px); } }
-              `}</style>
-              {/* 初回オンボーディング：小さな決定ボタンへ矢印で誘導（ボタンのすぐ左に配置） */}
-              {onboarding && !confirming && !isCurrentTarget && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: levelColor }}>{ja ? '目標資格を決定' : 'Confirm'}</span>
-                  <span style={{ display: 'inline-flex', animation: 'eso-onboarding-arrow 0.9s ease-in-out infinite', color: levelColor, fontSize: 22, lineHeight: 1 }}>➜</span>
+            <div style={{ flexShrink: 0, borderTop: `2px solid ${tint(levelColor, 20)}`, background: tint(levelColor, 3), padding: 'var(--spacing-sm) var(--spacing-md)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 'var(--spacing-md)', minHeight: 64 }}>
+              {(isCurrentTarget || confirming) ? (
+                <div role="status" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: 'var(--color-success)' }}>
+                  <IconCircleCheck size={18} />{ja ? `${exam} を学習中` : `Studying ${exam}`}
                 </div>
-              )}
-              {(isCurrentTarget || confirming) && (
-                <div style={{ fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: 'var(--color-success)', animation: confirming ? 'examStudyingFade 0.4s ease 0.5s both' : undefined }}>✓ {ja ? '学習中' : 'Studying'}</div>
-              )}
-              {/* confirming 中は isCurrentTarget になっても静的ボタンへ差し替えない。
-                  呼び出し元(Home)が targetExamChanged イベントで即座に targetExam を更新すると
-                  フリップ演出が途中で切れるため（MyPage 経由と挙動が揃わない）、演出完了まで維持する */}
-              {(isCurrentTarget && !confirming) ? (
-                <button disabled style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: levelColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', boxShadow: 'var(--box-shadow-pop)', flexShrink: 0, transition: 'none' }}>
-                  <IconBookOpenCheck size={22} />
-                </button>
               ) : (
-                <button
-                  ref={confirmBtnRef}
+                <Button
                   data-kbnav="confirm"
-                  onClick={() => {
+                  onClick={(e) => {
                     if (confirming) return;
                     setConfirming(true);
                     resetExercisePrefsOnExamChange(uid, localStorage.getItem(`targetExam_${uid}`), exam);
                     localStorage.setItem(`targetExam_${uid}`, exam);
                     window.dispatchEvent(new CustomEvent('targetExamChanged', { detail: exam }));
-                    // 押下直後にフリップとパーティクル放散を同時開始
+                    // 押した操作への応答としてだけパーティクルを出す
                     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
                     if (!reduceMotion) {
-                      const r = confirmBtnRef.current?.getBoundingClientRect();
-                      if (r) setBurst({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+                      const r = e.currentTarget.getBoundingClientRect();
+                      setBurst({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
                     }
-                    // フリップ(0.55s)→「学習中」フェードイン(0.5s遅延)→反映
-                    setTimeout(() => { onSelect(exam); setConfirming(false); }, 1100);
-                    // 非オンボーディング（マイページからの目標資格変更等）では、確定アニメ完了の
-                    // 約1秒後にオーバレイを自動で閉じる。オンボーディングは導線が異なるため onSelect 側で制御し除外。
-                    if (!onboarding && onClose) setTimeout(() => onClose(), 2100);
+                    // 「学習中」を一瞬見せてから反映する
+                    setTimeout(() => { onSelect(exam); setConfirming(false); }, 700);
+                    // 非オンボーディング（マイページからの目標資格変更等）では、反映の約1秒後にオーバレイを自動で閉じる。
+                    // オンボーディングは導線が異なるため onSelect 側で制御し除外。
+                    if (!onboarding && onClose) setTimeout(() => onClose(), 1700);
                   }}
                   disabled={confirming}
-                  aria-label={ja ? '決定' : 'Confirm'}
-                  style={{
-                    width: 44, height: 44, flexShrink: 0, padding: 0, border: 'none',
-                    background: 'transparent', cursor: confirming ? 'default' : 'pointer',
-                    perspective: 600, transition: 'none',
-                  }}
                 >
-                  {/* オセロのようにひっくり返る3Dフリップ（表=決定 / 裏=学習中） */}
-                  <div style={{
-                    position: 'relative', width: '100%', height: '100%',
-                    transformStyle: 'preserve-3d',
-                    transition: 'transform 0.55s cubic-bezier(.45,.05,.3,1)',
-                    transform: confirming ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                  }}>
-                    {/* 表面：決定 */}
-                    <span style={{
-                      position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%',
-                      border: `2px solid ${levelColor}`, background: 'var(--color-bg-white)', color: levelColor,
-                      boxShadow: 'var(--box-shadow-pop)',
-                      animation: (onboarding && !confirming) ? 'eso-onboarding-pulse 1.6s ease-in-out infinite' : undefined,
-                    }}>
-                      <IconBook size={22} />
-                    </span>
-                    {/* 裏面：学習中 */}
-                    <span style={{
-                      position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
-                      transform: 'rotateY(180deg)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%',
-                      background: levelColor, color: '#fff', boxShadow: 'var(--box-shadow-pop)',
-                    }}>
-                      <IconBookOpenCheck size={22} />
-                    </span>
-                  </div>
-                </button>
+                  {ja ? `${exam} を目標にする` : `Set ${exam} as target`}
+                </Button>
               )}
             </div>
           );

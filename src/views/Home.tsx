@@ -14,7 +14,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import {
   API_ENDPOINT, EXAM_TYPES, EXAM_CONFIGS, EXAM_DOMAINS,
   DOMAIN_WEIGHTS, PASS_SCORES, qDomainName, DOMAIN_RATE_WARNING,
-  EXAM_LEVEL, EXAM_LEVEL_COLORS,
+  EXAM_LEVEL, EXAM_LEVEL_COLORS, tint, levelText,
   tagIdMatches, domainsToIndices, storedDomainsToNames, isNonAwsExam, COMPANION_EXAM, companionLabel, officialExamsForCompanion,
 } from '../constants';
 import { readDomainResults, readDomainHistory } from '../utils/domainStats';
@@ -25,7 +25,7 @@ import { getPoints, deductPoints } from '../utils/points';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import PageLayout from '../components/ui/PageLayout';
-import { IconLightbulb, IconBean, IconSettings, IconChevronUp, IconChevronDown, IconLock, IconFileText, IconTrendingUp, IconBookOpen, IconCheck, IconCircleCheck, IconSparkles, IconPointer, IconMousePointerClick, IconCalendarNotebook, IconRefreshCw, IconTarget, IconChart, ServiceIconImg, isServiceIconKey, IconUser, IconSave, IconSaveCheck, IconExternalLink } from '../components/Icons';
+import { IconLightbulb, IconBean, IconSettings, IconChevronUp, IconLock, IconFileText, IconTrendingUp, IconBookOpen, IconCheck, IconCircleCheck, IconSparkles, IconPointer, IconMousePointerClick, IconCalendarNotebook, IconRefreshCw, IconTarget, IconChart, ServiceIconImg, isServiceIconKey, IconUser, IconSave, IconSaveCheck, IconExternalLink } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 import { CATALOG } from '../data/awsServiceCatalog';
 import { autoScoreAndClearDrafts } from '../utils/sessionUtils';
@@ -41,7 +41,11 @@ const HOME_MAX_WIDTH = 1280;
 type DomainStat = { tagId: string; correctCount?: number; incorrectCount?: number; recentResults?: boolean[] };
 type SessionEntry = { correct: number; total: number };
 type DomainHistory = Record<string, SessionEntry[]>;
-type ScoreEntry = { date: string; score: number };
+// w = 記録時の「直近N問」設定。予想スコアは N によって計算が変わる（N問中の正答数で
+// 各ドメインの満点が決まる）ため、N の違う点を同じ線に並べると尺度が混ざる。
+// 記録時の N を残し、グラフは現在の N と一致するものだけを描く。
+// w の無い古い記録は、判別できないので現在の N のものとして扱う。
+type ScoreEntry = { date: string; score: number; w?: 5 | 10 };
 type WeakQuestion = { questionId: string; questionText: string; correctCount: number; incorrectCount: number };
 
 // ── ユーティリティ ───────────────────────────────────────────────
@@ -80,13 +84,20 @@ function ScoreLineChart({ data, passScore, lang = 'ja', animate = true, isMobile
     );
   }
   // Web版は横幅いっぱいに拡大されて縦・文字が大きくなるため、viewBoxを横長・低めにして拡大率を抑える
-  const W = isMobile ? 300 : 470, H = isMobile ? 110 : 100, PL = 36, PR = 8, PT = 20, PB = 22;
+  const W = isMobile ? 300 : 470, H = isMobile ? 110 : 100, PL = 36, PR = 28, PT = 20, PB = 22;
   const iW = W - PL - PR, iH = H - PT - PB;
   const scores = data.map(d => d.score);
   const minS = Math.max(0, Math.min(...scores) - 50);
   const maxS = Math.min(1000, Math.max(...scores) + 50);
   const range = maxS - minS || 200;
-  const cx = (i: number) => PL + (i / (data.length - 1)) * iW;
+  // 横軸は日付に比例させる。演習しなかった日は履歴に行が無いので、等間隔で描くと
+  // 「10-15 → 10-17」の2日空きが1日分と同じ幅になり、実際の間隔と合わない。
+  const dayNo = (s: string) => Math.floor(Date.parse(`${s}T00:00:00Z`) / 86400000);
+  const days = data.map(d => dayNo(d.date));
+  // 日付が壊れている・並びが逆・全部同日 のときは等間隔に落とす（NaN で描画を壊さない）
+  const daysOk = days.every(n => Number.isFinite(n)) && days[days.length - 1] > days[0];
+  const daySpan = daysOk ? days[days.length - 1] - days[0] : 1;
+  const cx = (i: number) => PL + (daysOk ? (days[i] - days[0]) / daySpan : i / (data.length - 1)) * iW;
   const cy = (s: number) => PT + iH - ((s - minS) / range) * iH;
   const pathD = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${cx(i).toFixed(1)},${cy(d.score).toFixed(1)}`).join(' ');
   const stagger = 0.13, nodeDur = 0.22;
@@ -102,8 +113,8 @@ function ScoreLineChart({ data, passScore, lang = 'ja', animate = true, isMobile
       ))}
       {passScore !== null && passScore >= minS && passScore <= maxS && (
         <>
-          <line x1={PL} x2={PL + iW} y1={cy(passScore)} y2={cy(passScore)} stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4,3" />
-          <text x={PL + iW + 2} y={cy(passScore) + 3} fontSize={8} fill="#f59e0b" fontWeight="bold">{lang === 'ja' ? '合格' : 'Pass'}</text>
+          <line x1={PL} x2={PL + iW + 8} y1={cy(passScore)} y2={cy(passScore)} stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4,3" />
+          <text x={PL + iW + 10} y={cy(passScore) + 3} fontSize={8} fill="#f59e0b" fontWeight="bold">{lang === 'ja' ? '合格' : 'Pass'}</text>
         </>
       )}
       <path d={pathD} fill="none" stroke="var(--color-primary)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
@@ -134,7 +145,7 @@ function SessionScoreChart({ data, passScore, lang = 'ja', animate = true, isMob
     );
   }
   // Web版は横幅いっぱいに拡大されて縦・文字が大きくなるため、viewBoxを横長・低めにして拡大率を抑える
-  const W = isMobile ? 300 : 470, H = isMobile ? 90 : 84, PL = 36, PR = 8, PT = 20, PB = 18;
+  const W = isMobile ? 300 : 470, H = isMobile ? 90 : 84, PL = 36, PR = 28, PT = 20, PB = 18;
   const iW = W - PL - PR, iH = H - PT - PB;
   const minS = Math.max(0, Math.min(...data) - 50);
   const maxS = Math.min(1000, Math.max(...data) + 50);
@@ -155,8 +166,8 @@ function SessionScoreChart({ data, passScore, lang = 'ja', animate = true, isMob
       ))}
       {passScore !== null && passScore >= minS && passScore <= maxS && (
         <>
-          <line x1={PL} x2={PL + iW} y1={cy(passScore)} y2={cy(passScore)} stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4,3" />
-          <text x={PL + iW + 2} y={cy(passScore) + 3} fontSize={8} fill="#f59e0b" fontWeight="bold">{lang === 'ja' ? '合格' : 'Pass'}</text>
+          <line x1={PL} x2={PL + iW + 8} y1={cy(passScore)} y2={cy(passScore)} stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4,3" />
+          <text x={PL + iW + 10} y={cy(passScore) + 3} fontSize={8} fill="#f59e0b" fontWeight="bold">{lang === 'ja' ? '合格' : 'Pass'}</text>
         </>
       )}
       <path d={pathD} fill="none" stroke="var(--color-accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
@@ -183,7 +194,7 @@ function SessionScoreChart({ data, passScore, lang = 'ja', animate = true, isMob
 }
 
 // ── 成績詳細モーダル（ドメイン別 + 予想スコア 統合） ───────────
-function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passScore, lang, isMobile, uid, domainStats, scoreHistory: serverScoreHistory, sessionHistory: serverSessionHistory, sessionScoreLog: serverSessionScoreLog, nodeWindow, onNodeWindowChange, inline = false, onClose }: {
+function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passScore, lang, isMobile, uid, domainStats, scoreHistory: serverScoreHistory, sessionScoreLog: serverSessionScoreLog, nodeWindow, onNodeWindowChange, inline = false, onClose }: {
   targetExam: string;
   domainAccList: { correct: number; total: number; pct: number | null }[];
   estimatedScore: number | null;
@@ -193,7 +204,6 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
   uid: string;
   domainStats: DomainStat[];
   scoreHistory?: ScoreEntry[];
-  sessionHistory?: number[];
   sessionScoreLog?: ScoreEntry[];
   nodeWindow: 5 | 10;
   onNodeWindowChange: (w: 5 | 10) => void;
@@ -208,13 +218,16 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
   const ja = lang === 'ja';
   const domains = EXAM_DOMAINS[targetExam] ?? [];
   const history = serverScoreHistory ?? readScoreHistory(targetExam, uid);
-  const sessionHistory = serverSessionHistory ?? readSessionScoreHistory(targetExam, uid);
   const sessionLog = serverSessionScoreLog ?? readSessionScoreLog(targetExam, uid);
+  // 記録時の「直近N問」設定が今と違う点は尺度が違うので描かない（w 無しの古い記録は現在のNとみなす）
+  const sameWindow = (e: ScoreEntry) => (e.w ?? nodeWindow) === nodeWindow;
   // セッション別＝直近10回 / 日次最高点＝直近1週間（7日）
-  const sessionLast10 = sessionHistory.slice(-10);
+  // セッション別は w を持てる sessionScoreLog から取る（sessionScoreHistory は素の数値配列で
+  // 記録時のNを判別できない。中身は log の末尾10件と一致する）。
+  const sessionLast10 = sessionLog.filter(sameWindow).slice(-10).map(e => e.score);
   const dailyMaxLast7 = (() => {
     const wk = new Date(Date.now() + 9 * 3600 * 1000 - 6 * 86400000).toISOString().slice(0, 10);
-    return history.filter(h => (h.date || '') >= wk);
+    return history.filter(h => (h.date || '') >= wk && sameWindow(h));
   })();
   const [showCalc, setShowCalc] = useState(false);
   const [tab, setTab] = useState<'score' | 'history' | 'hiscore'>('score');
@@ -334,8 +347,15 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
           <div ref={scoreTabRef}>
             <style>{`@keyframes scoreNodePop { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: scale(1); } }`}</style>
             <div style={{ marginBottom: 16 }}>
-              <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--color-primary)', letterSpacing: '-1px' }}>{estimatedScore ?? '—'}</span>
+              {/* 未演習のときは大きな「—」が青い線に見えて壊れた表示に見えたので、文で示す */}
+              {estimatedScore == null ? (
+                <span style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-sub)' }}>
+                  {ja ? '演習すると予想スコアが表示されます' : 'Practice to see your estimated score'}
+                </span>
+              ) : (<>
+              <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--color-primary)', letterSpacing: '-1px' }}>{estimatedScore}</span>
               <span style={{ fontSize: 'var(--font-size-sm2)', color: 'var(--color-text-light)', marginLeft: 6 }}>/1000</span>
+              </>)}
               {passScore !== null && (
                 <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginLeft: 10 }}>
                   {ja ? `合格ライン: ${passScore}` : `Pass: ${passScore}`}
@@ -361,7 +381,7 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
                     const active = nodeWindow === w;
                     return (
                       <button key={w} onClick={() => onNodeWindowChange(w)}
-                        style={{ border: 'none', borderLeft: w === 5 ? 'none' : '1px solid var(--color-border)', background: active ? 'var(--color-primary)' : 'transparent', color: active ? 'var(--color-btn-primary-text, #fff)' : 'var(--color-text-sub)', fontSize: 'var(--font-size-xs)', fontWeight: 700, padding: '3px 10px', cursor: 'pointer', transition: 'background 0.15s' }}>
+                        style={{ border: 'none', borderLeft: w === 5 ? 'none' : '1px solid var(--color-border)', background: active ? 'var(--color-primary)' : 'transparent', color: active ? 'var(--color-on-primary)' : 'var(--color-text-sub)', fontSize: 'var(--font-size-xs)', fontWeight: 700, padding: '3px 10px', cursor: 'pointer', transition: 'background 0.15s' }}>
                         {ja ? `直近${w}回` : `Last ${w}`}
                       </button>
                     );
@@ -559,138 +579,13 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
 
   return (
     <div
-      data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
       onClick={e => { if (e.target === e.currentTarget) onClose?.(); }}
       onTouchStart={e => e.stopPropagation()}
       onTouchMove={e => e.stopPropagation()}
     >
       <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: isMobile ? '16px 16px 0' : '20px 28px', width: '100%', maxWidth: 540, maxHeight: isMobile ? '75vh' : '60vh', overflowY: 'auto', boxShadow: 'var(--box-shadow-lg)' }}>
         {body}
-      </div>
-    </div>
-  );
-}
-
-// ── 予想スコア詳細モーダル ──────────────────────────────────────
-function ScoreDetailModal({ targetExam, estimatedScore, passScore, lang, uid, onClose }: {
-  targetExam: string; estimatedScore: number | null; passScore: number | null; lang: string; uid: string; onClose: () => void;
-}) {
-  const ja = lang === 'ja';
-  const [showTip, setShowTip] = useState(false);
-  const history = readScoreHistory(targetExam, uid);
-  const sessionHistory = readSessionScoreHistory(targetExam, uid);
-  return (
-    <div
-      data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-      onTouchStart={e => e.stopPropagation()}
-      onTouchMove={e => e.stopPropagation()}
-    >
-      <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: '20px 24px', width: '100%', maxWidth: 380, boxShadow: 'var(--box-shadow-lg)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <span style={{ fontWeight: 700, fontSize: 'var(--font-size-base)', color: 'var(--color-text-main)' }}>
-            {ja ? '予想スコア詳細' : 'Score Detail'}
-          </span>
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-h3)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '0 4px', lineHeight: 1 }}>✕</button>
-        </div>
-
-        <div style={{ marginBottom: 4 }}>
-          <span style={{ fontSize: 32, fontWeight: 800, color: 'var(--color-primary)', letterSpacing: '-1px' }}>{estimatedScore ?? '—'}</span>
-          <span style={{ fontSize: 'var(--font-size-sm2)', color: 'var(--color-text-light)', marginLeft: 6 }}>/1000</span>
-          {passScore !== null && (
-            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginLeft: 10 }}>
-              {ja ? `合格ライン: ${passScore}` : `Pass: ${passScore}`}
-            </span>
-          )}
-        </div>
-
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--color-text-sub)', marginBottom: 8 }}>
-            {ja ? 'セッション別推移（直近5回）' : 'Per-Session Trend (last 5)'}
-          </div>
-          <SessionScoreChart data={sessionHistory} passScore={passScore} lang={lang} />
-          <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--color-border)' }}>
-            <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--color-text-sub)', marginBottom: 8 }}>
-              {ja ? '日次推移' : 'Daily Trend'}
-            </div>
-            <ScoreLineChart data={history} passScore={passScore} lang={lang} />
-          </div>
-        </div>
-
-        <div style={{ background: 'var(--color-bg-main)', borderRadius: 8, padding: '8px 12px' }}>
-          <div
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-            onClick={() => setShowTip(v => !v)}
-          >
-            <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-sub)' }}>
-              {ja ? '計算方法' : 'How calculated'}
-            </span>
-            <span style={{ color: 'var(--color-text-light)', display: 'flex' }}>{showTip ? <IconChevronUp size={12} /> : <IconChevronDown size={12} />}</span>
-          </div>
-          {showTip && (
-            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)', margin: '8px 0 0', lineHeight: 1.7 }}>
-              {ja
-                ? '直近セッションの回答を集計。各ドメインの上限5問分で算出（5問未満は正答率×(N/5)で計算）。未演習は0点扱い。スコア = Σ(正答率 × N/5 × 出題比率%) × 1000'
-                : 'Based on recent sessions. Score = Σ(accuracy × min(N,5)/5 × domain_weight%) × 1000. <5 answers reduces max contribution. Unpracticed domains = 0.'}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── ドメイン別詳細モーダル ──────────────────────────────────────
-function DomainDetailModal({ targetExam, domainAccList, lang, onClose }: {
-  targetExam: string; domainAccList: { correct: number; total: number; pct: number | null }[]; lang: string; onClose: () => void;
-}) {
-  const ja = lang === 'ja';
-  const isMobile = window.innerWidth < 768;
-  const domains = EXAM_DOMAINS[targetExam] ?? [];
-  return (
-    <div
-      data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-      onTouchStart={e => e.stopPropagation()}
-      onTouchMove={e => e.stopPropagation()}
-    >
-      <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: '20px 24px 0', width: '100%', maxWidth: 480, maxHeight: isMobile ? '75vh' : '60vh', overflowY: 'auto', boxShadow: 'var(--box-shadow-lg)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <span style={{ fontWeight: 700, fontSize: 'var(--font-size-base)', color: 'var(--color-text-main)' }}>
-            {ja ? 'ドメイン別成績' : 'Domain Results'}
-          </span>
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-h3)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '0 4px', lineHeight: 1 }}>✕</button>
-        </div>
-        {domains.map((d, i) => {
-          const { correct, total, pct } = domainAccList[i] ?? { correct: 0, total: 0, pct: null };
-          const label = d;
-          return (
-            <div key={d} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: i < domains.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <span style={{ fontSize: 'var(--font-size-2xs)', fontWeight: 700, color: 'var(--color-text-light)', flexShrink: 0 }}>D{i + 1}</span>
-                <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-main)', lineHeight: 1.4 }}>{label}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 24, marginBottom: 8 }}>
-                {[
-                  { label: ja ? '演習数' : 'Total', value: total, color: 'var(--color-text-main)' },
-                  { label: ja ? '正解数' : 'Correct', value: correct, color: 'var(--color-success)' },
-                  { label: ja ? '正答率' : 'Accuracy', value: pct !== null ? `${pct}%` : '—', color: 'var(--color-primary)' },
-                ].map(({ label: l, value, color }) => (
-                  <div key={l}>
-                    <div style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)', marginBottom: 2 }}>{l}</div>
-                    <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
-                  </div>
-                ))}
-              </div>
-              {pct !== null && (
-                <div style={{ height: 6, background: 'var(--color-border)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ width: `${pct}%`, minWidth: pct === 0 ? 3 : undefined, height: '100%', borderRadius: 3, background: 'var(--bar-gradient-primary)', transformOrigin: 'left center', animation: `growWidth 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) ${i * 40}ms both` }} />
-                </div>
-              )}
-            </div>
-          );
-        })}
-        <div style={{ height: 20 }} aria-hidden="true" />
       </div>
     </div>
   );
@@ -706,9 +601,7 @@ const OB_LEVEL: Record<string, string> = {
   ANS: 'Specialty', SCS: 'Specialty',
   ML: 'Additional', DB: 'Additional', NW: 'Additional', SEC: 'Additional',
 };
-const OB_LEVEL_COLOR: Record<string, string> = {
-  Foundational: '#6b9e3a', Business: '#db2777', Associate: '#006CE0', Professional: '#8b5cf6', Specialty: '#e67e22', Additional: '#14b8a6',
-};
+const OB_LEVEL_COLOR = EXAM_LEVEL_COLORS;
 const OB_SHORT: Record<string, string> = {
   CLF: 'Cloud Practitioner', AIF: 'AI Practitioner',
   AIB: 'AI Business Strategist',
@@ -765,7 +658,7 @@ function OnboardingModal({ lang, uid, onComplete }: {
 
           {grouped.map(({ lv, exams }) => (
             <div key={lv} style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: OB_LEVEL_COLOR[lv], marginBottom: 8 }}>
+              <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: levelText(OB_LEVEL_COLOR[lv]), marginBottom: 8 }}>
                 {lv === 'Additional' ? (ja ? '🧩 基礎知識（AWS認定外）' : '🧩 Original (not AWS certifications)') : lv}
               </div>
               {lv === 'Additional' && (
@@ -781,13 +674,13 @@ function OnboardingModal({ lang, uid, onComplete }: {
                     <button
                       key={exam}
                       onClick={() => handleSelect(exam)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, cursor: 'pointer', textAlign: 'left', background: nonAws ? `${OB_LEVEL_COLOR.Additional}0f` : 'var(--color-bg-card)', border: `2px ${nonAws ? 'dashed' : 'solid'} ${nonAws ? OB_LEVEL_COLOR.Additional : 'var(--color-border)'}`, transition: 'border-color .15s, background .15s' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, cursor: 'pointer', textAlign: 'left', background: nonAws ? tint(OB_LEVEL_COLOR.Additional, 6) : 'var(--color-bg-card)', border: `2px ${nonAws ? 'dashed' : 'solid'} ${nonAws ? OB_LEVEL_COLOR.Additional : 'var(--color-border)'}`, transition: 'border-color .15s, background .15s' }}
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ fontWeight: 700, fontSize: 'var(--font-size-sm2)', color: 'var(--color-text-main)' }}>{cfg.examCode}</span>
                           {nonAws && (
-                            <span style={{ fontSize: 9, fontWeight: 800, color: OB_LEVEL_COLOR.Additional, border: `1px dashed ${OB_LEVEL_COLOR.Additional}`, borderRadius: 'var(--border-radius-sm)', padding: '0 5px' }}>非公式</span>
+                            <span style={{ fontSize: 9, fontWeight: 800, color: levelText(OB_LEVEL_COLOR.Additional), border: `1px dashed ${OB_LEVEL_COLOR.Additional}`, borderRadius: 'var(--border-radius-sm)', padding: '0 5px' }}>非公式</span>
                           )}
                         </div>
                         <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{OB_SHORT[exam]}</div>
@@ -1058,17 +951,13 @@ function TodayServiceSection({ lang, userId, authReady, onNavigateEncyclopedia, 
           0%,100% { box-shadow: 0 0 14px 2px rgba(82,130,255,.3), 0 0 40px 6px rgba(82,130,255,.1); }
           50%      { box-shadow: 0 0 26px 6px rgba(82,130,255,.6), 0 0 60px 14px rgba(82,130,255,.22); }
         }
-        @keyframes ds-float {
-          0%,100% { transform: translateY(0); }
-          50%      { transform: translateY(-8px); }
-        }
-        @keyframes ds-tap {
-          0%,100% { opacity: 1; transform: translateY(0); }
-          50%      { opacity: .65; transform: translateY(-5px); }
-        }
       `}</style>
+      {/* 注意を引く動きはカード外周の光（ds-pulse）1つだけにする。「?」の浮遊と案内文の点滅は廃止 */}
       <div
         onClick={handleReveal}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleReveal(); } }}
         style={{
           marginBottom: 'var(--spacing-md)',
           borderRadius: 'var(--border-radius-md)',
@@ -1096,12 +985,10 @@ function TodayServiceSection({ lang, userId, authReady, onNavigateEncyclopedia, 
             fontSize: 52, fontWeight: 900, lineHeight: 1, color: 'white',
             textShadow: '0 4px 24px rgba(255,255,255,.25)',
             filter: 'drop-shadow(0 0 12px rgba(255,255,255,.2))',
-            animation: 'ds-float 3.2s ease-in-out infinite',
           }}>?</div>
           <div style={{
             marginTop: 10, fontSize: 'var(--font-size-sm2)', fontWeight: 600,
             color: 'rgba(255,255,255,.85)',
-            animation: 'ds-tap 1.5s ease-in-out infinite',
             textShadow: '0 2px 8px rgba(0,0,0,.5)',
           }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -1149,7 +1036,7 @@ function TodayServiceSection({ lang, userId, authReady, onNavigateEncyclopedia, 
                 width: 35, height: 35, borderRadius: '50%',
                 border: '1px solid var(--color-border)',
                 background: 'transparent',
-                color: rerolling ? 'var(--color-text-light)' : '#009E9E',
+                color: rerolling ? 'var(--color-text-light)' : 'var(--color-points)',
                 cursor: rerolling ? 'default' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 opacity: rerolling ? 0.5 : 1, flexShrink: 0,
@@ -1310,6 +1197,9 @@ function clearUserData(uid: string) {
   sessionStorage.removeItem(`_ts_ustats_${uid}`);
 }
 
+// 成績キャッシュのキー。目標資格を切り替えたとき別の資格の値を出さないよう資格別に持つ。
+const statsCacheKey = (userId: string, exam: string | null) => exam ? `ustats_${userId}_${exam}` : `ustats_${userId}`;
+
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const { lang } = useLanguage();
@@ -1331,6 +1221,7 @@ export default function Home() {
   const [domainStats, setDomainStats] = useState<DomainStat[]>([]);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsRefreshing, setStatsRefreshing] = useState(false);
+  const [statsSynced, setStatsSynced] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [quickLoading, setQuickLoading] = useState(false);
   const [quickLoadPct, setQuickLoadPct] = useState(0);
@@ -1534,7 +1425,10 @@ export default function Home() {
   // ── 成績フェッチ（stale-while-revalidate） ─────────────────────────
   const TS_KEY = (uid: string) => `_ts_ustats_${uid}`;
 
-  const doFetchStats = useCallback(async (userId: string, background: boolean, delayMs = 0) => {
+  // examType を付けると、サーバが累計（correctCount/incorrectCount）と直近の正誤（recentResults）を
+  // 1問ごとの回答ログから集計して返す。付けないと UserTagStats の生の行（抜け・二重のある recentResults）になる。
+  // キャッシュは資格別に持つ（statsCacheKey）。
+  const doFetchStats = useCallback(async (userId: string, exam: string | null, background: boolean, delayMs = 0) => {
     abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
@@ -1546,7 +1440,7 @@ export default function Home() {
           ctrl.signal.addEventListener('abort', () => { clearTimeout(t); rej(new Error('aborted')); });
         });
       }
-      const r = await fetch(`${API_ENDPOINT}/users/me/stats?userId=${userId}`, { signal: ctrl.signal });
+      const r = await fetch(`${API_ENDPOINT}/users/me/stats?userId=${userId}${exam ? `&examType=${exam}` : ''}`, { signal: ctrl.signal });
       const d = await r.json();
 
       // 管理者リセット検知: resetAt が更新されていたらローカルデータを消去してリロード
@@ -1561,13 +1455,13 @@ export default function Home() {
       }
 
       const stats: DomainStat[] = d.stats ?? [];
-      setCached(`ustats_${userId}`, stats, DEFAULT_TTL);
+      setCached(statsCacheKey(userId, exam), stats, DEFAULT_TTL);
       sessionStorage.setItem(TS_KEY(userId), String(Date.now()));
       setDomainStats(stats);
       setLastUpdated(new Date());
     } catch { /* abort or network error */ }
     finally {
-      if (!ctrl.signal.aborted) { setStatsLoading(false); setStatsRefreshing(false); }
+      if (!ctrl.signal.aborted) { setStatsLoading(false); setStatsRefreshing(false); setStatsSynced(true); }
     }
   }, []);
 
@@ -1575,12 +1469,13 @@ export default function Home() {
     if (!user || statsLoading || statsRefreshing) return;
     deleteCachedByPrefix(`ustats_${user.userId}`);
     sessionStorage.removeItem(TS_KEY(user.userId));
-    doFetchStats(user.userId, false);
-  }, [user, statsLoading, statsRefreshing, doFetchStats]);
+    doFetchStats(user.userId, targetExam, false);
+  }, [user, targetExam, statsLoading, statsRefreshing, doFetchStats]);
 
   useEffect(() => {
-    if (!user) { if (!authLoading) { setDomainStats([]); setLastUpdated(null); } return; }
-    const cached = getCached<DomainStat[]>(`ustats_${user.userId}`);
+    if (!user) { if (!authLoading) { setDomainStats([]); setLastUpdated(null); setStatsSynced(true); } return; }
+    setStatsSynced(false);
+    const cached = getCached<DomainStat[]>(statsCacheKey(user.userId, targetExam));
     const tsRaw = sessionStorage.getItem(TS_KEY(user.userId));
     if (tsRaw) setLastUpdated(new Date(parseInt(tsRaw)));
 
@@ -1592,12 +1487,12 @@ export default function Home() {
     if (cached !== null) {
       setDomainStats(cached);
       // セッション直後なら遅延バックグラウンド更新（楽観的キャッシュが古いデータを上書きしないよう少し待つ）
-      doFetchStats(user.userId, true, isPostSession ? 2000 : 0);
+      doFetchStats(user.userId, targetExam, true, isPostSession ? 2000 : 0);
     } else {
-      doFetchStats(user.userId, false, isPostSession ? 2000 : 0);
+      doFetchStats(user.userId, targetExam, false, isPostSession ? 2000 : 0);
     }
     return () => { abortRef.current?.abort(); };
-  }, [user?.userId, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.userId, authLoading, targetExam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!user || !targetExam) { setServerScoreHistory(null); setServerSessionHistory(null); setServerSessionScoreLog(null); return; }
@@ -1724,7 +1619,7 @@ export default function Home() {
   }, [answeredCountReady, focusedUnlocked, uid]);
 
   // ── ホーム「苦手分析」カード（デスクトップ限定・ログイン専用）用 ──
-  // マイページ苦手分析タブと同じデータ源。頻出ミス問題は解放(FOCUSED_UNLOCK_THRESHOLD)まで取得しない。
+  // 記録画面の苦手分析タブ（WeakAnalysis）と同じデータ源。頻出ミス問題は解放(FOCUSED_UNLOCK_THRESHOLD)まで取得しない。
   const [weakQuestions, setWeakQuestions] = useState<WeakQuestion[]>([]);
   const [weakLoaded, setWeakLoaded] = useState(false);
   useEffect(() => {
@@ -1807,16 +1702,25 @@ export default function Home() {
     }
 
     // サーバー読込が完了しローカルと同期されるまで追記しない（疎ローカルでの上書き防止）。
-    if (!scoreHistLoaded) return;
+    // 成績の再取得も待つ。待たずに書くと、ページを開いた時点の古いキャッシュ
+    // （＝前日などの成績）から計算した点が「その日の最高点」として残り、
+    // 実際にはその日に取っていない点数がグラフに出る。
+    if (!scoreHistLoaded || !statsSynced) return;
 
     // スコア履歴に追記（折れ線グラフ用）
     const histKey = `score_history_${targetExam}_${uid}`;
     let scoreHist: ScoreEntry[] = [];
     try { scoreHist = JSON.parse(localStorage.getItem(histKey) ?? '[]'); } catch {}
-    const last = scoreHist[scoreHist.length - 1];
     // 日次は「その日の最高点」を保持（日次最高点推移）。同日は max で更新。
-    if (last?.date === jstDate) { last.score = Math.max(last.score ?? 0, estimatedScore); }
-    else { scoreHist.push({ date: jstDate, score: estimatedScore }); }
+    // 「直近N問」設定ごとに別の行として持つ。N が違えば尺度が違い、max で混ぜられないため
+    // （末尾だけ見ると、同日に N を切り替えたとき同じ行を上書きしてしまう）。
+    const sameDay = scoreHist.find(e => e.date === jstDate && (e.w ?? nodeWindow) === nodeWindow);
+    if (sameDay) {
+      sameDay.score = Math.max(sameDay.score ?? 0, estimatedScore);
+      sameDay.w = nodeWindow;
+    } else {
+      scoreHist.push({ date: jstDate, score: estimatedScore, w: nodeWindow });
+    }
     const newHist = scoreHist.slice(-30);
     localStorage.setItem(histKey, JSON.stringify(newHist));
     setServerScoreHistory(newHist);
@@ -1827,13 +1731,15 @@ export default function Home() {
         body: JSON.stringify({ userId: user.userId, examType: targetExam, scoreHistory: newHist }),
       }).catch(() => {});
     }
-  }, [targetExam, estimatedScore, jstDate, uid, scoreHistLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [targetExam, estimatedScore, jstDate, uid, scoreHistLoaded, statsSynced, nodeWindow]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // セッション完了後にセッション別スコア履歴を追記
   useEffect(() => {
     if (!targetExam || estimatedScore === null) return;
     // サーバー読込・ローカル同期が済むまで待つ（疎ローカルを基にサーバー蓄積を上書きしない）。
-    if (!scoreHistLoaded) return;
+    // 成績の再取得も待つ。セッション直後は古いキャッシュの予想スコアで記録してしまい、
+    // ホームの表示（再取得後）とグラフ最新点がずれるため。
+    if (!scoreHistLoaded || !statsSynced) return;
     const addKey = `sessionScoreAdd_${targetExam}_${uid}`;
     if (!localStorage.getItem(addKey)) return;
     localStorage.removeItem(addKey);
@@ -1849,7 +1755,7 @@ export default function Home() {
     const sessionLogKey = `score_session_log_${targetExam}_${uid}`;
     let log: ScoreEntry[] = [];
     try { log = JSON.parse(localStorage.getItem(sessionLogKey) ?? '[]'); } catch {}
-    log = [...log, { date: jstNow, score: estimatedScore }].slice(-100);
+    log = [...log, { date: jstNow, score: estimatedScore, w: nodeWindow }].slice(-100);
     localStorage.setItem(sessionLogKey, JSON.stringify(log));
     setServerSessionScoreLog(log);
     if (user) {
@@ -1859,7 +1765,7 @@ export default function Home() {
         body: JSON.stringify({ userId: user.userId, examType: targetExam, sessionScoreHistory: hist, sessionScoreLog: log }),
       }).catch(() => {});
     }
-  }, [domainStats, targetExam, uid, estimatedScore, scoreHistLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [domainStats, targetExam, uid, estimatedScore, scoreHistLoaded, statsSynced, nodeWindow]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const scoreDelta = prevScore !== null && estimatedScore !== null ? estimatedScore - prevScore : null;
 
@@ -2082,7 +1988,7 @@ export default function Home() {
       const domainAcc = new Map<string, number | null>(); // ドメイン名 → 直近正答率（null=データ無し）
       examDomains.forEach((domain, idx) => {
         const stat = domainStats.find(s => tagIdMatches(s.tagId, targetExam, idx));
-        // マイページ苦手分析と同じ「直近10回」にスライス
+        // 記録画面の苦手分析と同じ「直近10回」にスライス
         const recent = (stat?.recentResults ?? []).slice(-10);
         let acc: number | null = null;
         if (recent.length > 0) {
@@ -2224,10 +2130,10 @@ export default function Home() {
   const resumePrimary = primaryMode === 'focused' ? resumeFocusedExercise : resumeQuickExercise;
   const primaryLoading = primaryMode === 'focused' ? focusedLoading : quickLoading;
   const primaryLoadPct = primaryMode === 'focused' ? focusedLoadPct : quickLoadPct;
-  const primaryBg = primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)';
-  const primaryColor = primaryMode === 'focused' ? '#fff' : 'var(--color-btn-primary-text)';
+  const primaryBg = primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)';
+  const primaryColor = primaryMode === 'focused' ? 'var(--color-on-points)' : 'var(--color-btn-primary-text)';
   const primarySpinnerBorder = primaryMode === 'focused' ? '2px solid rgba(255,255,255,0.3)' : '2px solid rgba(0,0,0,0.2)';
-  const primarySpinnerTop = primaryMode === 'focused' ? '#fff' : '#16191f';
+  const primarySpinnerTop = primaryMode === 'focused' ? 'var(--color-on-points)' : 'var(--color-btn-primary-text)';
   const discardPrimaryDraft = primaryMode === 'focused' ? discardFocusedDraft : discardQuickDraft;
   const startPrimary = primaryMode === 'focused' ? startFocusedExercise : startQuickExercise;
 
@@ -2292,7 +2198,7 @@ export default function Home() {
           <span style={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)' }}>
             {ja ? '目標演習量' : 'Daily Goal'}
           </span>
-          {ja && <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-sub)' }}>※達成で<span style={{ color: '#009E9E', fontWeight: 700 }}>+10p</span>！</span>}
+          {ja && <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-sub)' }}>※達成で<span style={{ color: 'var(--color-points)', fontWeight: 700 }}>+10p</span>！</span>}
           <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: dailyCount >= dailyGoal ? 'var(--color-success)' : 'var(--color-text-sub)' }}>
             {dailyCount >= dailyGoal && <IconCircleCheck size={14} />}
             {dailyCount} / {dailyGoal}{ja ? '問' : 'Q'}
@@ -2301,8 +2207,8 @@ export default function Home() {
         <div style={{ height: 6, borderRadius: 3, background: 'var(--color-border)', overflow: 'hidden' }}>
           {(() => {
             const barColor = dailyCount >= dailyGoal
-              ? 'linear-gradient(90deg, #009E9E, #4dd9d9)'
-              : 'linear-gradient(90deg, #009E9E, #00cccc)';
+              ? 'linear-gradient(90deg, var(--color-points), #4dd9d9)'
+              : 'linear-gradient(90deg, var(--color-points), #00cccc)';
             return (
               <div style={{ height: '100%', width: `${Math.min(100, (dailyCount / dailyGoal) * 100)}%`, borderRadius: 3, background: barColor, transformOrigin: 'left center', animation: 'growWidth 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both' }} />
             );
@@ -2315,7 +2221,6 @@ export default function Home() {
   const perfProps = {
     domainAccList, estimatedScore, passScore, lang, isMobile, uid, domainStats,
     scoreHistory: serverScoreHistory ?? undefined,
-    sessionHistory: serverSessionHistory ?? undefined,
     sessionScoreLog: serverSessionScoreLog ?? undefined,
     nodeWindow,
     onNodeWindowChange: (w: 5 | 10) => { setNodeWindow(w); localStorage.setItem(`scoreWindow_${uid}`, String(w)); },
@@ -2358,7 +2263,8 @@ export default function Home() {
           時系列で見るもの(セッション別推移・日次最高点・ハイスコア)をまとめる。 */}
       {!isMobile && targetExam && (
         <Card padding="var(--spacing-md)" style={{ marginBottom: 'var(--spacing-md)' }}>
-          {panelHeading(<IconTrendingUp size={13} />, ja ? '推移と記録' : 'Trend & Records')}
+          {/* 記録画面の「正答率の推移」と区別するため、指標名（予想スコア）を名前に入れる（specs/007） */}
+          {panelHeading(<IconTrendingUp size={13} />, ja ? '予想スコアの推移' : 'Estimated Score Trend')}
           <CombinedDetailModal targetExam={targetExam} {...perfProps} inline="trend" />
         </Card>
       )}
@@ -2543,14 +2449,15 @@ export default function Home() {
       />
 
       {/* ── 苦手分析（デスクトップ・ログイン専用。ゲストは非表示） ──
-          マイページ苦手分析タブの要約。詳細はクリックでマイページへ遷移して見る。
+          記録画面の苦手分析タブの要約。詳細はクリックで記録画面へ遷移して見る。
           flex:1 + 中央寄せで、右カラム最後のパネルとして左カラムの下端まで
           自然に伸ばし、ページ最下部でパネルの底を左カラムに揃える。 */}
       {!isMobile && user && targetExam && (
         <Card
           padding="var(--spacing-md)"
-          style={{ marginTop: 'var(--spacing-md)', cursor: 'pointer', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-          onClick={() => navigate('/aws/mypage', { state: { tab: 'analysis' } })}
+          // 未解放のときは中身が1行だけなので伸ばさない（空の大きな枠が壊れて見えた）
+          style={{ marginTop: 'var(--spacing-md)', cursor: 'pointer', flex: effectiveFocusedUnlocked ? 1 : undefined, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+          onClick={() => navigate('/aws/stats', { state: { tab: 'analysis' } })}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
             <span style={{ color: 'var(--color-text-sub)', display: 'flex', alignItems: 'center' }}>
@@ -2648,7 +2555,7 @@ export default function Home() {
                       <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)', textAlign: 'center', marginBottom: 8 }}>
                         {ja ? 'セッションを上書きして新しく開始します' : 'This will overwrite the current session'}
                       </div>
-                      <Button variant="outline" size="sm" fullWidth style={{ height: 36, borderColor: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)', color: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)' }} onClick={() => { setShowWebQuickMenu(false); discardPrimaryDraft(); startPrimary(); }}>
+                      <Button variant="outline" size="sm" fullWidth style={{ height: 36, borderColor: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)' }} onClick={() => { setShowWebQuickMenu(false); discardPrimaryDraft(); startPrimary(); }}>
                         {ja ? `新規に開始（${primaryMode === 'focused' ? 'しっかり対策' : 'サクッと演習'}）` : `Start New (${primaryMode === 'focused' ? 'Focused' : 'Quick'})`}
                       </Button>
                       <div style={{ marginTop: 6 }}>
@@ -2658,7 +2565,7 @@ export default function Home() {
                             <button
                               disabled={!targetExam || !user || !effectiveFocusedUnlocked}
                               onClick={() => { setShowWebQuickMenu(false); switchMode('focused'); }}
-                              style={{ width: '100%', height: 36, padding: '0 12px', border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : '#009E9E'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : '#009E9E', fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                              style={{ width: '100%', height: 36, padding: '0 12px', border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : 'var(--color-points)'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : 'var(--color-points)', fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                             >
                               {!effectiveFocusedUnlocked && <IconLock size={13} />}
                               {ja ? 'しっかり対策モード' : 'Switch to Focused'}
@@ -2723,7 +2630,7 @@ export default function Home() {
                           <button
                             disabled={!targetExam || !user || !effectiveFocusedUnlocked}
                             onClick={() => { setShowFocusedMenu(false); switchMode('focused'); }}
-                            style={{ width: '100%', height: 36, padding: '0 12px', border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : '#009E9E'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : '#009E9E', fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                            style={{ width: '100%', height: 36, padding: '0 12px', border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : 'var(--color-points)'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : 'var(--color-points)', fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                           >
                             {!effectiveFocusedUnlocked && <IconLock size={13} />}
                             {ja ? 'しっかり対策モード' : 'Switch to Focused'}
@@ -2769,7 +2676,7 @@ export default function Home() {
                     <button
                       disabled={!targetExam || focusedLoading}
                       onClick={() => { if (targetExam && !focusedLoading) startFocusedExercise(); }}
-                      style={{ flex: 1, height: 44, border: 'none', background: '#009E9E', color: '#fff', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: (!targetExam || focusedLoading) ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
+                      style={{ flex: 1, height: 44, border: 'none', background: 'var(--color-points)', color: 'var(--color-on-points)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: (!targetExam || focusedLoading) ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
                     >
                       {focusedLoading ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -2786,7 +2693,7 @@ export default function Home() {
                   )}
                   <button
                     onClick={() => setShowFocusedMenu(v => !v)}
-                    style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-on-points)' : 'var(--color-btn-primary-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     aria-label={primaryMode === 'quick' ? (ja ? 'しっかり対策' : 'Focused practice') : (ja ? 'サクッと演習' : 'Quick practice')}
                   >
                     <IconChevronUp size={16} />
@@ -2799,9 +2706,11 @@ export default function Home() {
                 if (primaryMode === 'focused') { const fp = loadFocusedPrefs(uid); savedFocusedPrefsRef.current = fp; setDraftFocusedPrefs({ ...fp }); setShowFocusedModal(true); }
                 else { const p = loadQuickPrefs(uid); const d = { ...p, domains: storedDomainsToNames(targetExam ?? 'SAA', p.domains) }; savedQuickPrefsRef.current = d; setDraftPrefs(d); setShowQuickModal(true); }
               }}
-              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, width: 132, border: `1.5px solid ${primaryMode === 'focused' ? '#009E9E' : 'var(--color-primary)'}`, borderRadius: 'var(--border-radius-full)', background: 'var(--color-bg-white)', cursor: 'pointer', color: primaryMode === 'focused' ? '#009E9E' : 'var(--color-primary)', fontWeight: 600, fontSize: 'var(--font-size-base)' }}
+              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, border: `1.5px solid ${primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)'}`, borderRadius: '50%', background: 'var(--color-bg-white)', cursor: 'pointer', color: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)' }}
+              aria-label={ja ? '設定' : 'Settings'}
+              title={ja ? '設定' : 'Settings'}
             >
-              {ja ? '設定' : 'Settings'}
+              <IconSettings size={18} />
             </button>
           </div>
         </div>
@@ -2818,7 +2727,7 @@ export default function Home() {
                 <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', textAlign: 'center', marginBottom: 10 }}>
                   {ja ? 'セッションを上書きして開始します' : 'This will overwrite the current session'}
                 </div>
-                <Button variant="outline" fullWidth style={{ height: 44, borderColor: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)', color: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)' }} onClick={() => { setShowNewPanel(false); discardPrimaryDraft(); startPrimary(); }}>
+                <Button variant="outline" fullWidth style={{ height: 44, borderColor: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)' }} onClick={() => { setShowNewPanel(false); discardPrimaryDraft(); startPrimary(); }}>
                   {ja ? `新規に開始（${primaryMode === 'focused' ? 'しっかり対策' : 'サクッと演習'}）` : `Start New (${primaryMode === 'focused' ? 'Focused' : 'Quick'})`}
                 </Button>
                 <div style={{ marginTop: 8 }}>
@@ -2828,7 +2737,7 @@ export default function Home() {
                       <button
                         disabled={!targetExam || !user || !effectiveFocusedUnlocked}
                         onClick={() => { setShowNewPanel(false); switchMode('focused'); }}
-                        style={{ width: '100%', height: 44, border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : '#009E9E'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : '#009E9E', fontWeight: 600, fontSize: 'var(--font-size-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                        style={{ width: '100%', height: 44, border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : 'var(--color-points)'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : 'var(--color-points)', fontWeight: 600, fontSize: 'var(--font-size-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                       >
                         {!effectiveFocusedUnlocked && <IconLock size={15} />}
                         {ja ? 'しっかり対策モード' : 'Switch to Focused'}
@@ -2862,7 +2771,7 @@ export default function Home() {
                     <button
                       disabled={!targetExam || !user || !effectiveFocusedUnlocked}
                       onClick={() => { setShowFocusedMenu(false); switchMode('focused'); }}
-                      style={{ width: '100%', height: 44, border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : '#009E9E'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : '#009E9E', fontWeight: 600, fontSize: 'var(--font-size-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                      style={{ width: '100%', height: 44, border: `1.5px solid ${(!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-border)' : 'var(--color-points)'}`, borderRadius: 'var(--border-radius-full)', cursor: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'default' : 'pointer', background: 'transparent', color: (!targetExam || !user || !effectiveFocusedUnlocked) ? 'var(--color-text-light)' : 'var(--color-points)', fontWeight: 600, fontSize: 'var(--font-size-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                     >
                       {!effectiveFocusedUnlocked && <IconLock size={15} />}
                       {ja ? 'しっかり対策モード' : 'Switch to Focused'}
@@ -2934,7 +2843,7 @@ export default function Home() {
                   <button
                     disabled={!targetExam || focusedLoading}
                     onClick={() => { if (targetExam && !focusedLoading) startFocusedExercise(); }}
-                    style={{ flex: 1, height: 44, border: 'none', background: '#009E9E', color: '#fff', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !targetExam || focusedLoading ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
+                    style={{ flex: 1, height: 44, border: 'none', background: 'var(--color-points)', color: 'var(--color-on-points)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !targetExam || focusedLoading ? 'default' : 'pointer', paddingLeft: 16, paddingRight: 8 }}
                   >
                     {focusedLoading ? (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -2946,7 +2855,7 @@ export default function Home() {
                 )}
                 <button
                   onClick={() => setShowFocusedMenu(v => !v)}
-                  style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? '#009E9E' : 'var(--color-accent)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  style={{ width: 44, height: 44, border: 'none', borderLeft: '2px solid rgba(255,255,255,0.4)', background: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-accent)', color: primaryMode === 'focused' ? 'var(--color-on-points)' : 'var(--color-btn-primary-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                   aria-label={primaryMode === 'quick' ? (ja ? 'しっかり対策' : 'Focused practice') : (ja ? 'サクッと演習' : 'Quick practice')}
                 >
                   <IconChevronUp size={16} />
@@ -2959,7 +2868,7 @@ export default function Home() {
                 if (primaryMode === 'focused') { const fp = loadFocusedPrefs(uid); savedFocusedPrefsRef.current = fp; setDraftFocusedPrefs({ ...fp }); setShowFocusedModal(true); }
                 else { const p = loadQuickPrefs(uid); const d = { ...p, domains: storedDomainsToNames(targetExam ?? 'SAA', p.domains) }; savedQuickPrefsRef.current = d; setDraftPrefs(d); setShowQuickModal(true); }
               }}
-              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, border: `1.5px solid ${primaryMode === 'focused' ? '#009E9E' : 'var(--color-primary)'}`, borderRadius: '50%', background: 'transparent', cursor: 'pointer', color: primaryMode === 'focused' ? '#009E9E' : 'var(--color-primary)' }}
+              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, border: `1.5px solid ${primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)'}`, borderRadius: '50%', background: 'transparent', cursor: 'pointer', color: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)' }}
               aria-label={ja ? '設定' : 'Settings'}
             >
               <IconSettings size={18} />
@@ -2971,7 +2880,7 @@ export default function Home() {
       {/* ── サクッと演習 設定モーダル ── */}
       {showQuickModal && (
         <div
-          data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
           onClick={e => { if (e.target === e.currentTarget) setShowQuickModal(false); }}
           onTouchStart={e => e.stopPropagation()}
           onTouchMove={e => e.stopPropagation()}
@@ -3028,12 +2937,12 @@ export default function Home() {
                       <span style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, fontSize: 'var(--font-size-sm)', fontWeight: includeCompanionPref(draftPrefs) ? 700 : 500, color: 'var(--color-text-main)' }}>
                         <span>
                           {ja ? (
-                            <><span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{`基礎知識（${companionLabel(COMPANION_EXAM[targetExam])}）`}</span>を含める</>
+                            <><span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{`基礎知識（${companionLabel(COMPANION_EXAM[targetExam])}）`}</span>を含める</>
                           ) : (
-                            <>Include <span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{companionLabel(COMPANION_EXAM[targetExam])}</span></>
+                            <>Include <span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{companionLabel(COMPANION_EXAM[targetExam])}</span></>
                           )}
                         </span>
-                        {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanionPref(draftPrefs) ? EXAM_LEVEL_COLORS.Additional : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
+                        {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanionPref(draftPrefs) ? levelText(EXAM_LEVEL_COLORS.Additional) : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
                       </span>
                     </label>
                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: 2 }}>
@@ -3255,7 +3164,7 @@ export default function Home() {
                           <IconSave size={22} />
                         </span>
                         {/* 裏面：保存済（オレンジ塗り・白アイコン） */}
-                        <span style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--color-accent)', color: '#fff', boxShadow: 'var(--box-shadow-pop)' }}>
+                        <span style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)', boxShadow: 'var(--box-shadow-pop)' }}>
                           <IconSaveCheck size={22} />
                         </span>
                       </div>
@@ -3271,7 +3180,7 @@ export default function Home() {
       {/* ── しっかり対策 設定モーダル ── */}
       {showFocusedModal && (
         <div
-          data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
           onClick={e => { if (e.target === e.currentTarget) setShowFocusedModal(false); }}
           onTouchStart={e => e.stopPropagation()}
           onTouchMove={e => e.stopPropagation()}
@@ -3280,7 +3189,7 @@ export default function Home() {
             {/* ヘッダー固定 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '20px 24px 0', flexShrink: 0 }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 'var(--font-size-h3)', fontWeight: 700, color: '#009E9E' }}>
+                <h3 style={{ margin: 0, fontSize: 'var(--font-size-h3)', fontWeight: 700, color: 'var(--color-points)' }}>
                   {ja ? 'しっかり対策 設定' : 'Focused Practice Settings'}
                 </h3>
                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: 2 }}>
@@ -3328,12 +3237,12 @@ export default function Home() {
                       <span style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, fontSize: 'var(--font-size-sm)', fontWeight: includeCompanionPref(draftFocusedPrefs) ? 700 : 500, color: 'var(--color-text-main)' }}>
                         <span>
                           {ja ? (
-                            <><span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{`基礎知識（${companionLabel(COMPANION_EXAM[targetExam])}）`}</span>を含める</>
+                            <><span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{`基礎知識（${companionLabel(COMPANION_EXAM[targetExam])}）`}</span>を含める</>
                           ) : (
-                            <>Include <span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{companionLabel(COMPANION_EXAM[targetExam])}</span></>
+                            <>Include <span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{companionLabel(COMPANION_EXAM[targetExam])}</span></>
                           )}
                         </span>
-                        {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanionPref(draftFocusedPrefs) ? EXAM_LEVEL_COLORS.Additional : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
+                        {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanionPref(draftFocusedPrefs) ? levelText(EXAM_LEVEL_COLORS.Additional) : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
                       </span>
                     </label>
                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: 2 }}>
@@ -3465,7 +3374,7 @@ export default function Home() {
                   </div>
                   <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', lineHeight: 1.5, marginBottom: 8 }}>
                     {ja
-                      ? '各ドメインの直近10回の正答率で苦手を判定（マイページ苦手分析と同じ。未演習は常に対象）'
+                      ? '各ドメインの直近10回の正答率で苦手を判定（記録の苦手分析と同じ。未演習は常に対象）'
                       : "Weakness judged by each domain's last-10 accuracy (same as My Page analysis; unattempted always included)"}
                   </div>
                   {([
@@ -3585,7 +3494,7 @@ export default function Home() {
                           <IconSave size={22} />
                         </span>
                         {/* 裏面：保存済（オレンジ塗り・白アイコン） */}
-                        <span style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--color-accent)', color: '#fff', boxShadow: 'var(--box-shadow-pop)' }}>
+                        <span style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)', boxShadow: 'var(--box-shadow-pop)' }}>
                           <IconSaveCheck size={22} />
                         </span>
                       </div>
@@ -3600,7 +3509,7 @@ export default function Home() {
 
       {/* 成績詳細モーダル（デスクトップは常時展開表示のためモーダルは使わない） */}
       {isMobile && showCombinedDetail && targetExam && (
-        <CombinedDetailModal targetExam={targetExam} domainAccList={domainAccList} estimatedScore={estimatedScore} passScore={passScore} lang={lang} isMobile={isMobile} uid={uid} domainStats={domainStats} scoreHistory={serverScoreHistory ?? undefined} sessionHistory={serverSessionHistory ?? undefined} sessionScoreLog={serverSessionScoreLog ?? undefined} nodeWindow={nodeWindow} onNodeWindowChange={w => { setNodeWindow(w); localStorage.setItem(`scoreWindow_${uid}`, String(w)); }} onClose={() => setShowCombinedDetail(false)} />
+        <CombinedDetailModal targetExam={targetExam} domainAccList={domainAccList} estimatedScore={estimatedScore} passScore={passScore} lang={lang} isMobile={isMobile} uid={uid} domainStats={domainStats} scoreHistory={serverScoreHistory ?? undefined} sessionScoreLog={serverSessionScoreLog ?? undefined} nodeWindow={nodeWindow} onNodeWindowChange={w => { setNodeWindow(w); localStorage.setItem(`scoreWindow_${uid}`, String(w)); }} onClose={() => setShowCombinedDetail(false)} />
       )}
 
       {/* オンボーディング（目標資格未設定） */}

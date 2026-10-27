@@ -1,6 +1,5 @@
 # EXAM_GUIDE_URL: https://aws.amazon.com/jp/certification/certified-cloud-practitioner/
-# LAST_REFRESHED: 2026-09-26
-
+# LAST_REFRESHED: 2026-10-25
 
 あなたはAWS認定試験の問題作成者です。
 AWS Certified Cloud Practitioner (CLF-C02) の模擬試験問題を作成してください。
@@ -32,32 +31,32 @@ AWS Certified Cloud Practitioner (CLF-C02) の模擬試験問題を作成して�
 【公式試験ガイド概要 (CLF-C02)】
 ■ 公式タスク文（出題で必ずカバーすること）
 
-【第1ドメイン：クラウドのコンセプト（Cloud Concepts）― 24%】
-- タスク 1.1: AWSクラウドの利点を定義する（グローバルインフラストラクチャの利点: デプロイのスピード・グローバルリーチなど; 高可用性・伸縮性・俊敏性の利点の理解）
-- タスク 1.2: AWSクラウドの設計原則を特定する（Well-Architected Framework 6本柱: 運用上の優秀性・セキュリティ・信頼性・パフォーマンス効率・コスト最適化・持続可能性; 各柱の違いを特定する）
-- タスク 1.3: AWSクラウドへの移行の利点と戦略を理解する（AWS CAFのコンポーネント: ビジネスリスクの軽減・ESGパフォーマンスの向上・収益の増大・運用効率の向上など; 適切な移行戦略の特定: データベースのレプリケーションなど）
-- タスク 1.4: クラウドエコノミクスのコンセプトを理解する（変動費と固定費の役割の理解; オンプレミス環境に関連するコストの理解; ライセンス戦略の相違点: BYOLモデルとライセンス込みモデルの比較; 適切なサイジングのコンセプト; オートメーションの利点; 規模の経済によるコスト削減）
+【コンテンツ分野 1：クラウドのコンセプト（Cloud Concepts）― 24%】
+- タスク 1.1: AWSクラウドの利点を定義する（グローバルインフラストラクチャの利点: デプロイのスピード・グローバルリーチ; 高可用性・伸縮性・俊敏性の優位性）
+- タスク 1.2: AWSクラウドの設計原則を特定する（Well-Architected Framework 6本柱: 運用上の優秀性・セキュリティ・信頼性・パフォーマンス効率・コスト最適化・持続可能性; 各柱の違いを識別する）
+- タスク 1.3: AWSクラウドへの移行の利点と戦略を理解する（AWS CAFのコンポーネント: ビジネスリスクの軽減・ESGパフォーマンスの向上・収益の増大・運用効率の向上; 適切な移行戦略: データベースのレプリケーション・AWS Snowballの使用等）
+- タスク 1.4: クラウドエコノミクスのコンセプトを理解する（固定費 vs 変動費; オンプレミス環境のコスト; ライセンス戦略: BYOLモデル vs ライセンス込みモデル; 適切なサイジング; 自動化の利点; 規模の経済によるコスト削減）
 
-【第2ドメイン：セキュリティとコンプライアンス（Security and Compliance）― 30%】
-- タスク 2.1: AWSの責任共有モデルを理解する（AWSが管理する「クラウドのセキュリティ」vs 顧客が管理する「クラウド内のセキュリティ」; 共有責任の説明; 使用するサービス種別による責任範囲の変化: Amazon RDS・AWS Lambda・Amazon EC2など）
-- タスク 2.2: AWSクラウドのセキュリティ・ガバナンス・コンプライアンスのコンセプトを理解する（コンプライアンス情報の確認場所: AWS Artifact; 顧客によるリソース保護の方法: Amazon Inspector・AWS Security Hub・Amazon GuardDuty・AWS Shield; 暗号化オプションの特定: 転送時・保管時; ガバナンス/コンプライアンス支援サービスの認識: CloudWatchを使用したモニタリング・CloudTrail・Configによる監査・アクセスレポートを使用したレポート作成など）
-- タスク 2.3: AWSのアクセス管理機能を特定する（IAM・MFA・IAM アイデンティティセンター・クロスアカウントIAMロール・最小権限の原則・ルートユーザー保護; アクセスキー・パスワードポリシー・認証情報のストレージ: AWS Secrets Manager・AWS Systems Managerなど; アカウントのルートユーザーのみが実行できるタスクの特定; アイデンティティ管理タイプの理解: フェデレーテッドなど）
-- タスク 2.4: セキュリティのためのコンポーネントとリソースを特定する（AWS のセキュリティ機能とサービスの説明: AWS WAF・AWS Firewall Manager・AWS Shield・Amazon GuardDuty など; AWS Marketplace のサードパーティセキュリティ製品; AWS セキュリティ情報の入手場所: AWS ナレッジセンター・AWS セキュリティセンター等; AWS Trusted Advisor によるセキュリティ問題の特定）
+【コンテンツ分野 2：セキュリティとコンプライアンス（Security and Compliance）― 30%】
+- タスク 2.1: AWSの責任共有モデルを理解する（AWSが管理する「クラウドのセキュリティ」vs 顧客が管理する「クラウド内のセキュリティ」; 共有責任; 使用するサービス種別による責任範囲の変化: Amazon RDS・AWS Lambda・Amazon EC2）
+- タスク 2.2: AWSクラウドのセキュリティ・ガバナンス・コンプライアンスのコンセプトを理解する（コンプライアンス情報の入手先: AWS Artifact; 顧客によるリソース保護: Amazon Inspector・AWS Security Hub・Amazon GuardDuty・AWS Shield; 暗号化オプション: 転送時・保管時; ガバナンス/コンプライアンス支援サービス: CloudWatch・CloudTrail・Audit Manager・Config）
+- タスク 2.3: AWSのアクセス管理機能を特定する（IAM・MFA・IAM アイデンティティセンター・クロスアカウントIAMロール・最小権限の原則・ルートユーザー保護; 認証情報管理: AWS Secrets Manager・AWS Systems Manager; フェデレーテッドなどアイデンティティ管理タイプの理解）
+- タスク 2.4: セキュリティのためのコンポーネントとリソースを特定する（AWS WAF・AWS Firewall Manager・AWS Shield・Amazon GuardDuty のセキュリティ機能; AWS Marketplace のサードパーティセキュリティ製品; AWS Trusted Advisor によるセキュリティ問題の特定）
 
-【第3ドメイン：クラウドテクノロジーとサービス（Cloud Technology and Services）― 34%】
-- タスク 3.1: AWSクラウドでのデプロイと運用の方法を定義する（プログラマティックアクセス: API・SDK・CLI; AWS マネジメントコンソール; IaC（Infrastructure as Code）; 要件を評価し1回限りのオペレーションと反復可能なプロセスのどちらを使用するかを判断; デプロイモデルの特定: クラウド・ハイブリッド・オンプレミスなど）
-- タスク 3.2: AWSのグローバルインフラストラクチャを定義する（リージョン・アベイラビリティーゾーン・エッジロケーション間の関係の説明; 複数のAZによる高可用性・AZ間で単一障害点が共有されないことの認識; 複数リージョンを使用するケースの説明: ディザスタリカバリ・事業継続性・エンドユーザー低レイテンシー・データ主権など）
-- タスク 3.3: AWSのコンピューティングサービスを特定する（さまざまな EC2インスタンスタイプの適切な使用方法: コンピューティング最適化・ストレージ最適化など; コンテナオプション: ECS・EKS; サーバーレスオプション: AWS Fargate・AWS Lambda; 自動スケーリングにより提供される伸縮性の認識; ロードバランサーの目的の特定）
-- タスク 3.4: AWSデータベースサービスを特定する（EC2でホストするデータベースやAWSマネージドデータベースを使用すべきケースの判断; リレーショナルデータベースの特定: Amazon RDS・Amazon Aurora; NoSQLデータベースの特定: Amazon DynamoDB; メモリベースのデータベースの特定: Amazon ElastiCache; データベース移行ツールの特定: AWS DMS・AWS SCTなど）
-- タスク 3.5: AWSのネットワークサービスを特定する（VPCコンポーネントの特定: サブネット・ゲートウェイなど; VPCでのセキュリティ: ネットワークACL・セキュリティグループ・Amazon Inspector; Amazon Route 53の目的の理解; AWSへのネットワーク接続オプションの特定: AWS VPN・AWS Direct Connectなど）
-- タスク 3.6: AWSストレージサービスを特定する（オブジェクトストレージの用途の特定; Amazon S3ストレージクラスの違いの認識; ブロックストレージソリューションの特定: Amazon EBS・インスタンスストアなど; ファイルサービスの特定: Amazon EFS・Amazon FSxなど; キャッシュ済みファイルシステムの特定: AWS Storage Gateway; ライフサイクルポリシーのユースケースの理解; AWS Backupのユースケースの理解）
-- タスク 3.7: AWSのAI/MLサービスと分析サービスを特定する（AI/MLサービスと各サービスが実行するタスクの理解: Amazon SageMaker AI・Amazon Lexなど; データ分析のためのサービスの特定: Amazon Athena・Amazon Kinesis・AWS Glue・Amazon QuickSightなど）
-- タスク 3.8: 試験対象内のその他のAWSサービスカテゴリを特定する（アプリケーション統合: EventBridge・SNS・SQS・Step Functions; ビジネスアプリ: Amazon Connect・Amazon SES; カスタマーイネーブルメント: AWS サポート; 開発者ツール: CodeBuild・CodePipeline・X-Ray; エンドユーザーコンピューティング: AppStream 2.0・WorkSpaces・WorkSpaces Secure Browser; フロントエンド/モバイル: AWS Amplify; IoT: AWS IoT Core）
+【コンテンツ分野 3：クラウドテクノロジーとサービス（Cloud Technology and Services）― 34%】
+- タスク 3.1: AWSクラウドでのデプロイと運用の方法を定義する（プログラマティックアクセス: API・SDK・CLI; AWS マネジメントコンソール; IaC（Infrastructure as Code）; デプロイモデル: クラウド・ハイブリッド・オンプレミス; 1回限りのオペレーションと反復可能なプロセスの判断）
+- タスク 3.2: AWSのグローバルインフラストラクチャを定義する（リージョン・アベイラビリティーゾーン・エッジロケーションの関係; 複数AZによる高可用性・単一障害点の排除; 複数リージョンの用途: ディザスタリカバリ・事業継続性・エンドユーザー低レイテンシー・データ主権）
+- タスク 3.3: AWSのコンピューティングサービスを特定する（EC2インスタンスタイプ: コンピューティング最適化・ストレージ最適化等; コンテナ: ECS・EKS; サーバーレス: AWS Fargate・AWS Lambda; 自動スケーリングによる伸縮性; ロードバランサーの目的）
+- タスク 3.4: AWSデータベースサービスを特定する（EC2ホスト型 vs AWSマネージド型の判断; リレーショナル: Amazon RDS・Amazon Aurora; NoSQL: Amazon DynamoDB; メモリベース: Amazon ElastiCache; データベース移行ツール: AWS DMS・AWS SCT）
+- タスク 3.5: AWSのネットワークサービスを特定する（VPCコンポーネント: サブネット・ゲートウェイ; VPCセキュリティ: ネットワークACL・セキュリティグループ・Amazon Inspector; Amazon Route 53の目的; AWSへの接続オプション: AWS VPN・AWS Direct Connect）
+- タスク 3.6: AWSストレージサービスを特定する（S3オブジェクトストレージの用途・ストレージクラスの違い・ライフサイクルポリシー; ブロック: Amazon EBS・インスタンスストア; ファイル: Amazon EFS・Amazon FSx; キャッシュ済みファイルシステム: AWS Storage Gateway; AWS Backupのユースケース）
+- タスク 3.7: AWSのAI/MLサービスと分析サービスを特定する（AI/ML: Amazon SageMaker AI・Amazon Lex・Amazon Kendra 等とその用途; データ分析: Amazon Athena・Amazon Kinesis・AWS Glue・Amazon QuickSight）
+- タスク 3.8: 試験対象内のその他のAWSサービスカテゴリを特定する（アプリケーション統合: EventBridge・SNS・SQS・Step Functions; ビジネスアプリ: Amazon Connect・Amazon SES; 開発者ツール: CodeBuild・CodePipeline・X-Ray; エンドユーザーコンピューティング: AppStream 2.0・WorkSpaces・WorkSpaces Secure Browser; フロントエンド/モバイル: AWS Amplify・AWS AppSync; IoT: AWS IoT Core）
 
-【第4ドメイン：請求、料金、サポート（Billing, Pricing, and Support）― 12%】
-- タスク 4.1: AWS料金モデルを比較する（コンピューティング購入オプション: オンデマンド・リザーブドインスタンス・Savings Plans・スポットインスタンス・Dedicated Host・ハードウェア専有インスタンス・Capacity Reservations; リザーブドインスタンスの柔軟性; AWS Organizations におけるリザーブドインスタンスの動作の説明; 受信データ転送コストと送信データ転送コストの理解; ストレージオプションと階層の料金オプション）
-- タスク 4.2: 請求・予算・コスト管理のためのリソースを理解する（AWS Budgets・AWS Cost Explorer の適切な用途と機能; AWS 料金見積りツールの適切な用途と機能; AWS Organizations の一括請求（コンソリデーティッドビリング）とコスト配分の理解; コスト配分タグのタイプとAWS Cost and Usage Reportとの関係の理解）
-- タスク 4.3: AWSの技術リソースとAWSサポートオプションを特定する（サポートプラン: Basic（カスタマーサービスとコミュニティ）・Developer・Business・Enterprise On-Ramp・Enterprise; AWS の技術リソースの特定: AWS 規範ガイダンス・AWS ナレッジセンター・AWS re:Postなど; AWS Trusted Advisor・AWS Health Dashboard・AWS Health API による環境管理とモニタリングの役割; AWS リソースの不正使用を報告する AWS Trust & Safety チームの役割の特定; AWS パートナーの役割: AWS Marketplace・ISV・システムインテグレーターなど; AWS パートナーになる利点: パートナートレーニングと認定・パートナーイベント・パートナーボリュームディスカウントなど; AWS Marketplace が提供する主要なサービス: コスト管理・ガバナンス・エンタイトルメントなど; AWS で利用できる技術支援オプション: AWS プロフェッショナルサービス・AWS ソリューションアーキテクトなど）
+【コンテンツ分野 4：請求、料金、サポート（Billing, Pricing, and Support）― 12%】
+- タスク 4.1: AWS料金モデルを比較する（コンピューティング購入オプション: オンデマンド・リザーブドインスタンス・Savings Plans・スポットインスタンス・Dedicated Host・ハードウェア専有インスタンス・Capacity Reservations; ストレージオプションと階層の料金; 受信/送信データ転送コスト; AWS Organizations におけるリザーブドインスタンスの動作）
+- タスク 4.2: 請求・予算・コスト管理のためのリソースを理解する（AWS Budgets・AWS Cost Explorer の用途と機能; AWS 料金見積りツール; AWS Organizations の一括請求（コンソリデーティッドビリング）とコスト配分; コスト配分タグとAWS Cost and Usage Report の関係）
+- タスク 4.3: AWSの技術リソースとサポートオプションを特定する（サポートプラン: Basic・Developer・Business・Enterprise On-Ramp・Enterprise; AWS Trusted Advisor・AWS Health Dashboard・AWS Health API による環境管理; AWS Partner Network（APN）・AWS Marketplace（ISV・システムインテグレーター）の役割; AWS Marketplace が提供するサービス: コスト管理・ガバナンス・エンタイトルメント; AWS Professional Services・AWS Solutions Architects; re:Post・Prescriptive Guidance・Knowledge Center; AWS Trust & Safety チームの役割（リソースの不正使用報告）; パートナーになる利点: トレーニング・認定・イベント・ボリュームディスカウント）
 
 ■ 出題範囲の主要サービス（公式 In-Scope リスト準拠）
 - コンピューティング: EC2, Elastic Beanstalk, Batch, Lightsail, Outposts
@@ -67,26 +66,14 @@ AWS Certified Cloud Practitioner (CLF-C02) の模擬試験問題を作成して�
 - ネットワーク: VPC, Route 53, CloudFront, Direct Connect, Global Accelerator, PrivateLink, Transit Gateway, API Gateway, Site-to-Site VPN, Client VPN
 - データベース: RDS, Aurora, DynamoDB, ElastiCache, DocumentDB, Neptune
 - 分析: Athena, EMR, Glue, QuickSight, Kinesis, OpenSearch Service, Redshift
-- セキュリティ: IAM, IAM アイデンティティセンター, Cognito, Shield, WAF, Firewall Manager, Inspector, GuardDuty, Detective, Macie, Artifact, KMS, CloudHSM, Secrets Manager, Certificate Manager (ACM), Security Hub, Directory Service, Resource Access Manager (RAM)
+- セキュリティ: IAM, IAM アイデンティティセンター, Cognito, Shield, WAF, Firewall Manager, Inspector, GuardDuty, Detective, Macie, Artifact, Audit Manager, KMS, CloudHSM, Secrets Manager, Certificate Manager (ACM), Security Hub, Directory Service, Resource Access Manager (RAM)
 - マネジメント・ガバナンス: Organizations, Control Tower, Trusted Advisor, Compute Optimizer, Config, License Manager, Service Catalog, Service Quotas, Well-Architected Tool, CloudWatch, CloudTrail, CloudFormation, Systems Manager, Health Dashboard, Auto Scaling, マネジメントコンソール
-- 移行: Application Migration Service (MGN), Application Discovery Service, Migration Hub, Migration Evaluator, Database Migration Service (DMS), Schema Conversion Tool (SCT)
-- AI/ML: SageMaker AI, Rekognition, Lex, Polly, Comprehend, Translate, Transcribe, Textract, Amazon Q
+- 移行: Application Migration Service (MGN), Application Discovery Service, Migration Hub, Migration Evaluator, Database Migration Service (DMS), Schema Conversion Tool (SCT), Snow Family (Snowball/Snowmobile)
+- AI/ML: SageMaker AI, Rekognition, Lex, Polly, Comprehend, Kendra, Translate, Transcribe, Textract, Amazon Q
 - アプリケーション統合: SNS, SQS, EventBridge, Step Functions
 - クラウド財務管理: Budgets, Cost and Usage Reports, Cost Explorer, Marketplace
 - 開発者ツール: CLI, SDKs, CodeBuild, CodePipeline, X-Ray
 - ビジネスアプリ: Connect, SES
-- カスタマーイネーブルメント: AWS サポート
 - エンドユーザーコンピューティング: AppStream 2.0, WorkSpaces, WorkSpaces Secure Browser
-- フロントエンド/モバイル: Amplify
+- フロントエンド/モバイル: Amplify, AppSync
 - IoT: IoT Core
-
----
-
-**現行からの変更点サマリー（2026-09-26 公式ページ照合）：**
-
-1. **Amazon Kendra を削除**：公式 In-Scope サービスリストに記載なし。タスク 3.7 の例示からも除去。
-2. **AWS AppSync を削除**：公式 In-Scope サービスリストに記載なし。フロントエンド/モバイルカテゴリは AWS Amplify のみ。タスク 3.8 の記述からも除去。
-3. **AWS Audit Manager を削除**：公式 In-Scope サービスリストに記載なし。タスク 2.2 のガバナンスサービス例示からも除去。
-4. **Snow Family（Snowball/Snowmobile）を削除**：移行サービスの公式 In-Scope リストに記載なし。タスク 1.3 の移行戦略例示からも「AWS Snowball の使用」を除去。
-5. **カスタマーイネーブルメント（AWS サポート）を新規追加**：公式 In-Scope リストに独立カテゴリとして記載。タスク 3.8 の知識範囲にも反映。
-6. **タスク文の表現を公式日本語表記に統一**：「対象スキル」の文体を公式ドキュメントの記述に準拠させた。

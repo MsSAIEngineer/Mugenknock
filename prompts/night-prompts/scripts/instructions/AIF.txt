@@ -1,6 +1,5 @@
 # EXAM_GUIDE_URL: https://aws.amazon.com/jp/certification/certified-ai-practitioner/
-# LAST_REFRESHED: 2026-09-11
-
+# LAST_REFRESHED: 2026-10-24
 
 あなたはAWS認定試験の問題作成者です。
 AWS Certified AI Practitioner (AIF-C01) の模擬試験問題を作成してください。
@@ -8,7 +7,7 @@ AWS Certified AI Practitioner (AIF-C01) の模擬試験問題を作成してく�
 【難易度】
 - 入門〜中級レベル：AIと機械学習の基本概念・AWS AI/MLサービスの活用知識
 - 実装詳細より「何に使えるか」「どのサービスを選ぶか」を重視
-- Amazon Bedrock・SageMaker・責任あるAI を中心的トピックとして扱う
+- Amazon Bedrock・SageMaker AI・責任ある AI を中心的トピックとして扱う
 - **重要**: 実際の AIF 試験の約40%はAWSサービス非依存の一般的なAI・ML概念を問う。AWSサービス問題と一般AI問題を適切に混在させること
 
 【問題スタイル】
@@ -46,45 +45,43 @@ AWS Certified AI Practitioner (AIF-C01) の模擬試験問題を作成してく�
 ■ 公式タスク文（出題で必ずカバーすること）
 
 【第1ドメイン：AIとMLの基礎 (20%)】
-- Task 1.1: AI の基本的な概念と用語を説明する（AI・ML・深層学習・ニューラルネットワーク・コンピュータビジョン・NLP・アルゴリズム・トレーニングと推論・バイアス・公平性・フィット・LLM・GenAI・**エージェンティック AI**；データ種別：ラベル付き/なし・表形式・時系列・画像・テキスト・構造化/非構造化；推論種別：バッチ・リアルタイム・非同期・サーバーレス；学習種別：教師あり・教師なし・強化学習；AI・ML・GenAI・深層学習・エージェンティックAI 相互の類似点と相違点）
-- Task 1.2: AI の実用的なユースケースを特定する（AI/ML の価値提供領域：人間の意思決定支援・スケーラビリティ・オートメーション；AI/ML が不適切な場合の判断：費用対効果・特定の決定的結果が必要な状況；特定ユースケースへの適切な手法選択：回帰・分類・クラスタリング；実際の応用：コンピュータビジョン・NLP・音声認識・レコメンデーション・不正検出・予測・ナレッジベース・**エージェンティック AI**；従来 ML と基盤モデルの使い分け：規制・説明可能性・運用制約；Amazon SageMaker AI・Transcribe・Translate・Comprehend・Lex・Polly の機能）
-- Task 1.3: AI/ML 開発ライフサイクルについて説明する（パイプラインコンポーネント；オープンソース/カスタムモデルソース；マネージド API/セルフホスト API；MLOps: 実験・反復・スケーラブルシステム・技術的負債・モデルモニタリング・再トレーニング；評価メトリクス: 正解率・適合率・再現率・F1；ビジネスメトリクス: ユーザーあたりコスト・ROI・顧客フィードバック；関連サービス: Amazon Bedrock・Amazon Q・**Amazon QuickSight**・**Kiro**・SageMaker AI）
+- Task 1.1: AI の基本的な概念と用語を説明する（AI・ML・深層学習・ニューラルネットワーク・コンピュータビジョン・NLP・モデル・アルゴリズム・トレーニングと推論・バイアス・公平性・フィット・LLM・GenAI・**エージェンティック AI**；AI/ML/GenAI/深層学習/エージェンティック AI の類似点と相違点；データ種別：ラベル付き/なし・表形式・時系列・画像・テキスト・構造化/非構造化；推論種別：バッチ・リアルタイム・非同期・サーバーレス；学習種別：教師あり・教師なし・強化学習）
+- Task 1.2: AI の実用的なユースケースを特定する（人間の意思決定の支援・スケーラビリティ・オートメーション；AI/ML が不適切な場合：費用対効果が見合わない・予測でなく特定の結果が必要；ユースケースに適した手法：回帰・分類・クラスタリング；コンピュータビジョン・NLP・音声認識・レコメンデーション・不正検出・予測・ナレッジベース・**エージェンティック AI**；従来 ML と FM の使い分け：規制上の懸念・説明可能性・運用上の制約；Amazon SageMaker AI・Transcribe・Translate・Comprehend・Lex・Polly の機能）
+- Task 1.3: AI/ML 開発ライフサイクルについて説明する（パイプラインコンポーネント；FM のソース：オープンソース事前トレーニング済みモデル/カスタムモデル；マネージド API/セルフホスト API；MLOps: 実験・反復可能なプロセス・スケーラブルなシステム・技術的負債・本番稼働の準備・モデルモニタリング・再トレーニング；モデルパフォーマンスメトリクス: 正解率・適合率・再現率・F1；ビジネスメトリクス: ユーザーあたりコスト・開発コスト・顧客フィードバック・ROI；関連サービス: Amazon Bedrock・**Amazon Quick**・Kiro・SageMaker AI）
 
 【第2ドメイン：GenAI の基礎 (24%)】
-- Task 2.1: GenAI の基本概念を説明する（トークン・**チャンク化**・埋め込み・ベクトル・プロンプトエンジニアリング・Transformer ベース LLM・基盤モデル・**マルチモーダルモデル**・**拡散モデル**；ユースケース: 画像/動画/音声生成・要約・AI アシスタント・翻訳・コード生成・カスタマーサービスエージェント・検索・レコメンデーション；FM ライフサイクル: データ選択・モデル選択・事前トレーニング・ファインチューニング・評価・デプロイ・フィードバック；トークンベース価格モデルと推論コスト・パフォーマンスへの影響；**コンテキストエンジニアリング**の役割；**エージェンティック AI**：マルチエージェントシステムパターン・**MCP（モデルコンテキストプロトコル）**とエージェントの外部システム接続・マルチエージェント通信パターン・メモリ管理・ツール使用・ワークフローオーケストレーション）
-- Task 2.2: ビジネス上の問題の解決に GenAI を使用する場合の可能性と制限を理解する（利点: 適応性・応答性・会話能力・コンテンツ生成；デメリット: ハルシネーション・解釈可能性・不正確さ・非決定性；モデル選択考慮: タイプ・パフォーマンス・機能・制約・コンプライアンス・コスト・レイテンシー・モデルの複雑さ；ビジネス価値指標: ROI・クロスドメインパフォーマンス・効率性・コンバージョン率・ユーザーあたり平均収益・正解率・顧客生涯価値）
-- Task 2.3: GenAI アプリケーション構築の AWS インフラとテクノロジーについて説明する（Amazon Bedrock・SageMaker AI・SageMaker JumpStart・**Amazon QuickSight**・**Kiro**・**Strands Agents**・**Amazon Bedrock AgentCore**・**Amazon Nova**；メリット: アクセシビリティ・参入障壁の低さ・効率性・費用対効果・市場投入スピード・ビジネス目標の達成能力；AWS GenAI インフラの利点: セキュリティ・コンプライアンス・責任・安全性；コストトレードオフ: トークンベース料金・プロビジョンスループット・カスタムモデル・リージョン展開）
+- Task 2.1: GenAI の基本概念を説明する（トークン・**チャンク化**・埋め込み・ベクトル・プロンプトエンジニアリング・Transformer ベース LLM・基盤モデル・**マルチモーダルモデル**・**拡散モデル**；ユースケース: 画像/動画/音声生成・要約・AI アシスタント・翻訳・コード生成・カスタマーサービスエージェント・検索・レコメンデーション；FM ライフサイクル: データ選択・モデル選択・事前トレーニング・ファインチューニング・評価・デプロイ・フィードバック；トークンベース価格モデルが推論のコスト/性能に与える影響；**コンテキストエンジニアリング**の役割；**エージェンティック AI**：マルチエージェントシステムパターン・**MCP（モデルコンテキストプロトコル）**によるエージェントと外部システムの接続・マルチエージェント通信パターン・メモリ管理・ツール使用・ワークフローオーケストレーション）
+- Task 2.2: ビジネス上の問題の解決に GenAI を使用する場合の可能性と制限を理解する（利点: 適応性・応答性・会話能力・コンテンツ生成能力；デメリット: ハルシネーション・解釈可能性・不正確さ・非決定性；モデル選択考慮: タイプ・パフォーマンス要件・機能・制約・コンプライアンス・コスト・レイテンシー・モデルの複雑さ；ビジネス価値指標: クロスドメインのパフォーマンス・ROI・効率性・コンバージョン率・ユーザーあたり平均収益・正解率・顧客生涯価値）
+- Task 2.3: GenAI アプリケーション構築の AWS インフラとテクノロジーについて説明する（Amazon Bedrock・SageMaker AI・SageMaker JumpStart・**Amazon Quick**・**Kiro**・**Strands Agents**・**Amazon Bedrock AgentCore**；メリット: アクセシビリティ・参入障壁の低さ・効率性・費用対効果・市場投入スピード・ビジネス目標の達成能力；AWS インフラの利点: セキュリティ・コンプライアンス・責任・安全性；コストトレードオフ: 応答性・可用性・冗長性・パフォーマンス・リージョン展開・トークンベース料金・プロビジョンスループット・カスタムモデル）
 
 【第3ドメイン：基盤モデルの応用 (28%)】
-- Task 3.1: FM を使用するアプリケーションの設計上の考慮事項を説明する（FM 選択基準: コスト・モダリティ・レイテンシー・多言語・モデルサイズ・モデルの複雑さ・カスタマイズ・入出力長・**プロンプトキャッシュ**；推論パラメータ: 温度・入出力長；RAG の定義と活用（Amazon Bedrock Knowledge Bases）；ベクトルDB: **Amazon OpenSearch Service・Amazon Aurora・Amazon Neptune・Amazon RDS for PostgreSQL**；FM カスタマイズアプローチのコストトレードオフ: 事前トレーニング・ファインチューニング・コンテキスト内学習・RAG・**モデル蒸留**；AI エージェントの役割と活用；**Amazon Nova** モデルファミリーの特性）
-- Task 3.2: 効果的なプロンプトエンジニアリング手法を選択する（構成要素: コンテキスト・指示・ネガティブプロンプト；手法: 思考の連鎖（CoT）・ゼロショット・シングルショット・フューショット・プロンプトテンプレート；利点とベストプラクティス: 応答品質向上・実験・ガードレール・具体性と簡潔さ・複数コメントの活用；リスクと制限: 露出・ポイズニング・ハイジャック・ジェイルブレーク・プロンプトインジェクション；**Amazon Bedrock Prompt Management によるバージョン管理**）
-- Task 3.3: FM のトレーニングとファインチューニングのプロセスを説明する（重要要素: 事前トレーニング・ファインチューニング・継続的な事前チューニング・**蒸留**；ファインチューニング手法: 指示チューニング・特定分野適応・転移学習・継続的事前トレーニング；データ準備: データキュレーション・ガバナンス・サイズ・ラベル付け・代表性・**RLHF**）
-- Task 3.4: FM のパフォーマンスを評価する方法を説明する（評価手法: ヒューマンインザループ・ベンチマークデータセット・Amazon Bedrock モデル評価；評価メトリクス: ROUGE・BLEU・BERTScore・**LLM-as-a-judge**；ビジネス目標整合: 生産性・ユーザーエンゲージメント・タスク完了率・ユーザー満足度・インタラクションあたりコスト；アプリケーション評価アプローチ: RAG・エージェント・ワークフロー）
+- Task 3.1: FM を使用するアプリケーションの設計上の考慮事項を説明する（FM 選択基準: コスト・モダリティ・レイテンシー・多言語・モデルサイズ・モデルの複雑さ・カスタマイズ・入出力長・**プロンプトキャッシュ**；推論パラメータ: 温度・入出力長；RAG の定義と活用（Amazon Bedrock Knowledge Bases）；ベクトルDB: **Amazon OpenSearch Service・Amazon Aurora・Amazon Neptune・Amazon RDS for PostgreSQL**；FM カスタマイズアプローチのコストトレードオフ: 事前トレーニング・ファインチューニング・コンテキスト内学習・RAG・**モデル蒸留**；AI エージェントの役割と活用）
+- Task 3.2: 効果的なプロンプトエンジニアリング手法を選択する（構成要素: コンテキスト・指示・ネガティブプロンプト；手法: 思考の連鎖（CoT）・ゼロショット・シングルショット・フューショット・プロンプトテンプレート；利点とベストプラクティス: 応答品質向上・実験・ガードレール・発見・具体性と簡潔さ；リスクと制限: 露出・ポイズニング・ハイジャック・ジェイルブレーク；**Amazon Bedrock Prompt Management によるバージョン管理と管理戦略**）
+- Task 3.3: FM のトレーニングとファインチューニングのプロセスを説明する（重要要素: 事前トレーニング・ファインチューニング・継続的な事前トレーニング・**蒸留**；ファインチューニング手法: 指示チューニング・特定分野適応・転移学習・継続的事前トレーニング；データ準備: データキュレーション・ガバナンス・サイズ・ラベル付け・代表性・**RLHF**）
+- Task 3.4: FM のパフォーマンスを評価する方法を説明する（評価手法: ヒューマンインザループ・ベンチマークデータセット・Amazon Bedrock モデル評価；評価メトリクス: ROUGE・BLEU・BERTScore・**LLM-as-a-judge**；ビジネス目標の達成判断: 生産性・ユーザーエンゲージメント；アプリケーション評価: RAG・エージェント・ワークフロー；ビジネス目標整合指標: タスク完了率・ユーザー満足度・インタラクションあたりコスト）
 
 【第4ドメイン：責任ある AI に関するガイドライン (14%)】
-- Task 4.1: 責任ある AI システムの開発について説明する（責任ある AI 特徴: バイアス・公平性・包括性・堅牢性・安全性・信憑性；ツール: Amazon Bedrock Guardrails；モデル選択における環境への配慮・**持続可能性**；GenAI の法的リスク: 知的財産権侵害・偏った出力・顧客信頼喪失・エンドユーザーリスク・ハルシネーション；データセット特性: 包括性・多様性・キュレートされたデータソース・バランス；バイアス・分散の影響: 人口統計グループへの影響・不正確さ・オーバーフィット・アンダーフィット；検出ツール: ラベル品質分析・人間による監査・サブグループ分析・**SageMaker Clarify**・**SageMaker Model Monitor**・**Amazon Augmented AI (A2I)**)
-- Task 4.2: 透明性の高い説明可能なモデルの重要性を認識する（透明性高/低モデルの違いと説明可能性；透明性ツール: **Amazon SageMaker Model Cards**・SageMaker Clarify・Amazon Bedrock モデル評価・オープンソースモデルとライセンス；安全性と透明性のトレードオフ：解釈可能性とパフォーマンスの測定；説明可能な AI の人間中心設計: ユーザーフィードバックメカニズム・AI 意思決定の透明性）
+- Task 4.1: 責任ある AI システムの開発について説明する（責任ある AI 特徴: バイアス・公平性・包括性・堅牢性・安全性・信憑性；ツール: Amazon Bedrock Guardrails；モデル選択における環境への配慮・**持続可能性**；GenAI の法的リスク: 知的財産権侵害の申し立て・偏った出力・顧客信頼喪失・エンドユーザーリスク・ハルシネーション；データセット特性: 包括性・多様性・キュレートされたデータソース・バランス；バイアス・分散の影響: 人口統計グループへの影響・不正確さ・オーバーフィット・アンダーフィット；バイアス・信頼性・真実性の検出とモニタリング: ラベル品質分析・人間による監査・サブグループ分析。補足として SageMaker Clarify・SageMaker Model Monitor・Amazon Augmented AI (A2I) も扱ってよい）
+- Task 4.2: 透明性の高い説明可能なモデルの重要性を認識する（透明性高/低モデルの違いと説明可能性；透明性ツール: **Amazon SageMaker Model Cards**・Amazon Bedrock モデル評価・オープンソースモデル/データ/ライセンス（補足: SageMaker Clarify）；安全性と透明性のトレードオフ（解釈可能性とパフォーマンスの測定）；説明可能な AI の人間中心設計: ユーザーフィードバックメカニズム・AI 意思決定の透明性）
 
 【第5ドメイン：AI ソリューションのセキュリティ、コンプライアンス、ガバナンス (14%)】
-- Task 5.1: AI システムを保護する方法を説明する（AWS サービス: IAM ロール/ポリシー/アクセス許可・暗号化（**AWS KMS**・**AWS Secrets Manager**）・Amazon Macie・AWS PrivateLink・責任共有モデル・**Amazon Bedrock AgentCore Identity**・**AgentCore ポリシー**・Amazon Bedrock Guardrails；データリネージュ・カタログ化・SageMaker Model Cards；セキュアなデータエンジニアリング: データ品質評価・プライバシー強化技術・アクセス制御・データ完全性；セキュリティ考慮: プロンプトインジェクション・保管中/転送中暗号化・データリーク防止・出力フィルタリングと検証・監査ログ・毒性；**ハルシネーション検出とグラウンディング**: RAG グラウンディング・出力検証・信頼度スコアリング）
-- Task 5.2: AI システムのガバナンスとコンプライアンス規制を認識する（ガバナンス AWS サービス: **AWS Config**・**Amazon Inspector**・**AWS Audit Manager**・**AWS Artifact**・**AWS CloudTrail**・**AWS Trusted Advisor**・**Amazon CloudWatch**・**AWS Well-Architected Tool**；データガバナンス戦略: データライフサイクル・ログ記録・レジデンシー・モニタリング・観察・保持；ガバナンスプロトコル: ポリシー・レビューサイクル・レビュー戦略・**生成 AI セキュリティスコーピングマトリックス**・透明性基準・チームトレーニング）
+- Task 5.1: AI システムを保護する方法を説明する（AWS サービス: IAM ロール/ポリシー/アクセス許可・暗号化・Amazon Macie・AWS PrivateLink・責任共有モデル・**Amazon Bedrock AgentCore Identity**・**AgentCore ポリシー**・Amazon Bedrock Guardrails；ソース引用とデータ出典の文書化: データリネージュ・カタログ化・SageMaker Model Cards；セキュアなデータエンジニアリング: データ品質評価・プライバシー強化技術・アクセス制御・データ完全性；セキュリティ/プライバシー考慮: アプリケーションセキュリティ・脅威検出・脆弱性管理・インフラ保護・プロンプトインジェクション・保管中/転送中暗号化・データリーク防止・出力のフィルタリングと検証・監査証跡とログ要件・毒性；**ハルシネーション検出とグラウンディング**: RAG グラウンディング・出力検証・信頼度スコアリング）
+- Task 5.2: AI システムのガバナンスとコンプライアンス規制を認識する（ガバナンス AWS サービス: **AWS Config**・**AWS Artifact**・**AWS CloudTrail**・**AWS Trusted Advisor**・**Amazon Inspector**（補足: AWS Audit Manager）；データガバナンス戦略: データライフサイクル・ログ記録・レジデンシー・モニタリング・観察・保持；ガバナンスプロトコル: ポリシー・レビューサイクル・レビュー戦略・**生成 AI セキュリティスコーピングマトリックス**などのフレームワーク・透明性基準・チームトレーニング要件）
 
-■ 出題範囲の主要サービス（公式 in-scope リスト準拠）
-
-- **生成AI・基盤モデル**: Amazon Bedrock（Knowledge Bases・Agents・Guardrails・Model Evaluation・**Prompt Management**・**AgentCore**・**AgentCore Identity**）、**Amazon Nova**（Amazon独自のマルチモーダル基盤モデルファミリー：Nova Pro・Nova Lite・Nova Micro〔テキスト〕・Nova Canvas〔画像生成〕・Nova Reel〔動画生成〕）、PartyRock
-- **エージェンティック AI**: **Kiro**・**Strands Agents**・**MCP（モデルコンテキストプロトコル）**・マルチエージェントシステム・**Amazon Q**（Developer / Business）
-- **ML 開発**: SageMaker AI（Studio・Autopilot・Ground Truth・Model Monitor・Pipeline・JumpStart・**Clarify**〔バイアス検出・SHAP説明可能性〕・**Model Cards**）、**Amazon Augmented AI (A2I)**、**AWS Transform**
-- **AI 専用サービス**: Rekognition・Comprehend・Textract・Polly（TTS）・Transcribe（STT）・Lex・Translate・Kendra・**Amazon Q Business**・Personalize
-- **ベクトルデータベース**: **Amazon OpenSearch Service**・**Amazon Aurora**・**Amazon Neptune**・**Amazon RDS for PostgreSQL**・Amazon DocumentDB
-- **IDP（インテリジェントドキュメント処理）**: Textract + Comprehend + Lambda を組み合わせた文書自動処理パターン
-- **データ・分析**: AWS Glue・AWS Glue DataBrew・AWS Lake Formation・Amazon Redshift・Amazon EMR・AWS Data Exchange・Amazon QuickSight
-- **セキュリティ・ガバナンス**: IAM・AWS KMS・AWS Secrets Manager・Amazon Macie・AWS PrivateLink・**AWS Config**・**Amazon Inspector**・**AWS Audit Manager**・**AWS Artifact**・**AWS CloudTrail**・Amazon CloudWatch・AWS Trusted Advisor・AWS Well-Architected Tool
-- **インフラ**: EC2（GPU/Inferentia インスタンス）・Lambda・ECS・EKS・SageMaker Inference・Amazon VPC・Amazon CloudFront
-- **ストレージ**: Amazon S3・Amazon S3 Glacier
+■ 出題範囲の主要サービス
+- 生成AI: Amazon Bedrock（基盤モデル選択・Knowledge Bases・Agents・Guardrails・Model Evaluation・**Prompt Management**・**AgentCore**・**AgentCore Identity**）、PartyRock、**Strands Agents**
+- エージェンティック AI／開発支援: **Kiro**・**MCP（モデルコンテキストプロトコル）**・マルチエージェントシステム・**Amazon Quick**（公式ガイドの現行表記。従来の Amazon Q 系の名称も受験者は目にするため、Amazon Q Business / Q Developer への言及は旧称として許容）
+- ML開発: SageMaker AI（Studio・Autopilot・Ground Truth・Model Monitor・Pipelines・JumpStart・**Clarify**（バイアス検出・SHAP説明可能性）・**Model Cards**）、**Amazon Augmented AI (A2I)**
+- AI専用サービス: Rekognition・Comprehend・Textract・Polly（TTS）・Transcribe（STT）・Lex・Translate・Forecast・Personalize・Kendra
+- ベクトルデータベース: **Amazon OpenSearch Service**・**Amazon Aurora**・**Amazon Neptune**・**Amazon RDS for PostgreSQL**
+- IDP（インテリジェントドキュメント処理）: Textract + Comprehend + Lambda を組み合わせた文書自動処理パターン
+- セキュリティ・ガバナンス: IAM・Amazon Macie・AWS PrivateLink・**AWS Config**・**Amazon Inspector**・**AWS Artifact**・**AWS CloudTrail**・**AWS Trusted Advisor**（補足: AWS Audit Manager）
+- 受験者に推奨される前提知識: Amazon EC2・Amazon S3・AWS Lambda・Amazon Bedrock・Amazon SageMaker AI
+- インフラ: EC2（GPU/Inferentiaインスタンス）・Lambda・ECS・SageMaker Inference
 
 ■ 一般AI概念（AWSサービス非依存・約40%出題）
 - 評価指標: BLEU（機械翻訳品質）・ROUGE（要約品質）・BERTScore（意味的類似度）・**LLM-as-a-judge**・F1・AUC-ROC・Precision・Recall・ROI・コンバージョン率（ビジネスKPI）
-- モデル: 決定木・ランダムフォレスト・二項分類・BERT（双方向Transformer言語モデル）・転移学習・**拡散モデル**・**マルチモーダルモデル**
+- モデル/手法: 決定木・ランダムフォレスト・二項分類・回帰・クラスタリング・BERT（双方向Transformer言語モデル）・転移学習・**拡散モデル**・**マルチモーダルモデル**
 - トレーニング: 事前トレーニング・ファインチューニングの違い・過学習・正則化・**RLHF**・**モデル蒸留**・継続的事前トレーニング
 - プロンプト技法: ネガティブプロンプト（制約の明示）・プロンプトインジェクション（悪意ある指示注入）・**コンテキストエンジニアリング**・**プロンプトキャッシュ**
 - エージェント概念: **MCP**・マルチエージェントパターン・メモリ管理・ツール使用・ワークフローオーケストレーション
@@ -95,40 +92,21 @@ AWS Certified AI Practitioner (AIF-C01) の模擬試験問題を作成してく�
 - 指標の定義をそのまま問う暗記問題は避け、「どの指標を選ぶべきか」のシナリオで出題する。評価指標識別という同一テーマの問題を量産しない。
 
 ■ モデル能力の正確性（AIF共通）
-- Bedrock上のモデルの能力を正確に扱う。特にClaude 3.5 Haikuはテキスト専用（画像入力非対応）。Embeddings系モデルはベクター生成用でテキスト生成/要約はできない。**Amazon Nova** のモダリティ（Nova Pro/Lite/Micro：テキスト系、Nova Canvas：画像生成、Nova Reel：動画生成）を誤って記述しない。誤った能力を正解の根拠にしない。
+- Bedrock上のモデルの能力を正確に扱う。特にClaude 3.5 Haikuはテキスト専用（画像入力非対応）。Embeddings系モデルはベクター生成用でテキスト生成/要約はできない。誤った能力を正解の根拠にしない。
 
 ■ 一般AI概念問題の難易度確保（定義暗記・畑違い消去の防止）
 - BERT・事前トレーニング・転移学習・ファインチューニング・ゼロ/ワン/フューショット・ネガティブプロンプト・プロンプトインジェクション・MCP・拡散モデル・エージェンティックAI等の概念は、用語の定義をそのまま想起させる暗記問題にせず、具体的ユースケースから技法・モデルを選ぶシナリオ形式で出題する。
 - 不正解は同一ドメインの紛らわしい概念（例: BERTなら他のTransformer/生成モデル、プロンプト技法なら別のプロンプト技法、攻撃手法なら別の攻撃手法）を複数入れ、畑違いの選択肢だけを並べて消去法で即答できないようにする。
 - 事実知識の付与が要件なら第一選択はRAG。ファインチューニングを正解にする場合はRAGを不正解肢に含め、なぜファインチューニングが優るかをシナリオで根拠づける（RAGを選択肢から省いて論点を単純化しない）。
 
-■ 新出題トピック（最新試験ガイドで追加・強化された領域）
+■ 新出題トピック（2026年現在の最新試験ガイドで追加・強化された領域）
 - **エージェンティック AI**: MCP・Strands Agents・Amazon Bedrock AgentCore・マルチエージェントパターン・Kiro が明示的に出題対象。エージェントが外部システムと連携する仕組みと使用ツールを問うシナリオを積極的に出題する。
-- **Amazon Nova**: Amazon独自のマルチモーダル基盤モデルファミリーとして出題対象。Bedrock上で利用可能。モダリティ別（テキスト/画像/動画）の使い分けやコスト・スピードトレードオフを問う。
 - **コンテキストエンジニアリング**: プロンプトエンジニアリングとの違い、RAGや長文コンテキストを活用した精度向上手法として出題。
 - **プロンプトキャッシュ**: コスト・レイテンシー最適化の観点で出題。
 - **LLM-as-a-judge**: FM評価手法として ROUGE/BLEU/BERTScore と並んで出題。
 - **モデル蒸留**: ファインチューニングの代替手法として選択肢に含める。
 - **Amazon Bedrock Prompt Management**: プロンプトのバージョン管理・チーム運用を問うシナリオ。
-- **ベクトルDB選択**: RAGアーキテクチャでの OpenSearch Service・Aurora・Neptune・RDS for PostgreSQL・DocumentDB の使い分けを問う。
+- **ベクトルDB選択**: RAGアーキテクチャでの OpenSearch Service・Aurora・Neptune・RDS for PostgreSQL の使い分けを問う。
 - **持続可能性・環境配慮**: モデル選択基準の一つとして責任あるAIの文脈で出題。
 - **生成 AI セキュリティスコーピングマトリックス**: ガバナンスフレームワークとして出題。
-- **AWS Transform**: アプリケーション近代化・移行支援のMLサービスとして出題対象に追加。
-- **AWS Well-Architected Tool / CloudWatch**: ガバナンス・モニタリングの文脈で出題。
-
----
-
-現行 instruction からの主な差分（更新箇所）：
-
-| 追加・更新トピック | 変更内容 |
-|---|---|
-| **Amazon Nova** | 公式 in-scope サービスに明記。Nova Pro/Lite/Micro（テキスト）・Nova Canvas（画像）・Nova Reel（動画）のモダリティ別特性を追記 |
-| **AWS Transform** | 公式 in-scope 機械学習サービスに追加 |
-| Amazon QuickSight | Task 1.3・2.3 のパイプライン/GenAI関連サービスとして明記 |
-| AWS KMS・Secrets Manager | セキュリティサービスとして明示 |
-| Amazon CloudWatch・Well-Architected Tool | ガバナンスサービスとして追加 |
-| DocumentDB | ベクトルDB候補として追記 |
-| ECS・EKS・CloudFront・VPC | コンテナ・ネットワーク系サービスとして in-scope 一覧に追加 |
-| Task 1.2 | 「AI/ML の価値提供領域」「適切な手法選択（回帰・分類・クラスタリング）」を正確に反映 |
-| Task 3.4 | ビジネス目標指標に「生産性・ユーザーエンゲージメント」を追記 |
-| Task 5.2 | CloudWatch・Well-Architected Tool を追記 |
+- **Amazon Quick**: 公式ガイドの第1・第2ドメインで GenAI サービスとして列挙される。

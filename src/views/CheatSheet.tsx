@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { EXAM_LEVEL, EXAM_LEVEL_COLORS, API_ENDPOINT, levelLabel } from '../constants';
+import { EXAM_LEVEL, EXAM_LEVEL_COLORS, API_ENDPOINT, levelLabel, tint, levelText, levelOn } from '../constants';
 import { EXAM_ICON_COMPONENTS, IconSearch, IconCopy, IconCheck } from '../components/Icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -1006,12 +1006,12 @@ function articleTitle(art: Article): string {
 
 // ── レベル定義（ExamSelectOverlay と同じ構成） ─────────────────
 const EXAM_LEVELS = [
-  { key: 'Practitioner', color: '#6b9e3a', exams: ['CLF', 'AIF'] },
-  { key: 'Business',     color: '#db2777', exams: ['AIB'] },
-  { key: 'Associate',    color: '#006CE0', exams: ['SAA', 'DVA', 'SOA', 'DEA', 'MLA'] },
-  { key: 'Professional', color: '#8b5cf6', exams: ['SAP', 'DOP', 'AIP'] },
-  { key: 'Specialty',    color: '#0ea5e9', exams: ['ANS', 'SCS'] },
-  { key: 'Additional',   color: '#14b8a6', exams: ['ML', 'DB', 'NW', 'SEC'] },
+  { key: 'Practitioner', color: EXAM_LEVEL_COLORS.Foundational, exams: ['CLF', 'AIF'] },
+  { key: 'Business',     color: EXAM_LEVEL_COLORS.Business, exams: ['AIB'] },
+  { key: 'Associate',    color: EXAM_LEVEL_COLORS.Associate, exams: ['SAA', 'DVA', 'SOA', 'DEA', 'MLA'] },
+  { key: 'Professional', color: EXAM_LEVEL_COLORS.Professional, exams: ['SAP', 'DOP', 'AIP'] },
+  { key: 'Specialty',    color: EXAM_LEVEL_COLORS.Specialty, exams: ['ANS', 'SCS'] },
+  { key: 'Additional',   color: EXAM_LEVEL_COLORS.Additional, exams: ['ML', 'DB', 'NW', 'SEC'] },
 ] as const;
 
 // 検索時に横断する全資格の順序
@@ -1360,11 +1360,11 @@ export default function CheatSheet() {
                 }}
               >
                 {EIcon && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4, color: isSelected ? '#fff' : 'var(--color-text-light)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4, color: isSelected ? levelOn(levelColor) : 'var(--color-text-light)' }}>
                     <EIcon size={18} />
                   </div>
                 )}
-                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: isSelected ? '#fff' : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
+                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: isSelected ? levelOn(levelColor) : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
               </button>
             );
           })}
@@ -1382,14 +1382,14 @@ export default function CheatSheet() {
 
       {/* 用語コピーヒント */}
       {!q && (
-        <p style={{ fontSize: 'var(--font-size-xs)', color: '#009E9E', marginBottom: 'var(--spacing-sm)', marginTop: 0 }}>
+        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-points)', marginBottom: 'var(--spacing-sm)', marginTop: 0 }}>
           色付き太字の用語はタップしてコピーできます（検索向けに文脈補足が付く場合あり）
         </p>
       )}
 
       {/* カードの狙い＋関連資格への導線（オリジナルカード / AIF） */}
       {!q && EXAM_INTRO[selectedExam] && (
-        <div style={{ background: `${examColor}0f`, border: `1px solid ${examColor}55`, borderRadius: 'var(--border-radius-md)', padding: '10px 12px', marginBottom: 'var(--spacing-md)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ background: tint(examColor, 6), border: `1px solid ${tint(examColor, 33)}`, borderRadius: 'var(--border-radius-md)', padding: '10px 12px', marginBottom: 'var(--spacing-md)', display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)', lineHeight: 1.6 }}>{EXAM_INTRO[selectedExam].note}</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)', flexShrink: 0 }}>関連:</span>
@@ -1397,7 +1397,7 @@ export default function CheatSheet() {
               <button
                 key={l.exam}
                 onClick={() => switchExam(l.exam)}
-                style={{ padding: '3px 10px', borderRadius: 'var(--border-radius-md)', border: `1.5px solid ${examColor}`, background: 'var(--color-bg-white)', color: examColor, fontSize: 'var(--font-size-2xs)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                style={{ padding: '3px 10px', borderRadius: 'var(--border-radius-md)', border: `1.5px solid ${examColor}`, background: 'var(--color-bg-white)', color: levelText(examColor), fontSize: 'var(--font-size-2xs)', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
               >{l.label} →</button>
             ))}
           </div>
@@ -1425,17 +1425,17 @@ export default function CheatSheet() {
             <h2 style={{
               fontSize: 'var(--font-size-sm)',
               fontWeight: 700,
-              color: secColor,
+              color: levelText(secColor),
               margin: '0 0 var(--spacing-sm)',
               paddingBottom: 6,
-              borderBottom: `2px solid ${secColor}30`,
+              borderBottom: `2px solid ${tint(secColor, 19)}`,
               display: 'flex',
               alignItems: 'center',
               gap: 6,
             }}>
               <span style={{ display: 'inline-block', width: 3, height: 14, background: secColor, borderRadius: 2 }} />
               {/* 検索時はどの資格の記事かを示すバッジを表示 */}
-              {q && <span style={{ fontSize: 'var(--font-size-2xs)', fontWeight: 700, color: '#fff', background: secColor, borderRadius: 'var(--border-radius-sm)', padding: '1px 8px', flexShrink: 0 }}>{section.exam}</span>}
+              {q && <span style={{ fontSize: 'var(--font-size-2xs)', fontWeight: 700, color: levelOn(secColor), background: secColor, borderRadius: 'var(--border-radius-sm)', padding: '1px 8px', flexShrink: 0 }}>{section.exam}</span>}
               {section.title}
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(400px, 100%), 1fr))', gap: 'var(--spacing-sm)' }}>
@@ -1493,8 +1493,8 @@ export default function CheatSheet() {
           bottom: 80,
           left: '50%',
           transform: 'translateX(-50%)',
-          background: '#009E9E',
-          color: '#fff',
+          background: 'var(--color-points)',
+          color: 'var(--color-on-points)',
           padding: '8px 20px',
           borderRadius: 'var(--border-radius-full)',
           fontSize: 'var(--font-size-sm)',
@@ -1686,7 +1686,7 @@ function ItemCard({ item, exam, q, allNames, highlightedId, onCopy, onNavigate, 
       data-article-id={article?.id ?? item.name}
       style={{
         background: 'var(--color-bg-white)',
-        border: highlighted ? '1px solid #009E9E' : '1px solid var(--color-border)',
+        border: highlighted ? '1px solid var(--color-points)' : '1px solid var(--color-border)',
         borderRadius: 'var(--border-radius-md)',
         padding: '10px 12px',
         boxShadow: highlighted ? '0 0 0 3px rgba(0,158,158,0.2)' : 'var(--box-shadow-sm)',
@@ -1699,7 +1699,7 @@ function ItemCard({ item, exam, q, allNames, highlightedId, onCopy, onNavigate, 
             <div
               onClick={() => copyWithContext(item.keyword ?? item.name.replace(/[（(][^）)]*[）)]/g, '').trim())}
               title="タップしてコピー"
-              style={{ fontWeight: 700, fontSize: 'var(--font-size-base)', color: '#009E9E', cursor: 'pointer' }}
+              style={{ fontWeight: 700, fontSize: 'var(--font-size-base)', color: 'var(--color-points)', cursor: 'pointer' }}
             >
               {highlight(title)}
             </div>
@@ -1759,7 +1759,7 @@ function ItemCard({ item, exam, q, allNames, highlightedId, onCopy, onNavigate, 
               <span
                 onClick={() => copyWithContext(copyTerm)}
                 title={copyTerm !== term ? `コピー: ${copyTerm}` : 'タップしてコピー'}
-                style={{ fontWeight: 700, color: '#009E9E', cursor: 'pointer' }}
+                style={{ fontWeight: 700, color: 'var(--color-points)', cursor: 'pointer' }}
               >{highlight(term)}</span>
               {'：'}
               {renderRich(body.slice(colonIdx + 1))}
@@ -1812,7 +1812,7 @@ function ArticleChip({ label, onClick }: { label: string; onClick: () => void })
       onClick={onClick}
       style={{
         fontSize: 'var(--font-size-2xs)',
-        color: '#009E9E',
+        color: 'var(--color-points)',
         background: 'rgba(0,158,158,0.08)',
         border: '1px solid rgba(0,158,158,0.25)',
         borderRadius: 'var(--border-radius-md)',

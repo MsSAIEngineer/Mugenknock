@@ -1,18 +1,18 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from '@/compat/react-router-dom';
-import { API_ENDPOINT, EXAM_DOMAINS, tagIdMatches } from '../constants';
+import { useNavigate, useLocation } from '@/compat/react-router-dom';
+import { API_ENDPOINT } from '../constants';
+import WeakAnalysis from '../components/records/WeakAnalysis';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import PageLayout from '../components/ui/PageLayout';
-import { getCached, setCached, SHORT_TTL } from '../utils/cache';
+import { getCached, setCached } from '../utils/cache';
 import { IconStar, IconTarget, IconLightbulb } from '../components/Icons';
 
 const TARGET_EXAM_KEY_BASE = 'targetExam';
 const STATS_GOOD_RATE = 70;
-const STATS_FAIR_RATE = 50;
 
 type Session = {
   sessionId: string;
@@ -34,7 +34,6 @@ type AnswerRecord = {
   answeredAt: string;
 };
 
-type TagStat = { tagId: string; correctCount?: number; incorrectCount?: number };
 
 // ── スコア推移折れ線グラフ ────────────────────────────────────────────
 const ScoreLineChart = ({ sessions, passRate, lang }: { sessions: Session[]; passRate?: number; lang: string }) => {
@@ -62,7 +61,8 @@ const ScoreLineChart = ({ sessions, passRate, lang }: { sessions: Session[]; pas
     : 0;
 
   return (
-    <svg key={n} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }} role="img">
+    <svg key={n} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }} role="img"
+      aria-label={`セッション別スコア推移（${n}回）`}>
       {gridScores.map(v => (
         <g key={v}>
           <line x1={padL} y1={yOf(v)} x2={W - padR} y2={yOf(v)} stroke="var(--color-border)" strokeWidth={0.7} />
@@ -148,7 +148,10 @@ const ActivityChart = ({ data, lang }: { data: { label: string; count: number; i
   const showEvery = n <= 7 ? 1 : n <= 14 ? 2 : 5;
 
   return (
-    <svg key={chartKey} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }} role="img">
+    <svg key={chartKey} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }} role="img"
+      aria-label={lang === 'ja'
+        ? `日次の解答数（${n}日間・合計${data.reduce((a, d) => a + d.count, 0)}問）`
+        : `Daily answers (${n} days, ${data.reduce((a, d) => a + d.count, 0)} total)`}>
       {[0, Math.round(maxCount / 2), maxCount].filter((v, i, a) => a.indexOf(v) === i).map(v => (
         <g key={v}>
           <line x1={padL} y1={padT + chartH * (1 - v / maxCount)} x2={W - padR} y2={padT + chartH * (1 - v / maxCount)}
@@ -224,7 +227,16 @@ export default function Stats() {
   const navigate = useNavigate();
   const uid = user?.userId ?? 'guest';
 
-  const [tab, setTab] = useState<'volume' | 'performance' | 'history'>('volume');
+  const location = useLocation();
+  const isMobile = window.innerWidth < 768;
+  // 記録画面（specs/007）。苦手分析・解答履歴・正答率の推移・演習量の4タブ。
+  // ホーム苦手分析カード・模試設定・旧マイページのリンクは location.state.tab で初期タブを指定してくる
+  type RecordsTab = 'analysis' | 'history' | 'trend' | 'volume';
+  const [tab, setTab] = useState<RecordsTab>(() => {
+    const requested = (location.state as any)?.tab;
+    if (requested === 'performance') return 'trend'; // 旧「ノック成績」タブ
+    return requested === 'history' || requested === 'trend' || requested === 'volume' ? requested : 'analysis';
+  });
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [sessionAnswers, setSessionAnswers] = useState<Record<string, AnswerRecord[]>>({});
   const [answersLoading, setAnswersLoading] = useState<string | null>(null);
@@ -233,18 +245,22 @@ export default function Stats() {
   const [questionDetailLoading, setQuestionDetailLoading] = useState<string | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [bookmarkLoadingId, setBookmarkLoadingId] = useState<string | null>(null);
-  const [targetExam] = useState<string | null>(() => localStorage.getItem(`${TARGET_EXAM_KEY_BASE}_${uid}`));
+  const [targetExam, setTargetExam] = useState<string | null>(() => localStorage.getItem(`${TARGET_EXAM_KEY_BASE}_${uid}`));
+  // 直接 URL で開いたとき、目標資格は Layout がサーバから読み込んでイベントで知らせてくる（トレーニング画面と同じ）
+  useEffect(() => {
+    setTargetExam(localStorage.getItem(`${TARGET_EXAM_KEY_BASE}_${uid}`));
+    const handler = (e: Event) => setTargetExam((e as CustomEvent<string>).detail ?? null);
+    window.addEventListener('targetExamChanged', handler);
+    return () => window.removeEventListener('targetExamChanged', handler);
+  }, [uid]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
-  const [tagStats, setTagStats] = useState<TagStat[]>([]);
   const [loading, setLoading] = useState(true);
-  const [perfLoading, setPerfLoading] = useState(false);
-  const [perfLoaded, setPerfLoaded] = useState(false);
   const [activityRange, setActivityRange] = useState<7 | 14 | 30 | 'all'>(7);
   const [showHint, setShowHint] = useState(() => !localStorage.getItem(`sherpaStatsHint_${uid}`));
 
-  // ── 初期ロード（ノック量に必要なデータのみ） ──
+  // ── 初期ロード（演習量・解答履歴・推移に必要なデータ） ──
   useEffect(() => {
     if (!user || !targetExam) { setLoading(false); return; }
     const cachedTotal = getCached<number>(`qcount_${targetExam}`);
@@ -268,7 +284,7 @@ export default function Stats() {
     }).catch(console.error).finally(() => setLoading(false));
   }, [user, targetExam]);
 
-  // ── ノック履歴タブを開いたときにブックマーク一覧をロード ──
+  // ── 解答履歴タブを開いたときにブックマーク一覧をロード ──
   useEffect(() => {
     if (tab !== 'history' || !user) return;
     fetch(`${API_ENDPOINT}/users/me/bookmarks?userId=${user.userId}`)
@@ -277,22 +293,6 @@ export default function Stats() {
       .catch(() => {});
   }, [tab, user]);
 
-  // ── ノック成績タブを開いたときに遅延ロード ──
-  useEffect(() => {
-    if (tab !== 'performance' || perfLoaded || !user || !targetExam) return;
-    const cachedStats = getCached<any[]>(`ustats_${user.userId}_${targetExam}`);
-    if (cachedStats !== null) { setTagStats(cachedStats); setPerfLoaded(true); return; }
-    setPerfLoading(true);
-    fetch(`${API_ENDPOINT}/users/me/stats?userId=${user.userId}&examType=${targetExam}`)
-      .then(r => r.json())
-      .then(d => {
-        setTagStats(d.stats ?? []);
-        setCached(`ustats_${user.userId}_${targetExam}`, d.stats ?? [], SHORT_TTL);
-        setPerfLoaded(true);
-      })
-      .catch(console.error)
-      .finally(() => setPerfLoading(false));
-  }, [tab, user, targetExam, perfLoaded]);
 
   // ── 派生データ ──
   const allSortedSessions = useMemo(() =>
@@ -330,17 +330,6 @@ export default function Stats() {
     });
   }, [sessions, activityRange]);
 
-  const domainStats = useMemo(() => {
-    if (!targetExam) return [];
-    return (EXAM_DOMAINS[targetExam] ?? []).map((domain, idx) => {
-      const ts = tagStats.find(t => tagIdMatches(t.tagId, targetExam, idx));
-      const correct = ts?.correctCount ?? 0;
-      const incorrect = ts?.incorrectCount ?? 0;
-      const total = correct + incorrect;
-      const rate = total > 0 ? Math.round((correct / total) * 100) : null;
-      return { domain, correct, incorrect, total, rate };
-    });
-  }, [targetExam, tagStats]);
 
   const totalActivity = dailyData.reduce((s, d) => s + d.count, 0);
   const effectiveRange = activityRange === 'all' ? dailyData.length : activityRange;
@@ -354,7 +343,7 @@ export default function Stats() {
           <div style={{ textAlign: 'center', padding: 'var(--spacing-xl) 0' }}>
             <div style={{ fontSize: 32, marginBottom: 'var(--spacing-md)', color: 'var(--color-accent)', display: 'flex', justifyContent: 'center' }}><IconTarget size={40} /></div>
             <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-sub)', margin: '0 0 var(--spacing-lg)' }}>
-              {lang === 'ja' ? '目標資格を設定すると統計が表示されます' : 'Set a target certification to view your stats'}
+              {lang === 'ja' ? '目標資格を設定すると記録が表示されます' : 'Set a target certification to view your records'}
             </p>
             <Button variant="primary" onClick={() => navigate('/aws/')}>
               {lang === 'ja' ? 'ホームで資格を設定する' : 'Set a certification on Home'}
@@ -391,24 +380,30 @@ export default function Stats() {
 
       {/* ── タブ ── */}
       <div style={{ display: 'flex', borderBottom: '1px solid color-mix(in srgb, var(--color-text-light) 40%, transparent)', marginBottom: 'var(--spacing-lg)' }}>
-        <button style={tabStyle(tab === 'volume')} onClick={() => setTab('volume')}>
-          {lang === 'ja' ? 'ノック量' : 'Volume'}
-        </button>
-        <button style={tabStyle(tab === 'performance')} onClick={() => setTab('performance')}>
-          {lang === 'ja' ? 'ノック成績' : 'Performance'}
-        </button>
-        <button style={tabStyle(tab === 'history')} onClick={() => setTab('history')}>
-          {lang === 'ja' ? 'ノック履歴' : 'History'}
-        </button>
+        {([
+          ['analysis', lang === 'ja' ? '苦手分析' : 'Weak points'],
+          ['history', lang === 'ja' ? '解答履歴' : 'History'],
+          ['trend', lang === 'ja' ? '正答率の推移' : 'Accuracy'],
+          ['volume', lang === 'ja' ? '演習量' : 'Volume'],
+        ] as const).map(([key, label]) => (
+          <button key={key} data-kbnav="tab" role="tab" aria-selected={tab === key} style={tabStyle(tab === key)} onClick={() => setTab(key)}>
+            {label}
+          </button>
+        ))}
       </div>
 
-      {/* ════════ ノック量タブ ════════ */}
+      {/* ════════ 苦手分析タブ（旧マイページ苦手分析） ════════ */}
+      {tab === 'analysis' && (
+        <WeakAnalysis userId={user?.userId ?? null} targetExam={targetExam} ja={lang === 'ja'} isMobile={isMobile} />
+      )}
+
+      {/* ════════ 演習量タブ ════════ */}
       {tab === 'volume' && (
         <>
           {/* 消化進捗 */}
           <Card padding="var(--spacing-lg)" style={{ marginBottom: 'var(--spacing-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--color-text-sub)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 'var(--spacing-md)' }}>
-              {lang === 'ja' ? '合計ノック量' : 'Total Practice'}
+              {lang === 'ja' ? '解いた問題数' : 'Total Practice'}
             </div>
             {loading ? (
               <>
@@ -454,7 +449,7 @@ export default function Stats() {
           <Card padding="var(--spacing-lg)">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-md)', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
               <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--color-text-sub)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                {lang === 'ja' ? '日次ノック量' : 'Daily Activity'}
+                {lang === 'ja' ? '日ごとの演習量' : 'Daily Activity'}
               </div>
               <div style={{ display: 'flex', gap: 4 }}>
                 {([7, 14, 30, 'all'] as const).map(r => (
@@ -491,69 +486,21 @@ export default function Stats() {
         </>
       )}
 
-      {/* ════════ ノック成績タブ ════════ */}
-      {tab === 'performance' && (
+      {/* ════════ 正答率の推移タブ ════════
+          ドメイン別正答率（累計）は苦手分析タブの「累計」に統合した（同じ正答率を2か所で出さない） */}
+      {tab === 'trend' && (
         <>
-          {perfLoading && (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--spacing-xl) 0' }}>
-              <div className="sherpa-spinner" style={{ width: 28, height: 28, borderWidth: 3 }} />
-            </div>
-          )}
-
-          {/* ドメイン別正答率 */}
-          {!perfLoading && user && targetExam && (
-            <Card style={{ marginBottom: 'var(--spacing-lg)' }}>
-              <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--color-text-sub)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 'var(--spacing-md)' }}>
-                {t('stats.domainAccuracy')}
-              </div>
-              {!perfLoaded ? (
-                <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-light)' }}>...</p>
-              ) : answeredCount <= 10 ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', padding: '8px 12px', background: 'var(--color-hint-bg)', border: '1px solid var(--color-hint-border)', borderRadius: 'var(--border-radius-sm)', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)' }}>
-                  <span>⚠️</span>
-                  <span>{lang === 'ja' ? `回答数が足りません（${answeredCount}問）。10問以上解くと精度が上がります。` : `Not enough answers (${answeredCount}). Accuracy improves after 10+ answers.`}</span>
-                </div>
-              ) : (
-                <>
-                  {[...domainStats].sort((a, b) => (a.rate ?? 101) - (b.rate ?? 101)).map(({ domain, correct, total, rate }) => (
-                    <div key={domain} style={{ marginBottom: 'var(--spacing-lg)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-xs)' }}>
-                        <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-text-main)' }}>
-                          {domain}
-                        </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', flexShrink: 0 }}>
-                          {rate !== null ? (
-                            <>
-                              <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-text-main)' }}>
-                                {rate}%
-                              </span>
-                              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)' }}>{correct}/{total}{t('stats.qUnit')}</span>
-                            </>
-                          ) : (
-                            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-light)', fontStyle: 'italic' }}>{t('stats.noAnswer')}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div style={{ background: 'var(--color-bg-main)', borderRadius: 10, height: 8, overflow: 'hidden' }}>
-                        <div style={{
-                          width: rate !== null ? `${rate}%` : '0%', height: '100%', borderRadius: 10,
-                          background: rate === null ? 'var(--color-border)' : 'var(--color-primary)',
-                          transformOrigin: 'left center',
-                          animation: 'growWidth 0.6s cubic-bezier(0.4, 0, 0.2, 1) both',
-                        }} />
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
+          {user && !loading && allSortedSessions.length === 0 && (
+            <Card padding="var(--spacing-xl)">
+              <p style={{ margin: 0, textAlign: 'center', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)' }}>
+                {lang === 'ja' ? '演習するとセッションごとの正答率がここに並びます' : 'Your accuracy per session will appear here'}
+              </p>
             </Card>
           )}
-
-          {/* 成績推移 */}
-          {!perfLoading && user && allSortedSessions.length > 0 && (
+          {user && allSortedSessions.length > 0 && (
             <Card style={{ marginBottom: 'var(--spacing-lg)' }}>
               <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--color-text-sub)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 'var(--spacing-md)' }}>
-                {lang === 'ja' ? '成績推移' : 'Score History'}
+                {lang === 'ja' ? 'セッションごとの正答率' : 'Accuracy per Session'}
               </div>
               <ScoreLineChart sessions={allSortedSessions} passRate={STATS_GOOD_RATE} lang={lang} />
               <div style={{ marginTop: 6, display: 'flex', gap: 'var(--spacing-lg)', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)' }}>
@@ -579,7 +526,7 @@ export default function Stats() {
         </>
       )}
 
-      {/* ════════ ノック履歴タブ ════════ */}
+      {/* ════════ 解答履歴タブ ════════ */}
       {tab === 'history' && (
         <>
           {!user ? (
@@ -614,7 +561,7 @@ export default function Stats() {
                       ? (lang === 'ja' ? 'しっかり対策' : 'Focused')
                       : (lang === 'ja' ? 'サクッと演習' : 'Quick');
                   const modeBg = s.mode === 'exam' ? 'var(--color-danger-light, #fff0f0)' : s.isFocused ? '#e6f4f4' : 'var(--color-primary-light)';
-                  const modeColor = s.mode === 'exam' ? 'var(--color-danger)' : s.isFocused ? '#009E9E' : 'var(--color-primary)';
+                  const modeColor = s.mode === 'exam' ? 'var(--color-danger)' : s.isFocused ? 'var(--color-points)' : 'var(--color-primary)';
                   const d = new Date(s.endedAt || s.startedAt);
                   const dateLabel = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
                   const isExpanded = expandedSession === s.sessionId;

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from '@/compat/react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { API_ENDPOINT, EXAM_CONFIGS, EXAM_DOMAINS, EXAM_TYPES, PASS_SCORES, qDomainName, domainsToIndices, storedDomainsToNames, tagIdMatches, isNonAwsExam, COMPANION_EXAM, companionLabel, EXAM_LEVEL_COLORS, officialExamsForCompanion } from '../constants';
+import { API_ENDPOINT, EXAM_CONFIGS, EXAM_DOMAINS, EXAM_TYPES, PASS_SCORES, qDomainName, domainsToIndices, storedDomainsToNames, tagIdMatches, isNonAwsExam, COMPANION_EXAM, companionLabel, EXAM_LEVEL_COLORS, levelText, officialExamsForCompanion } from '../constants';
 import Button from '../components/ui/Button';
 import PageLayout from '../components/ui/PageLayout';
 import { getCached, setCached, SHORT_TTL, getCachedPersist, setCachedPersist } from '../utils/cache';
@@ -555,10 +555,11 @@ export default function Practice() {
       {tab === 'exercise' && (
         <>
           {!targetExam ? (
-            <div style={{ padding: 24, background: 'var(--color-primary-light)', border: '1px solid var(--color-primary)', borderRadius: 'var(--border-radius-md)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)', textAlign: 'center' }}>
-              {ja
-                ? (isMobile ? '上部メニューから試験を選択してください' : '左のメニューから試験を選択してください')
-                : (isMobile ? 'Select your target exam from the top menu' : 'Select your target exam from the left sidebar')}
+            // 目標資格の選択はホームのオーバーレイで行う。以前の「左のメニューから選択」は、
+            // そのメニューが存在せず行き止まりになっていた
+            <div style={{ padding: 'var(--spacing-lg)', background: 'var(--color-primary-light)', border: '1px solid var(--color-primary)', borderRadius: 'var(--border-radius-md)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+              {ja ? 'まだ目標資格が選ばれていません。' : 'You haven\'t chosen a target exam yet.'}
+              <Button onClick={() => navigate('/aws/')}>{ja ? '目標資格を選ぶ' : 'Choose a target exam'}</Button>
             </div>
           ) : (<>
           {/* 基礎知識(オリジナル資格)の混在（対応資格があり、ドメイン絞り込みをしていない時のみ表示） */}
@@ -570,12 +571,12 @@ export default function Practice() {
                 <span style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, fontSize: 'var(--font-size-sm)', fontWeight: includeCompanion ? 600 : 400, color: 'var(--color-text-main)' }}>
                   <span>
                     {ja ? (
-                      <><span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{`基礎知識（${companionLabel(COMPANION_EXAM[examType])}）`}</span>を含める</>
+                      <><span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{`基礎知識（${companionLabel(COMPANION_EXAM[examType])}）`}</span>を含める</>
                     ) : (
-                      <>Include <span style={{ color: EXAM_LEVEL_COLORS.Additional }}>{companionLabel(COMPANION_EXAM[examType])}</span></>
+                      <>Include <span style={{ color: levelText(EXAM_LEVEL_COLORS.Additional) }}>{companionLabel(COMPANION_EXAM[examType])}</span></>
                     )}
                   </span>
-                  {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanion ? EXAM_LEVEL_COLORS.Additional : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
+                  {statusCounts?.companionTotal != null && <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: includeCompanion ? levelText(EXAM_LEVEL_COLORS.Additional) : 'var(--color-text-light)', flexShrink: 0 }}>{statusCounts.companionTotal}{ja ? '問' : ''}</span>}
                 </span>
               </label>
               <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: 2, marginLeft: 26 }}>
@@ -773,8 +774,9 @@ export default function Practice() {
       {tab === 'exam' && (
         <>
           {!targetExam ? (
-            <div style={{ padding: 24, background: 'var(--color-primary-light)', border: '1px solid var(--color-primary)', borderRadius: 'var(--border-radius-md)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)', textAlign: 'center' }}>
-              {ja ? 'サイドメニューから試験を選択してください' : 'Select your target exam from the sidebar'}
+            <div style={{ padding: 'var(--spacing-lg)', background: 'var(--color-primary-light)', border: '1px solid var(--color-primary)', borderRadius: 'var(--border-radius-md)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+              {ja ? 'まだ目標資格が選ばれていません。' : 'You haven\'t chosen a target exam yet.'}
+              <Button onClick={() => navigate('/aws/')}>{ja ? '目標資格を選ぶ' : 'Choose a target exam'}</Button>
             </div>
           ) : (
             <>

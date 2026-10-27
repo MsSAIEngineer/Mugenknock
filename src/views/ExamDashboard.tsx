@@ -99,6 +99,7 @@ export default function ExamDashboard() {
       }}>
         <button
           onClick={() => navigate(-1)}
+          aria-label={ja ? '戻る' : 'Back'}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: 44, height: 44, border: 'none', background: 'none',

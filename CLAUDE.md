@@ -115,11 +115,12 @@
 実装が終わったら、ユーザーの個別指示を待たずに `develop` へ commit し、`git push github develop` してよい。
 
 **自動で行う条件（すべて満たしてから）**:
-1. 実装とローカル検証が済んでいる。`npx tsc --noEmit` が通り、UI の変更はブラウザで動作確認済み。
+1. 実装とローカル検証が済んでいる。`npx tsc --noEmit` と `npm run lint:tokens`（デザイントークン違反が増えていないか）が通り、UI の変更はブラウザで動作確認済み。
 2. docs の更新が要る変更は、同じコミットに docs を含めている。
 3. コミットは**自分の変更だけ**。`git diff` で中身を確認し、ファイル名を指定して add する
    （`git add -A` / `git add <dir>` は使わない）。夜間バッチが自動更新する
-   `prompts/night-prompts/scripts/state/*.json`・`instructions/*.txt` や、他セッションの作りかけは含めない。
+   `instructions/*.txt`・`state/service-catalog.json` や、他セッションの作りかけは含めない
+   （これらはバッチが `scripts/commit-night-assets.sh` で自分でコミットする。それ以外の `state/` は gitignore 済み）。
 4. push したら、次の「ビルドは成功まで見届ける」に従う。
 
 **自動にしない（従来どおりユーザーの明示指示が必要）**:
@@ -153,6 +154,8 @@
   は HEAD のビルドを名指しで待つ（SHA を指定する場合は第2引数）。最大10分（実測の約5倍）。
   push 直後は前回の成功ビルドが最新に見えて「成功」と誤報しやすいので、
   **「最新のデプロイ」ではなく「自分のコミット」で判定する**（旧実装はこれで誤報した）。
+- **ビルド対象外のコミットは「⏭ ビルド対象外」で完了。** Cloudflare Pages の Build watch paths で、docs・specs・`*.md`・`*.sh`・
+  夜間のログや state だけの変更はビルドしない（2026-10-27〜。一覧は `docs/07-operations.md`）。`wait` は `is_skipped` を見てすぐ返る。
 - **バックグラウンドで待つ。** 完了通知を受けて結果を確認する。`sleep` でのポーリングはしない。
 - **続けて push しない。** 前のビルドが終わる前に次を push すると、実行中のビルドが取り消されて
   検証が曖昧になる。まとめて push するか、完了を待ってから次を push する。
@@ -166,7 +169,7 @@
 
 | リモート名 | URL | 用途 |
 |-----------|-----|------|
-| `github` | `git@github.com:Ares2023/Mugenknock.git` | GitHub（Cloudflare Pages 連携） |
+| `github` | `git@github.com:MsSAIEngineer/Mugenknock.git` | GitHub（Cloudflare Pages 連携） |
 
 ---
 
@@ -204,6 +207,7 @@
 - 引数なし: 現在のブランチを見て自動判定（develop→dev、master→prod）
 - `./scripts/deploy-lambda.sh dev`: 強制的に dev へデプロイ
 - `./scripts/deploy-lambda.sh prod`: 強制的に prod へデプロイ
+- `./scripts/deploy-lambda.sh status` / `rollback <dev|prod> [版]`: live の版の確認 / 1つ前の版へ戻す（2026-10-28〜。デプロイは `lambda/test` が通ってから版を切り、エイリアス `live` を向ける。API Gateway は `<env>:live` を呼ぶ）
 
 ### Lambda 更新ルール（必須・厳守）
 - **Lambda を変更したら `awsquizHandler-dev` と `awsquizHandler-prod` の両方を必ずデプロイする。** これは「原則」ではなく必須。`lambda/` 配下を1行でも変更したコミットは、dev・prod 両方に反映するまで作業完了としない。
@@ -214,12 +218,13 @@
   ※ prod への反映自体は「ブランチ・デプロイルール」に従いユーザーの明示指示が必要。ただし **dev だけ出して prod を出し忘れる／その逆で片側が旧コードのまま放置するのを禁止**する、という意味。prod 反映指示が出たら dev も揃っているか必ず確認する。
 - **`git push` では Lambda は一切更新されない。** push は Cloudflare のフロントビルドのみ。Lambda は必ず `deploy-lambda.sh` で手動デプロイする。**「git にマージ済み＝本番反映済み」ではない**点に注意。
 - 各 Lambda の利用者:
-  - **`awsquizHandler-prod`（/prod）**: 本番 mugenknock.com。**加えて現状は検証(develop preview)のフロントも /prod を叩く**（`.env.production` が全ビルドで効くため）。デプロイ済みフロントは両環境ともこれを使用。
-  - **`awsquizHandler-dev`（/dev）**: ローカル開発（`.env.local`）と**夜間スクリプト**（`01-generate-questions.sh` 等の問題生成・取込）。
+  - **`awsquizHandler-prod`（/prod）**: 本番 mugenknock.com。
+  - 2026-10-28〜 **検証(develop preview)のフロントは /dev を叩く**（以前は Cloudflare の変数名の末尾の空白で /prod を向いていた）。
+  - **`awsquizHandler-dev`（/dev）**: 検証のフロント、ローカル開発（`.env.local`）と**夜間スクリプト**（`01-generate-questions.sh` 等の問題生成・取込）。
 - したがって **prod だけ更新すると夜間生成・ローカルが旧コード / dev だけ更新すると本番が旧コード**になる。手順は「dev に出して検証 → （指示後）prod に反映」の二段で必ず両方更新する。
 - DynamoDB は dev/prod 共通テーブルのためデータは同じ。dev/prod Lambda の違いは「どちらのコードで処理するか」だけ。
 - **デプロイ漏れの実害例（再発防止）**: 出題ドメイン均等化コード（`domainBalancedOrder`, 2026-06-29 に git 追加）を **prod Lambda へ反映し忘れ**、prod が均等化前の旧コードで約1か月ランダム出題を続けた結果、ユーザーの累積ドメイン分布が大きく偏った（最少1問 vs 最多12問）。git にはあるのに本番未デプロイ、が原因。Lambda ロジック変更は「git 反映」で終わらせず必ず **稼働中の Lambda 実機で挙動を確認**する。
-- **検証環境で「新規Lambdaエンドポイントが動かない」ように見えるが実は仕様通りのケース（2026-09-15発覚）**: 検証(develop preview)のフロントは上記の通り `/prod` を叩くため、**dev にだけ新規デプロイしたエンドポイントは検証環境からは404/失敗になる**。実際に問題の👍👎リアクション機能で「保存直後は反映されるがリロードすると消える」という一見バグに見える挙動が起きたが、原因は prod Lambda に未反映なだけだった。新規Lambda機能を検証環境（`https://develop.mugenknock.pages.dev` 等のpreview URL）で確認する際は、**まずローカル（`.env.local`→dev Lambda）で動作確認してから**、検証環境での不一致が「機能のバグ」か「prod未反映という既知の仕様」かを切り分けること。焦って安易に prod デプロイをしない（prod反映はユーザーの明示指示が必要）。
+- **（解消済み）検証環境が /prod を叩いていた件（2026-09-15発覚・2026-10-28解消）**: 以前は検証のフロントが `/prod` を向いていたため、dev にだけ出した新規エンドポイントが検証で404になり、バグと見誤った（👍👎リアクションの件）。今は検証が `/dev` を向くので、**Lambda の変更は dev に出して検証環境で確かめてから** prod に出す。逆に、検証で見えるユーザーデータは `-dev` テーブルの分（本番の記録とは別）になった点に注意。
 
 ---
 
@@ -311,6 +316,11 @@ Cloudflare Pages 上でも**1.5〜2分**（直近10回の実測 84〜137秒。cl
 - モーダルの ✕ 閉じるボタン
 - 設定項目行（SettingsRow）・選択肢など、リスト内の特殊なクリッカブル要素
 
+### 機能が自明なボタンはアイコンにする（2026-10-27 本人指示）
+削除（ゴミ箱）・設定（歯車）・コピー・閉じる（✕）など、アイコンだけで意味が伝わるボタンは文字にせず、
+下の「アイコン専用の円形ボタン」にする。`aria-label` と `title` に機能名を必ず書く。
+確認ダイアログの「削除する」「キャンセル」「変更する」など、**結果を確定させるボタンは文字のまま**にする。
+
 ### アイコン専用の円形ボタン
 - 最小サイズ：`width: 44, height: 44`（タッチターゲット確保）
 - 形状：`borderRadius: '50%'`
@@ -322,6 +332,11 @@ Cloudflare Pages 上でも**1.5〜2分**（直近10回の実測 84〜137秒。cl
 ## 余白・間隔・サイズの標準（デザイントークン必須）
 
 画面間のデザイン不統一を防ぐため、**余白・gap・padding・フォントサイズ・影・角丸はインラインの生px値を避け、必ず `src/index.css` のトークンを使う**。
+
+### 機械チェック（2026-10-26〜）
+`npm run lint:tokens`（`scripts/check-design-tokens.mjs`）が、スケール外の余白・生のフォントサイズ・生の角丸・生の色コードを数える。
+既存の違反はファイルごとの件数を `scripts/design-token-baseline.json` に記録してあり、**増えたら失敗**する。
+直して減らしたら `node scripts/check-design-tokens.mjs --update` で基準を下げる（基準を上げる目的で --update しない）。
 
 ### スペーシングスケール（4px基準）
 `gap` / `margin` / `padding` はこのスケールのトークンのみ使う。`10px` `7px` `14px` `6px` `5px` `13px` など**スケール外の生px値は禁止**（最も近いトークンに丸める）。
@@ -374,6 +389,22 @@ Cloudflare Pages 上でも**1.5〜2分**（直近10回の実測 84〜137秒。cl
 
 **演習を開始する系のボタン**（モード切替・出題数選択・開始ボタン）は AWS マネジメントコンソールを
 意識して `full`（pill）を維持する。バッジ・フィルタチップなど非開始系は上表に従う。
+
+### 色（2026-10-26 確定）
+主色は AWS Cloudscape 系のブルー（`--color-primary`）、アクセントはオレンジ。ターコイズはロゴだけに使う。
+
+- 色は `src/index.css` のトークンを使い、`'#009E9E'` のような生の色コードを書かない。
+- **文字色は背景に対して WCAG 2.2 AA（4.5:1）を満たす。** トークンの値はこれを満たすように決めてある。
+  新しい色を足すときはコントラスト比を計算してから決める。
+  ただし**塗り・線・アイコンまで暗くしない**（全部を AA の濃さにしたら画面全体が暗く濁った。2026-10-26 本人指摘）。
+  明るい色は塗りに使い、文字だけ濃い別トークンにする。
+  例外: ポイント・しっかり対策の青緑 `--color-points`（#009E9E）は、明るさを優先する本人判断で AA 未満のまま使う。
+- オレンジの塗り（主ボタン）に載せる文字は `--color-btn-primary-text`（濃色）。白にしない。
+- 資格レベル色は `EXAM_LEVEL_COLORS`（`constants.ts`）だけを使い、画面ごとに色表を書かない。
+  実体は CSS 変数（`--level-*`）なので、`${color}33` のように hex のアルファを足せない。半透明は `tint(color, pct)`。
+  `EXAM_LEVEL_COLORS` は塗り・線用の明るい色。**文字に使うときは `levelText(color)`**（`--level-*-text`）、
+  **塗りに文字を載せるときは `levelOn(color)`**（`--level-*-on`。ライトは白で統一、ダークは濃色）を通す。
+- 正誤・状態を色だけで示さない。アイコンか文字を添える。
 
 ## 出題ドメイン配分の方針（確定）
 

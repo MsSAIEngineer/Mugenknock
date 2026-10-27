@@ -10,7 +10,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
-import { IconChevronLeft, IconChevronRight, IconSun, IconMoon } from '../components/Icons';
+import { IconChevronLeft, IconChevronRight, IconSun, IconMoon, IconTrash } from '../components/Icons';
 
 type SessionSummary = { examType: string; count: number; lastDate: string | null };
 
@@ -497,9 +497,15 @@ export default function Account() {
                           </div>
                         </div>
                         {!isConfirming && (
-                          <Button variant="danger" size="sm" onClick={() => setConfirmingExam(et)} style={{ flexShrink: 0 }}>
-                            {ja ? 'データを削除' : 'Delete'}
-                          </Button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingExam(et)}
+                            aria-label={ja ? `${et} のデータを削除` : `Delete ${et} data`}
+                            title={ja ? 'データを削除' : 'Delete data'}
+                            style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <IconTrash size={18} />
+                          </button>
                         )}
                       </div>
                       {isDeleting && (

@@ -5,33 +5,36 @@
 
 ## 7.1 全体像
 
+**5時間ごとのピンは、このプロジェクトではなくユーザー共通のタイマー `claude-timer` が回している**
+（2026-10-14〜。本体 `~/.local/share/claude-timer/`・独立した git リポジトリ・詳細はその `README.md`）。
+mugenknock は `~/.config/claude-timer/hooks.d/mugenknock.conf` に「ピンの N 分前」のフックを登録しているだけ。
+他のプロジェクトも同じ形でフックを登録できる。
+
 ```
-                  ~/.config/mugenknock/next_ping        ← 唯一の正（次回ピン時刻）
-                                │
-                  sync-local-schedule.sh 読む
-                                │
-   ┌────────────┬───────────────┼───────────────┬────────────────┐
-   ▼            ▼               ▼               ▼                ▼
-hook-1       hook-2          localping       postping      （常設タイマー）
-(ピン30分前)  (ピン20分前)     (ピン時刻)      (ピン+10分)     canary 23:50
-妥当性検証    問題生成         claude を起こす  再同期＋夜間     mode-reset 土03:00
-02-check-    01-generate     /usage で次回   バッチ           chainwatch
-validity     (累計1000問)    時刻を再計算
-(最大1000問)
+        ~/.config/claude-timer/next_ping        ← 唯一の正（次回ピン時刻・全プロジェクト共通）
+                          │ claude-timer sync が読む
+   ┌────────────┬─────────┴──────┬──────────────┬──────────────────┐
+   ▼            ▼                ▼              ▼                  ▼
+hook-mugenknock-1  hook-mugenknock-2  prelog       ping             hook-mugenknock-maint-1   （mugenknock の常設タイマー）
+(ピン30分前)        (ピン20分前)        (ピン1分前)   (ピン時刻)         (ピン10分後)               canary 23:50
+妥当性検証          問題生成            /usage を     claude を起こし    サイト保守                 mode-reset 土03:00
+02-check-validity   01-generate        usage.log に  /usage で次回      nightly-noai(日1回)
+(最大1000問)        (累計1000問)        記録          時刻を決めて再仕込み daily-services-weekly(週1回)
 ```
 
 - すべて **one-shot 絶対時刻タイマー**（`Persistent=true`）。PC停止中に逃した発火は次回起動時に走る
-- **連鎖構造**: postping が `sync-local-schedule.sh` を呼んで次サイクルを仕込む
-- 連鎖が切れると全部止まるので `chain-watchdog.sh` が保険で監視する
+- **連鎖構造**: ピン（`claude-timer-ping`）が終わるたびに次回時刻を決め、自分とフックを仕込み直す
+- 連鎖が切れると全部止まるので、`claude-timer-watchdog`（2時間おき）が保険で監視する
 
 ### なぜこの構成か
 
 Claude のサブスクリプションは5時間単位でトークンが回復する。
 **回復直前に残量を使い切る**のが最も効率的なので、ピン（＝回復時刻）の
-30分前・15分前にフックを仕込んでトークンを消化している。これは意図的な設計。
+30分前・20分前にフックを仕込んでトークンを消化している。これは意図的な設計。
 
 以前は Fargate + EventBridge でこれを回していたが、課金を避けるため
-**Fargate はピンのみ→2026-09にローカル systemd へ全面移行**した。
+**2026-09にローカル systemd へ全面移行**し、**2026-10-14 にピン部分をユーザー共通の `claude-timer` へ切り出した**
+（ピンは5時間枠＝アカウント単位の資源で、プロジェクトに閉じる理由がないため）。
 
 ## 7.2 systemd user タイマー
 
@@ -39,14 +42,17 @@ Claude のサブスクリプションは5時間単位でトークンが回復す
 
 | ユニット | 起動 | 実行内容 |
 |---|---|---|
-| `mugenknock-localping` | 次回ピン時刻 | `local-ping-run.sh` — claude を起こし、`/usage` から次回時刻を決めて再アーム |
-| `mugenknock-hook-1` | ピン30分前 | `local-validity-hook-run.sh` — 妥当性検証（`02-check-validity -n 1000`） |
-| `mugenknock-hook-2` | ピン20分前 | `local-generate-hook-run.sh` — 問題生成（`01-generate-questions --hard` を累計1000問まで繰り返す） |
+| `claude-timer-ping` | 次回ピン時刻 | （共通）claude を起こし、`/usage` から次回時刻を決めて再仕込み |
+| `claude-timer-prelog` | ピン1分前 | （共通）枠の終わり際の `/usage` を `~/.config/claude-timer/usage.log` に記録 |
+| `claude-timer-watchdog` | 2時間おき | （共通）連鎖切れの検知・修復 |
+| `claude-timer-hook-mugenknock-1` | ピン30分前 | `local-validity-hook-run.sh` — 妥当性検証（`02-check-validity -n 1000`） |
+| `claude-timer-hook-mugenknock-2` | ピン20分前 | `local-generate-hook-run.sh` — 問題生成（`01-generate-questions --hard` を累計1000問まで繰り返す） |
 
-フックの番号は `~/.config/mugenknock/hooks.conf` の行順（`ct hooks list`）。どちらのフックも
-**締切は次のピンの3分前**で、`next_ping` から求める（`scripts/mk-hook-deadline.sh`）。発動時刻を
-`hooks.conf` で変えても締切が追従する。以前は「自分は30分前（15分前）に発動する」と仮定した固定値で、
-発動時刻を変えると締切がずれた。ピンの直前に発動した場合（遅延起動など）は何もせずスキップする。
+フックの番号は `hooks.d/mugenknock.conf` の行順（`ct hooks list`）。`ct off` のとき（`hooks_enabled` が無いとき）は
+conf の `require=` により仕込まれない。どちらのフックも
+**締切は次のピンの3分前**で、`next_ping` から求める（`scripts/mk-hook-deadline.sh`。パスは claude-timer が
+`CLAUDE_TIMER_NEXT_PING_FILE` で渡す）。発動時刻を conf で変えても締切が追従する。
+ピンの直前に発動した場合（遅延起動など）は何もせずスキップする。
 `next_ping` が読めないときだけ、発動からの先行分（検証30分・生成20分）で代用する。
 2つは並走し、トークンは共有する。1000問は「枠が尽きるまで止まらない」ための上限で、実際に処理できる
 件数はトークンで決まる（検証は1回100〜150問程度）。
@@ -54,46 +60,107 @@ Claude のサブスクリプションは5時間単位でトークンが回復す
 **検証が先、生成が後になった影響（2026-10-12〜）。** 以前は生成（30分前）→検証（15分前）で、同じ
 サイクルで作った問題が同じサイクルのうちに検証・公開された。今は検証が先なので、生成した問題が公開
 されるのは**次のサイクルの検証**（約5時間後）になる。未確認の問題は検証で最優先なので、そこで確実に拾われる。
-| `mugenknock-postping` | ピン+10分 | `local-postping-run.sh` — 再同期 ＋ 夜間サイクルなら夜間バッチ |
+
+| ユニット | 起動 | 実行内容 |
+|---|---|---|
 | `mugenknock-canary` | 毎日 23:50 | Playwright カナリアテスト → S3 |
-| `mugenknock-nightly-noai` | 毎日 00:05 | AI 不要の夜間処理 |
+| `mugenknock-nightly-noai` | **ピン+10分**（その日の最初・下記） | 夜間処理: 削除予定チェック → 通報是正 → 試験ガイド更新 → サービスカタログ更新 → **図鑑の廃止照合**（`05-check-daily-services.sh --lifecycle-only`）→ サイト掲載内容チェック（`10`・30日以内実行済みならスキップ）→ リリースノート（前日分）→ 日次レポート |
+| `mugenknock-daily-services-weekly` | **ピン+10分**（前回から7日以上・毎日分の後） | 図鑑の新設サービス記事化（`04 -n 3`）→ 図鑑記事の体裁チェック（`05 -n 5`）。どちらも sonnet |
+
+**サイト保守はトークン回復後に走らせる（2026-10-27〜）。** 上の2ユニットにタイマーは無い。
+claude-timer のフック `~/.config/claude-timer/hooks.d/mugenknock-maint.conf`（`+10`）が
+`scripts/local-maintenance-hook-run.sh` を呼び、毎日分はその日まだなら、週1回分は前回から7日以上なら
+`systemctl --user start` する（実行済みの印は `~/.config/mugenknock/maintenance_daily_last` / `maintenance_weekly_last`）。
+通常は夜間の最初のピン（0〜4時台）で走り、PC が止まっていた日は起動後の最初のピンで走る。
+問題の検証・生成のスイッチ（`ct on/off`・`require=`）とは別ファイルにして、`ct off` でも保守は止まらないようにしている。
+
+**夜間監査の部分再開（2026-10-27）。** トークン節約で止めた夜間バッチのうち、軽いサイト保守だけを上の2ユニットへ移した。
+頻度は用途で決めた: リリースノートはコミットのある日しか claude を呼ばないので毎晩、サイト掲載内容チェックは
+スクリプト内で月1回に絞られるので毎晩の一覧に置く、図鑑記事の体裁チェックは記事が週3件しか増えないので週1回。
+**止めたままのもの**: 問題監査（`audit-questions-nightly`・opus・最大の消費元）、カナリア整合（`canary-coverage-check`・opus）、
+改行チェック（`09`・問題の体裁でサイト保守ではない）、問題の検証・生成（hook-1/2 で別途稼働）。
 | `mugenknock-mode-reset` | 土 03:00 | `ct` のモードを既定へ戻す |
-| `mugenknock-chainwatch` | 定期 | 連鎖切れの検知・修復 |
+
+**サービス図鑑の動向追従（2026-10-27〜）。** 図鑑のグリッドは `DailyServices` の記事そのもの。
+- 新設・廃止の検知: `refresh-service-catalog-monthly.sh`（毎晩・`-n 12`・30日以内確認済みはスキップ）が
+  AWS 公式の SSM サービス一覧を母集合に、新しいサービスを足し、各サービスの `status` を WebFetch で確認する。
+- 廃止: 毎晩 `05 --lifecycle-only`（claude 不要）が、非 active の記事に警告を付け、30日後に削除する。
+  active に戻れば警告を外す。`--dry-run` で DynamoDB を書き換えずに結果だけ見られる。
+- 新設: 週1回 `04 -n 3` が、カタログで現行・`isArticleTarget` と確認済みの未掲載サービスを記事化する
+  （トークン節約のため週1回・少数）。
+- カタログには同じ名前のエントリが複数あることがある（例: 現行の AWS Transform と、Migration Hub が
+  AWS Transform へ改名されたことを表すエントリ）。04・05 とも「active と renamed なら active、それ以外は
+  `lastVerifiedAt` が新しい方」で 1 つに決めてから判定する（後勝ちで現行サービスに警告が付いた実例あり）。
+- 結果は日次レポートの「日めくり 生成/検証」に載る（`prompts/logs/nscript_04-…`/`nscript_05-…` を読む）。
+- 図鑑から記事を消すと（廃止の猶予切れ・体裁チェックでの delete）、05 が `state/daily-service-removals.jsonl` に
+  日付・名前・理由を追記する。`generate-release-note.sh` はその日の削除があれば本文に決まった文
+  （「サービス図鑑から次のサービスを削除しました: …」）を必ず足す。コミットが無い日・ユーザー向けの変更が無い日でも、
+  削除があれば削除だけのリリースノートを作る。重複記事の整理（0.5）は図鑑からサービスが消えないので記録しない。
+- 夜間バッチ（下表）からは外したまま。体裁チェック（05 の後段）は週次ユニットで回す。
+
+**夜間バッチ（`local-postping-run.sh`・ピン+10分）は登録していない**（トークン節約のため停止中）。
+conf にコメントアウトした行があり、`#` を外して `ct sync` すれば再開する。基準は**直前のピン**の+10分で、
+そのピンが 0〜4時台なら夜間サイクルとして夜間バッチを実行する。
+> 旧構成の `mugenknock-postping` は「次回ピン+10分」に仕込んでいたため、ピンのたびに先送りされて
+> **2026-10-06 を最後に一度も発火していなかった**（夜間バッチが止まっていた実際の原因）。claude-timer では
+> ピン後のフックを直前のピン基準で仕込むので、この問題は起きない。
 
 ### 制御コマンド `ct`（`scripts/ct.sh`）
 
+`ct` は claude-timer の mugenknock 用の窓口。ピン関連の操作は claude-timer に委ねる。
+
 ```bash
-ct              # 状況表示
-ct on / off     # フック（hook/hook2/夜間バッチ）の有効・無効。ピンは常時
-ct set HH:MM    # 次回ピン時刻を変更（以降は /usage の回復時刻に自動追従）
-ct cancel       # 完全停止（ピンも止める）
+ct              # 状況表示（claude-timer の状態 + mugenknock のフック）
+ct on / off     # mugenknock のフックの有効・無効。ピンは常時
+ct set HH:MM    # 次回ピン時刻を変更（= claude-timer set。以降は /usage の回復時刻に自動追従）
+ct cancel       # 完全停止（= claude-timer cancel。**全プロジェクト共通のピンが止まる**）
 ct resume       # 再開（次回 = now+5h）
-ct sync         # 時計に合わせてタイマー再同期
-ct skip         # 次回のフックだけスキップ
-ct run          # 今すぐピン実行
-ct log [-f|-n|-d DATE]
-ct hooks list / add <分前> <スクリプト> [ラベル] / rm <#>
+ct sync         # 時計に合わせてタイマー再同期（= claude-timer sync）
+ct skip         # 次回の mugenknock のフックだけスキップ
+ct run          # 今すぐピン実行（= claude-timer run）
+ct log [-f|-n|-d DATE]   # ピン履歴（claude-timer）/ -n 夜間 / -d 日付
+ct hooks list / add <分前> <スクリプト> [ラベル] / rm <#> / edit
 ```
 
-フラグファイル:
-- `~/.config/mugenknock/ping_disabled` — `ct cancel`（完全停止）
-- `~/.config/mugenknock/hooks_enabled` — `ct on/off`（フックのみ切替）
-- `~/.config/mugenknock/hooks.conf` — フック定義（`分前|スクリプト|ラベル`）。`ct` と `sync` が共用
+ファイル:
+- `~/.config/claude-timer/hooks.d/mugenknock.conf` — フック定義（`符号付き分|スクリプト|ラベル`）。`ct hooks` が読み書きする
+- `~/.config/mugenknock/hooks_enabled` — `ct on/off`（mugenknock のフックのみ切替）
+- `~/.config/claude-timer/disabled` — `ct cancel`（完全停止）
+- `~/.config/claude-timer/usage.log` — 使用量ログ（旧パス `~/.config/mugenknock/usage.log` はシンボリックリンク）。
+  集計は `claude-timer report`
+- `~/.config/claude-timer/mail.conf` → `~/.mugenknock_mail.conf`（ピン失敗の通知メール）
 
-### 状態の同期（S3）
+### 夜間バッチのファイルの置き場（2026-10-27〜）
 
-バケット `mugenknock-fargate-state-<accountId>`。
+**手元（git の作業ツリー）が唯一の正。** 以前は Fargate と共有するため、状態・生成指示・認証情報を
+S3 バケット `mugenknock-fargate-state-<accountId>` と pull → 実行 → push で双方向同期していた。
+手元だけで動かす今は不要なうえ、手で直した `instructions` が次の実行で S3 の内容に巻き戻る原因だったので廃止した。
+Claude の認証情報（OAuth）を S3 に上げるのもやめ、S3 の写しは削除済み。
 
-| プレフィックス | 内容 |
-|---|---|
-| `creds/` | Claude のサブスクリプション OAuth 認証情報（**APIキーではない**） |
-| `state/` | 各夜間スクリプトの進捗状態（`claimed.json`, `service-catalog.json` 等） |
-| `instructions/` | 資格別の問題生成指示（`refresh-exam-guide.sh` が更新） |
-| `meta/` | `.last_run` / `.last_run_date` / `.claude_history` / `.night_history` |
+| 種類 | ファイル | 扱い |
+|---|---|---|
+| 改良される資産 | `instructions/*.txt`・`state/service-catalog.json`・そこから作る `src/data/originalInstructions.ts` | git で追跡。バッチ自身が `scripts/commit-night-assets.sh` で develop に `chore(night):` のコミットを作る |
+| 実行状態 | `state/` のそれ以外（`question_counts.json`・`last_domain_idx.json`・`daily-service-removals.jsonl` 等） | gitignore（追跡しない） |
 
-各スクリプトは **pull → 実行 → push** で同期する。
-`creds` は「`expiresAt` が新しい方を残す」スマート同期（フレッシュなローカルを古いS3で潰さない）。
-`.last_run_date` は二重実行防止の要なので盲目上書きしない。
+`commit-night-assets.sh` は、保守の毎日分（`mugenknock-nightly-noai` の 8/9）と、検証・生成フックの終わりに走る。
+
+- develop にいるときだけ動く。
+- 対象ファイルだけを `git commit --only` でコミットする。人がステージ中のものは巻き込まない。
+- push は、origin/develop の上に自分のコミットが1つ乗っただけのときに限る。手元に未 push の別コミットがあれば push しない。
+- `chore(night):` のコミットはリリースノートの対象外（`generate-release-note.sh` が除く）。
+
+S3 のバケットに残るのは、ログ（`night-logs/`・`run-logs/`）、実行メタ（`meta/`）、canary の結果、レポートの送信済みマーカー（`report-sent/`）だけ。
+`.last_run_date` は二重実行防止の要なので、盲目的に上書きしない（`local-night-run.sh`）。
+
+### サイトのビルドを走らせるパス（Cloudflare Pages の Build watch paths）
+
+運用だけの push ではビルドしない。プロジェクト `mugenknock` の `path_excludes`（本番・検証共通）:
+`docs/*` `specs/*` `e2e/*` `lambda/*` `*.md` `*.sh` `*.py` `prompts/logs/*` `prompts/scripts/*`
+`prompts/night-prompts/logs/*` `prompts/night-prompts/e2e/*` `prompts/night-prompts/manual/*`
+`prompts/night-prompts/texts/*` `prompts/night-prompts/scripts/state/*`。
+**`instructions/` はビルドが読む（`originalInstructions.ts` の元）ので除外しない。**
+除外は include より先に判定されるため、`prompts/*` のように丸ごと除外すると `instructions/` まで外れる。
+新しくビルドが読むファイルを `prompts/` や `scripts/` に置くときは、この一覧に掛からないか確認する。
 
 ## 7.3 夜間バッチ
 
@@ -108,8 +175,9 @@ ct hooks list / add <分前> <スクリプト> [ラベル] / rm <#>
 | ~~20~~ | ~~`01-generate-questions-hard.sh`~~ | **一時停止中**（同上） | ✅ |
 | 40 | `refresh-exam-guide-monthly.sh` | 公式試験ガイドの更新（30日以内はスキップ） | ✅ WebFetch |
 | 45 | `refresh-service-catalog-monthly.sh` | サービスカタログ更新（30日以内スキップ・`-n 12` で有界） | ✅ WebFetch |
-| 50 | `05-check-daily-services.sh` | 日めくり記事の廃止照合＋体裁チェック | 一部 ✅ |
-| 55 | `04-generate-daily-services.sh` | 日めくり記事の生成 | ✅ |
+| 47 | `10-check-site-content.sh` | サイト掲載内容（問題以外）の現行性チェック（30日スキップ・検知のみ） | 一部 ✅ WebFetch |
+| 50 | `05-check-daily-services.sh` | 日めくり記事の廃止照合＋体裁チェック（廃止照合だけは nightly-noai で毎晩実行） | 一部 ✅ |
+| 55 | `04-generate-daily-services.sh` | 日めくり記事の生成（週1回 `-n 3` は daily-services-weekly で実行） | ✅ |
 | 58 | `09-check-linebreaks.sh` | 改行整形（Haiku） | ✅ |
 | 60 | `audit-questions-nightly.sh` | 問題品質監査＋**生成/検証プロンプトの自動改良** | ✅ opus |
 | 60 | `generate-release-note.sh` | 前日のgitコミットからリリースノート生成 → `Releases` | ✅ |
@@ -150,17 +218,17 @@ audit-questions         監査。事実誤りではない指摘（易しすぎ�
 
 hook-2 は `01-generate-questions.sh -H -n 1000 -D <回復3分前>` を、**締切か累計1000問まで繰り返し**呼ぶ
 （1回は1ドメイン20問までで終わるため。繰り返すたびに資格は選び直され、既出一覧も作り直される。
-1回が異常終了・供給十分でスキップ・取込0件なら止まる）。
+1回が異常終了・取込0件なら止まる）。
 
-**資格の選び方（需要加重）。** 以前は「問題数が最少の資格」を選んでいた。需要を見ないため、
-2026-10-10〜11 の435問がすべて解答0回の資格（DB/NW/SEC/ML）に使われた（全5,449問に対し総解答
-1,564回、CLF・SAA で需要の53%）。今は毎回 DynamoDB から問題数と `globalAttempts` を取り、
+**資格の選び方（問題数が最少の資格）。** 毎回 DynamoDB から資格ごとの問題数を取り、最少のものを選ぶ
+（同数なら `EXAM_TYPES` の並び順で先のもの）。ログに全資格の問題数と解答数が出る（解答数は参考表示だけで、
+選定には使わない）。
 
-1. 問題数が `GEN_MIN_POOL`（既定150）未満の資格があれば、その中で最少のもの（新設資格の立ち上げ）
-2. それ以外は「(解答数 + `GEN_DEMAND_PRIOR`(既定5)) / 問題数」＝**需要比**が最大のもの
-3. `GEN_SKIP_BELOW_RATIO` > 0 で需要比の最大値がそれ未満なら「供給十分」として生成しない（既定 0＝無効）
-
-を選ぶ。需要0の資格は事実上選ばれない。ログに全資格の需要比が出る。
+> 2026-10-12 に一度「需要比（解答数/問題数）が最大の資格」へ変えたが、CLF・SAA に偏るため、同日中に
+> 問題数が最少の方式へ戻した（本人の判断）。需要で絞る案の根拠は、全5,449問に対し総解答1,564回で、
+> CLF・SAA が需要の53%、DB/NW/SEC/ML の435問は解答0回の資格に使われた、という調査結果。
+> 再び需要を見る場合は、`git show 9353b19:prompts/night-prompts/scripts/01-generate-questions.sh` の
+> 選定部分（`GEN_MIN_POOL` / `GEN_DEMAND_PRIOR` / `GEN_SKIP_BELOW_RATIO`）が参考になる。
 
 **1ドメインの上限。** 1回の実行で1ドメインに割り当てる数は `GEN_DOMAIN_CAP`（既定20）まで。
 以前は上限が無く、600問の予算が最少の1ドメインに集中して「2問×57回」同じプロンプトで生成していた。
@@ -421,20 +489,55 @@ Jev事前スコア（0=問題なし寄り〜1=疑わしい）: 選択肢ヒン�
 - 検証(02)は**同じトークン量でより多くの欠陥を見つける**方向で効率化する（上記 Jev トリアージ）。
   Claude に渡す本数は変えず、渡す順番を Jev で最適化する
 - 監査は `n=15 / c=8`（opus 呼び出し2回/晩）。以前は `n=30 / c=5`（6回/晩）で消費が大きかった
-- 水曜早朝、週間トークン使用率が50%以下なら `ct on`（使い切りモード）へ自動切替。
-  土曜03:00 の `mode-reset` で戻る
+- 使い切りモード（`ct on`）は**週間の残りから自動で入る**（2026-10-27〜）。ピン+3分のフック
+  `scripts/local-autoburn-hook-run.sh`（`hooks.d/mugenknock-autoburn.conf`）が、ピンのたびに
+  「残り% ≧ 週リセットまでのピン数 × 1枠の週間消費 × 安全率0.8」を判定し、満たしたら `ct on`。
+  1枠の週間消費は `usage.log` の直近4週の実績（満タン1枠あたり約8%。取れなければ8.5%）。
+  いったん入ったら土曜03:00 の `mode-reset` まで切らない。止めるときは `~/.config/mugenknock/autoburn_disabled` を作る
 - 生成は安く、**検証ゲートにだけ WebFetch を残す**方針
+
+### 人の確認（2026-10-28〜。docs/10-ops-review.md 4.1〜4.4）
+
+AI の判断を人が確かめる経路。管理画面「スキャン結果」の「人の確認待ち」に集まり、日次レポートの「0. 人の確認待ち」に件数と一番古い日付が出る。
+
+| 入口 | 何が入るか | 処理 |
+|---|---|---|
+| 検証（02）が正解を変えようとした | 修正案（`fixProposalJson`）。問題は非表示 | 適用 / 却下 |
+| 検証（02）が削除を提案した | 問題を非表示にするだけ（消さない） | 問題なし（表示に戻す）/ 誤りあり（直すか消す） |
+| 抜き取り検査（`sample-human-review.py`、保守の毎日分 9/10） | 28日ごとに20問。半分は直近30日に作成・修正された問題 | 問題なし / 誤りあり。不良率を日次レポートに出す |
+| 過去分（一度だけ `--mark-past`） | 2026-10-27 以前に AI が人の確認なしで正解を変えた問題 | 問題なし / 誤りあり |
+
+- 文言だけの修正（正解の位置が同じ）は、これまでどおり自動で反映する。
+- 監査（`audit-questions.sh -i`）の生成指示の改良は、**既定で提案のみ**（改良レポートに出すだけで `instructions/` は書き換えない）。
+  従来どおり自動で書き換えるときだけ `AUDIT_APPLY_INSTRUCTIONS=1`。
+- 生成指示が変わった日は、日次レポートにそのコミットが出る。
+
+### 生存の見張り（2026-10-28〜）
+
+保守の毎日分（`mugenknock-nightly-noai`）の最後に、CloudWatch のメトリクス `Mugenknock/NightlyHeartbeat` を1送る。
+アラーム `mugenknock-nightly-stopped` が、**2日続けて届かない**と SNS トピック `mugenknock-heartbeat-alarm` からメールする
+（PC 停止・claude-timer の連鎖切れ・フック外れを疑う）。費用は月 約$0.4。
+
+### 夜間バッチの管理 API 認証（2026-10-28〜）
+
+夜間バッチは**専用ユーザー**と**専用アプリクライアント**でログインする（`scripts/batch-id-token.sh`。
+SSM `/quiz-app/batch-username`・`/quiz-app/batch-password`・`/quiz-app/batch-client-id`）。
+`USER_PASSWORD_AUTH` はこのクライアントだけで有効。人の管理者アカウントは2段階認証（TOTP）を付けるので、バッチでは使わない。
+
+### CI
+
+`.github/workflows/ci.yml` が develop・master への push のたびに `tsc --noEmit`・`lint:tokens`・`node --test lambda/test/` を走らせる
+（docs・specs・`*.md` だけの変更では走らない）。デプロイはしない。
 
 ## 7.4 デプロイ・確認スクリプト
 
 | スクリプト | 用途 |
 |---|---|
-| `scripts/deploy-lambda.sh [dev\|prod]` | Lambda デプロイ（引数なしはブランチから判定） |
-| `prompts/night-prompts/scripts/cf-deploy-status.sh [prod\|staging\|wait [SHA]]` | Cloudflare Pages のビルド状況。`wait` は **HEAD（または指定SHA）のビルド**の完了を最大20分待つ。push 直後で未登録の間は待ち続け、登録されないままなら別のエラーとして報告する（旧実装は「最新デプロイ」を見て、push直前の成功ビルドを見て即座に成功と誤報した） |
+| `scripts/deploy-lambda.sh [dev\|prod\|status\|rollback <env> [版]]` | Lambda デプロイ（引数なしはブランチから判定）。`lambda/test` が通ってから版を切り、エイリアス `live` を向ける。`rollback` で1つ前の版へ戻す |
+| `prompts/night-prompts/scripts/cf-deploy-status.sh [prod\|staging\|wait [SHA]]` | Cloudflare Pages のビルド状況。Build watch paths で飛ばされたコミット（`is_skipped`）は「⏭ ビルド対象外」として即座に返る。`wait` は **HEAD（または指定SHA）のビルド**の完了を最大20分待つ。push 直後で未登録の間は待ち続け、登録されないままなら別のエラーとして報告する（旧実装は「最新デプロイ」を見て、push直前の成功ビルドを見て即座に成功と誤報した） |
 | `prompts/night-prompts/scripts/cf-usage.sh` | Cloudflare の使用量 |
 | `prompts/night-prompts/scripts/backend-health-check.sh` | API の疎通確認 |
 | `scripts/backup-devenv.sh` | 開発環境のバックアップ |
-| `scripts/backfill-question-accuracy.sh` | `globalAttempts`/`globalCorrect` の補正 |
 
 Cloudflare API トークンは `~/.bashrc` の `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` から読む。
 
@@ -500,10 +603,45 @@ S3 `mugenknock-error-logs/canary-logs/` にアップロードする。
 内容:
 1. 前日夜間スクリプトの成果サマリー（生成数・検証数）
 2. カナリアテスト結果（S3 の最新）
-3. AWS資格公式情報の変更チェック（WebFetch）
+3. AWS公式情報チェック（下記）
 4. サイト稼働状況（問題数・未検証数・未解決通報数）
 
 二重送信は S3 マーカーで冪等化されている。
+
+### AWS 情報の現行性チェック（3本立て）
+
+レポートの「5. AWS公式情報チェック」は、見る対象と頻度の違う3つで構成する。
+**いずれも検知と報告だけで、サイトのコードは自動で書き換えない。**
+
+| 観点 | 対象 | 頻度 | 実装 |
+|---|---|---|---|
+| 資格試験の変更 | `constants.ts` の試験コード・問題数・試験時間・合格点、資格の新設/廃止 | 週次・月曜 | `99-send-report.sh` 内（coming-soon + training blog を Haiku で走査→該当時のみ設定値と突き合わせ） |
+| サービスの変更 | 既存**問題**に影響する廃止・改称・新規受付停止 | 週次・木曜 | `99-send-report.sh` 内（What's New / News Blog の RSS をキーワード抽出→ Haiku で選別） |
+| サイト掲載内容の現行性 | **問題以外**のサイト静的データ（サービス図鑑・チートシート） | 月次 | `10-check-site-content.sh` |
+
+週次の2つが走査窓7日なので、**週次のまま**にしてある（月1にすると23日ぶんを取りこぼす）。
+月次なのは、走査窓を持たない「今のサイトの中身と今のAWSを突き合わせる」3本目だけ。
+
+#### `10-check-site-content.sh`（月次・2026-10-19 追加）
+
+30日以内に実行済みならスキップするので、毎晩起動しても実質月1回。
+状態は `scripts/state/site_content_check.json`（`last_run_at` と項目ごとの確認日）。
+
+- **A. サービス図鑑**（`src/data/awsServiceCatalog.ts`）
+  公式確認済みの `state/service-catalog.json`（SSM 由来）と突き合わせる。**決定的なので claude を呼ばない。**
+  図鑑側は略称（`S3` / `EC2` / `IAM`）、カタログ側は正式名なので、`shortName` と `serviceCode` も
+  別名として索引に入れて突き合わせる（これをしないと「Amazon Simple Storage Service が未掲載」が大量に誤検知される）。
+  報告するのは ①図鑑に残っているが `status` が active でないもの ②`examRelevance` が high/medium なのに未掲載のもの。
+- **B. チートシート**（`src/views/CheatSheet.tsx` の `CHEAT_DATA`・374項目）
+  公式ドキュメントと照らして、制限値・既定値・サービス名など**変わりうる事実**のズレを検知する。
+  量が多いので毎回 `SITE_CHECK_N`（既定12）件だけを、確認が古い順（未確認を最優先）に巡回する。
+  言い回しや教え方は指摘させない（事実のみ）。
+
+出力は `prompts/night-prompts/logs/site-content_<日時>.md`。
+`99-send-report.sh` が最新の1本を読んで要点をメールに載せる（45日より古ければ「未実行の疑い」として警告する）。
+実行順は **`99-send-report.sh` より前**に置くこと。
+
+環境変数: `SITE_CHECK_FORCE=1`（鮮度スキップを無視）/ `SITE_CHECK_N`（巡回件数）/ `SITE_CHECK_MAX_AGE_DAYS`。
 
 ### おひねり（Stripe 決済）の運用 — specs/006
 
@@ -520,7 +658,7 @@ S3 `mugenknock-error-logs/canary-logs/` にアップロードする。
 | 症状 | 確認すること |
 |---|---|
 | 夜間バッチが動いていない | `systemctl --user list-timers` で `Trigger: n/a` が無いか。`ct sync` で張り直す |
-| メールが来ない | 上と同じ（連鎖切れが最も多い原因）。`chain-watchdog.sh` のログも見る |
+| メールが来ない | 上と同じ（連鎖切れが最も多い原因）。`journalctl --user -u claude-timer-watchdog` のログも見る |
 | リリースノートが生成されない | **529 エラーは自己修復されない。** 手動で `generate-release-note.sh <日付>` を再実行する（2026-09-15 に delay=0→60 へ変更し発生頻度は軽減見込みだが未検証） |
 | 管理画面の変更が出題に反映されない | Lambda のウォームキャッシュ（最大10分）。[02-architecture.md](02-architecture.md) 2.7 |
 | 本番だけ挙動が古い | `deploy-lambda.sh prod` を打ち忘れていないか |

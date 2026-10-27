@@ -157,6 +157,7 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           <button
             onClick={() => navigate(user ? '/account' : '/login')}
+            aria-label={user ? (ja ? 'アカウント' : 'Account') : (ja ? 'ログイン' : 'Log in')}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: user ? 'var(--color-primary-light)' : 'transparent',
@@ -188,21 +189,6 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
               overflow: 'hidden',
               position: 'relative',
             }}>
-              {/* 装飾: 右上のグラデーション円 */}
-              <div style={{
-                position: 'absolute', top: -50, right: -50, width: 200, height: 200,
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(255,153,0,0.12) 0%, transparent 70%)',
-                pointerEvents: 'none',
-              }} />
-              {/* 装飾: 左下のグラデーション円 */}
-              <div style={{
-                position: 'absolute', bottom: -40, left: -40, width: 160, height: 160,
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(0,108,224,0.07) 0%, transparent 70%)',
-                pointerEvents: 'none',
-              }} />
-
               {/* ロゴ — 入場: opacity+scale、入場後: 浮遊ループ */}
               <div style={{
                 display: 'inline-flex', marginBottom: 'var(--spacing-md)',
@@ -257,7 +243,7 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
                   >
                     <div style={{
                       fontSize: isMobile ? 'var(--font-size-xl)' : 'var(--font-size-h2)',
-                      fontWeight: 900, color: 'var(--color-accent)', letterSpacing: '-1px', lineHeight: 1.1,
+                      fontWeight: 900, color: 'var(--color-accent-dark)', letterSpacing: '-1px', lineHeight: 1.1,
                     }}>
                       {stat.num}
                     </div>
@@ -292,12 +278,8 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
                   padding: '14px 16px',
                 }}>
                   <Reveal variant="pop" {...rv} delay={i * 80 + 60} style={{ flexShrink: 0 }}>
-                    <span style={{
-                      width: 24, height: 24, borderRadius: '50%',
-                      background: 'var(--color-accent)', color: '#fff',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 'var(--font-size-sm2)', fontWeight: 800,
-                    }}>{i + 1}</span>
+                    {/* 順番のない並びなので番号は付けない（以前は 1・2・3） */}
+                    <span style={{ display: 'flex', color: 'var(--color-accent-dark)', lineHeight: 1.75, fontWeight: 800 }}>✓</span>
                   </Reveal>
                   <p style={{ margin: 0, fontSize: isMobile ? 'var(--font-size-sm2)' : 'var(--font-size-base)', color: 'var(--color-text-sub)', lineHeight: 1.75 }}>{ja ? b.ja : b.en}</p>
                 </Reveal>
@@ -377,7 +359,7 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', margin: '0 0 var(--spacing-md)' }}>
                 {COMPARE_ROWS.map((row, i) => (
                   <Reveal key={i} {...rv} delay={i * 70} offset={12} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-sm)' }}>
-                    <span style={{ color: 'var(--color-accent)', fontWeight: 800, flexShrink: 0, lineHeight: 1.6 }}>✓</span>
+                    <span style={{ color: 'var(--color-accent-dark)', fontWeight: 800, flexShrink: 0, lineHeight: 1.6 }}>✓</span>
                     <span style={{ fontSize: isMobile ? 'var(--font-size-sm2)' : 'var(--font-size-base)', color: 'var(--color-text-main)', fontWeight: 700 }}>{ja ? row.s[0] : row.s[1]}</span>
                   </Reveal>
                 ))}
@@ -442,7 +424,6 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
         <div style={{ maxWidth: 860, margin: '0 auto' }}>
           <button
             onClick={handleStart}
-            className="portal-cta-pulse"
             style={{
               width: '100%', height: 44, border: 'none', borderRadius: 22,
               background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)',
@@ -470,7 +451,7 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
 
       {/* ── Cookie 同意バナー ── */}
       {mounted && !cookieConsent && (
-        <div style={{
+        <div role="region" aria-label={ja ? 'Cookie の利用について' : 'Cookie notice'} style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
           background: 'var(--color-bg-white)',
           borderTop: '1px solid var(--color-border)',
@@ -489,7 +470,8 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
           </span>
           <button
             onClick={acceptCookies}
-            style={{ flexShrink: 0, padding: '6px 18px', background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)', border: 'none', borderRadius: 'var(--border-radius-full)', fontWeight: 700, fontSize: 'var(--font-size-sm)', cursor: 'pointer' }}
+            // アプリ内の Cookie バナーと同じ青。オレンジは下の「演習開始」と競合していた
+            style={{ flexShrink: 0, padding: '6px 18px', background: 'var(--color-primary)', color: 'var(--color-on-primary)', border: 'none', borderRadius: 'var(--border-radius-full)', fontWeight: 700, fontSize: 'var(--font-size-sm)', cursor: 'pointer' }}
           >
             {ja ? '同意して閉じる' : 'Accept'}
           </button>

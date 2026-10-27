@@ -1,9 +1,0 @@
-.git
-.gitignore
-.next
-out
-node_modules
-*.log
-.env.local
-.env.production.local
-prompts/logs

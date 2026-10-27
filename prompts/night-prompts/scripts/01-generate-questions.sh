@@ -1,12 +1,9 @@
 #!/bin/bash
 # 問題自動生成スクリプト
 # instructions/ 内の資格ごとの指示を元に Claude で問題を生成し API 経由でインポートする
-# 資格は需要比（全問の解答数 / 問題数）で自動選択する（詳細は「需要を加味して資格を選ぶ」の節）
+# 資格は「問題数が最も少ない資格」を自動選択する
 #
 # 環境変数（すべて任意）:
-#   GEN_MIN_POOL=150         問題数がこれ未満の資格を最優先（新設資格の立ち上げ）
-#   GEN_DEMAND_PRIOR=5       需要比の分子に足す値（需要0の資格の扱い）
-#   GEN_SKIP_BELOW_RATIO=0   需要比の最大値がこれ未満なら生成しない（0で無効）
 #   GEN_DOMAIN_CAP=20        1回の実行で1ドメインに割り当てる上限
 #   GEN_CHUNK_SIZE=5         1回の claude 呼び出しで作る問題数
 #   GEN_AVOID_MAX=60         プロンプトに渡す既出の正解肢の件数
@@ -57,7 +54,7 @@ show_help() {
 usage: $(basename "$0") [options]
 
   -e, --exam EXAM       生成する資格を指定（例: SAA, CLF, DOP）
-                        省略時は需要比（解答数/問題数）が最大の資格を自動選択
+                        省略時は問題数が最も少ない資格を自動選択
   -d, --domain DOMAIN   生成するドメインを指定（-e と組み合わせて使用）
                         部分一致で検索（例: "セキュリティ"）。省略時は全ドメインを処理
   -n, --questions N     1ドメインあたりの問題数（デフォルト: ${QUESTIONS_PER_DOMAIN}）
@@ -219,25 +216,17 @@ if [ -n "$FORCE_EXAM" ]; then
   NEXT_EXAM="$FORCE_EXAM"
   echo "指定資格: $NEXT_EXAM"
 else
-  # ── 需要を加味して資格を選ぶ ──
-  # 以前は「問題数が最も少ない資格」を選んでいた。需要を見ないため、2026-10-10〜11 の435問が
-  # すべて解答0回の資格（DB/NW/SEC/ML）に使われた（全5,449問に対し総解答1,564回、CLF・SAA で
-  # 需要の53%）。限られたトークンを使われる資格へ回すため、次の順で選ぶ:
-  #   ① 問題数が GEN_MIN_POOL 未満の資格があれば、その中で最少のもの（新設資格の立ち上げ）
-  #   ② それ以外は「(全問の解答数 + GEN_DEMAND_PRIOR) / 問題数」が最大のもの
-  #      ＝問題1問あたりの需要が大きい資格。需要0の資格は事実上選ばれない。
-  #   ③ GEN_SKIP_BELOW_RATIO>0 で、②の最大値がそれ未満なら「供給十分」として生成しない
-  #      （トークンを検証(02)に残す。既定は 0＝無効）
-  # 解答数は Questions の globalAttempts（全ユーザー合計）。問題数・解答数は毎回 DynamoDB から
-  # 取る（以前のキャッシュは S3 同期で巻き戻り、MLA の問題数が古い値で凍った実例がある）。
+  # ── 問題数が最も少ない資格を選ぶ ──
+  # 2026-10-12 に一度「需要比（解答数/問題数）が最大の資格」に変えたが、CLF・SAA に偏るため
+  # 同日中に問題数が最少の方式へ戻した（本人の判断）。需要は選定には使わず、ログの参考表示だけに残す。
+  # 問題数は毎回 DynamoDB から取る（以前のキャッシュは S3 同期で巻き戻り、MLA の問題数が
+  # 古い値で凍った実例がある）。同数のときは EXAM_TYPES の並び順で先のもの。
   echo "資格ごとの問題数・解答数を DynamoDB から取得中..."
   _SCAN_TMP=$(mktemp /tmp/gen_scan_XXXX.json)
   aws dynamodb scan --table-name Questions \
     --projection-expression "examType, globalAttempts" --output json > "$_SCAN_TMP" 2>/dev/null || true
-  _SEL=$(GEN_MIN_POOL="${GEN_MIN_POOL:-150}" GEN_DEMAND_PRIOR="${GEN_DEMAND_PRIOR:-5}" \
-      GEN_SKIP_BELOW_RATIO="${GEN_SKIP_BELOW_RATIO:-0}" \
-      python3 - "$_SCAN_TMP" "$COUNT_CACHE_FILE" "${EXAM_TYPES[@]}" << 'PYEOF'
-import json, os, sys
+  _SEL=$(python3 - "$_SCAN_TMP" "$COUNT_CACHE_FILE" "${EXAM_TYPES[@]}" << 'PYEOF'
+import json, sys
 from datetime import datetime
 scan_file, cache_file, exams = sys.argv[1], sys.argv[2], sys.argv[3:]
 with open(scan_file, encoding='utf-8') as f:
@@ -265,22 +254,10 @@ for it in items:
 if not items:
     print('ERROR 0')
     sys.exit(0)
-min_pool = int(os.environ['GEN_MIN_POOL'])
-prior = float(os.environ['GEN_DEMAND_PRIOR'])
-skip_below = float(os.environ['GEN_SKIP_BELOW_RATIO'])
-ratio = {e: (att[e] + prior) / max(count[e], 1) for e in exams}
-for e in sorted(exams, key=lambda e: -ratio[e]):
-    print(f'  {e}: {count[e]}問 / 解答{att[e]}回 / 需要比 {ratio[e]:.3f}', file=sys.stderr)
-small = [e for e in exams if count[e] < min_pool]
-if small:
-    pick = min(small, key=lambda e: count[e])
-    why = f'問題数{count[pick]}問 < {min_pool}問（立ち上げ優先）'
-else:
-    pick = max(exams, key=lambda e: ratio[e])
-    why = f'需要比 {ratio[pick]:.3f} が最大（解答{att[pick]}回 / {count[pick]}問）'
-    if skip_below > 0 and ratio[pick] < skip_below:
-        print(f'SKIP {count[pick]} 最大の需要比 {ratio[pick]:.3f} < {skip_below}（供給十分）')
-        sys.exit(0)
+for e in sorted(exams, key=lambda e: count[e]):
+    print(f'  {e}: {count[e]}問 / 解答{att[e]}回', file=sys.stderr)
+pick = min(exams, key=lambda e: count[e])
+why = '最少'
 try:
     with open(cache_file) as fp:
         cache = json.load(fp)
@@ -299,10 +276,6 @@ PYEOF
   if [ "$NEXT_EXAM" = "ERROR" ] || [ -z "$NEXT_EXAM" ]; then
     echo "❌ DynamoDB から問題数を取得できませんでした"
     exit 1
-  fi
-  if [ "$NEXT_EXAM" = "SKIP" ]; then
-    echo "⏭  生成をスキップ: ${_SEL_WHY}"
-    exit 0
   fi
   echo "選択: $NEXT_EXAM (現在${MIN_COUNT}問 — ${_SEL_WHY})"
 fi
@@ -445,15 +418,10 @@ fi
 # ── Cognito 認証（ループ前に1回だけ）────────────────────────────
 echo ""
 echo "--- Cognito 認証中 ---"
-ADMIN_PASSWORD=$(aws ssm get-parameter --name "/quiz-app/admin-password" --with-decryption --query 'Parameter.Value' --output text)
+# 夜間バッチ専用ユーザーでログインする（scripts/batch-id-token.sh。人の管理者アカウントは MFA 付きなので使わない）
 _cognito_auth() {
   local _t
-  _t=$(aws cognito-idp initiate-auth \
-    --auth-flow USER_PASSWORD_AUTH \
-    --auth-parameters USERNAME=yuzuki2002110@gmail.com,PASSWORD="$ADMIN_PASSWORD" \
-    --client-id 16jjrj5m28o6s2k84og8kh2vh3 \
-    --query 'AuthenticationResult.IdToken' --output text 2>/dev/null)
-  [ -n "$_t" ] && [ "$_t" != "None" ] || return 1
+  _t=$(bash /home/yuzuki/aws-quiz-app/scripts/batch-id-token.sh) || return 1
   ID_TOKEN="$_t"
 }
 

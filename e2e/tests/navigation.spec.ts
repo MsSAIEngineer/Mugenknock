@@ -8,6 +8,7 @@ import { PageMonitor } from '../helpers/monitor';
 const PAGES = [
   { path: '/aws/',                label: 'ホーム' },
   { path: '/aws/practice',        label: 'トレーニング' },
+  { path: '/aws/stats',           label: '記録' },
   { path: '/aws/mypage',          label: 'マイページ' },
   { path: '/aws/exercise/setup',  label: '演習設定' },
   { path: '/aws/exam/setup',      label: '模試設定' },

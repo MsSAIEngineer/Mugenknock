@@ -23,6 +23,11 @@
 # サービスカタログの定期更新（30日以内確認済みはスキップ＝サービスごと実質月1回・-n12で有界）。
 # 全AWSサービスの提供状態・docUrlをWebFetchで確認し、記事の単一の真実sourceを最新化する。
 45,/home/yuzuki/aws-quiz-app/prompts/night-prompts/scripts/refresh-service-catalog-monthly.sh
+# サイト掲載内容（問題データ以外）の現行性チェック（30日スキップ＝実質月1回・検知と報告のみ）。
+# サービス図鑑(awsServiceCatalog.ts)の棚卸しは決定的でclaude不要。チートシート(CHEAT_DATA)の
+# 事実確認だけclaudeを使い、374項目を -n 件ずつ古い順に巡回する。自動修正はしない。
+# レポートを 99-send-report がメールに載せるので、必ずそれより前に置く。
+47,/home/yuzuki/aws-quiz-app/prompts/night-prompts/scripts/10-check-site-content.sh
 # 日めくり記事の提供状態ライフサイクル＋体裁チェック。冒頭の廃止照合は決定的(claude不要)で
 # 必ず走り、非推奨サービスに警告→30日後に削除する。後段の品質チェックのみclaudeを使う。
 50,/home/yuzuki/aws-quiz-app/prompts/night-prompts/scripts/05-check-daily-services.sh

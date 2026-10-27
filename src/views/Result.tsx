@@ -195,7 +195,7 @@ export default function Result() {
           {t('result.correctCount', { correct: results.filter((r: any) => r.isCorrect).length, total: questions.length })}
         </p>
         {earnedPts > 0 && (
-          <p style={{ color: '#009E9E', fontWeight: 800, fontSize: 'var(--font-size-base)', marginTop: 8 }}>
+          <p style={{ color: 'var(--color-points)', fontWeight: 800, fontSize: 'var(--font-size-base)', marginTop: 8 }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><IconSparkles size={16} /> {ja ? `+${earnedPts}p 獲得！` : `+${earnedPts}p earned!`}</span>
           </p>
         )}
@@ -203,7 +203,7 @@ export default function Result() {
 
       {/* 日次目標達成ボーナスポップアップ */}
       {showDailyBonus && (
-        <div data-kbscope="1" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+        <div data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           {bonusConfetti && <Confetti onDone={() => setBonusConfetti(false)} />}
           <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: 'var(--spacing-xl)', textAlign: 'center', boxShadow: 'var(--box-shadow-md)', maxWidth: 320, width: '100%', position: 'relative', zIndex: 1 }}>
             <div style={{ fontSize: 40, marginBottom: 8 }}>🎯</div>
@@ -214,10 +214,10 @@ export default function Result() {
               {ja ? '今日の演習目標をクリアしました' : 'You completed your daily exercise goal'}
             </div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-light)', borderRadius: 'var(--border-radius-md)', padding: '6px 20px', marginBottom: 20 }}>
-              <span style={{ display: 'inline-flex', color: '#009E9E' }}><IconSparkles size={18} /></span>
+              <span style={{ display: 'inline-flex', color: 'var(--color-points)' }}><IconSparkles size={18} /></span>
               <span style={{ fontWeight: 800, fontSize: 'var(--font-size-xl)', color: 'var(--color-primary)' }}>+{dailyBonusPts}p</span>
             </div>
-            <button data-kbnav="1" data-kbclose onClick={() => setShowDailyBonus(false)} style={{ display: 'block', width: '100%', padding: '10px 0', background: 'var(--color-primary)', color: 'var(--color-btn-primary-text)', border: 'none', borderRadius: 'var(--border-radius-full)', fontWeight: 700, fontSize: 'var(--font-size-md)', cursor: 'pointer' }}>
+            <button data-kbnav="1" data-kbclose onClick={() => setShowDailyBonus(false)} style={{ display: 'block', width: '100%', padding: '10px 0', background: 'var(--color-primary)', color: 'var(--color-on-primary)', border: 'none', borderRadius: 'var(--border-radius-full)', fontWeight: 700, fontSize: 'var(--font-size-md)', cursor: 'pointer' }}>
               {ja ? 'OK' : 'OK'}
             </button>
           </div>

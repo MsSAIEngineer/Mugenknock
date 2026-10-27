@@ -1,6 +1,7 @@
 :root {
   /* Colors */
-  --color-primary: #006CE0;
+  /* 灰色背景(#f2f3f3)でも文字で 4.5:1 を満たす濃さ（旧 #006CE0 は 4.47:1 で僅かに不足） */
+  --color-primary: #0066D6;
   --color-primary-hover: #0055B3;
   --color-primary-light: #E8F3FF;
   --color-secondary: #232f3e;
@@ -8,12 +9,17 @@
   --color-accent: #ff9900;
   --color-accent-hover: #ec7211;
   --color-accent-dark: #cc7a00;
-  --color-btn-primary-text: #fff;
+  /* オレンジ地の文字は濃色にする。白は 2.1:1 で読めない。AWS マネジメントコンソールの
+     オレンジボタンも濃色文字（WCAG 2.2 AA: 4.5:1 以上） */
+  --color-btn-primary-text: #16191f;
   --color-bg-main: #f2f3f3;
   --color-bg-white: #ffffff;
+  /* カード・タイルの地。7か所で使われていたが未定義（透明）だった */
+  --color-bg-card: var(--color-bg-white);
   --color-text-main: #16191f;
   --color-text-sub: #545b64;
-  --color-text-light: #879596;
+  /* Cloudscape の colorTextStatusInactive 相当。旧 #879596 は白地 3.1:1・灰色地 2.8:1 で AA 不足 */
+  --color-text-light: #656871;
   /* Cloudscape visual refresh の colorBorderDividerDefault 相当。
      旧値 #eaeded は classic 世代の色で、背景 #f2f3f3 とのコントラストが低く
      カードの輪郭が消えていた。 */
@@ -21,6 +27,36 @@
   --color-danger: #d13212;
   --color-success: #037f0c;
   --color-warning: #ff9900;
+
+  /* 資格レベル色。constants.ts の EXAM_LEVEL_COLORS / levelText() / levelOn() から参照する。
+     --level-*      … 塗り・線・アイコン・グラフ用の明るい色（監査前の色）
+     --level-*-text … 文字用。白地で 4.5:1 以上になる濃さ
+     （Foundational・オリジナルの暗い緑は文字では使わず通常の文字色にする。2026-10-27 本人指示）
+     --level-*-on   … --level-* の塗りに載せる文字（ライトは白で統一。緑・水色・青緑では 2.5〜3.2:1 で AA 未満だが、
+                      黒文字は不評だったため本人判断で白にした 2026-10-26。ダークは濃色）
+     半透明にするときは hex にアルファを足さず、constants.ts の tint() を使う */
+  --level-foundational: #6b9e3a;
+  --level-business: #db2777;
+  --level-associate: var(--color-primary);
+  --level-professional: #8b5cf6;
+  --level-specialty: #0ea5e9;
+  --level-additional: #14b8a6;
+  --level-foundational-text: var(--color-text-main);
+  --level-business-text: #c0256a;
+  --level-associate-text: var(--color-primary);
+  --level-professional-text: #7c4ddb;
+  --level-specialty-text: #0a74a8;
+  --level-additional-text: var(--color-text-main);
+  --level-foundational-on: #ffffff;
+  --level-business-on: #ffffff;
+  --level-associate-on: #ffffff;
+  --level-professional-on: #ffffff;
+  --level-specialty-on: #ffffff;
+  --level-additional-on: #ffffff;
+  /* ポイント（p）・しっかり対策の青緑。明るさを優先した本人判断で、小さい文字では 3.3:1（AA 未満）
+     （2026-10-26。一度 #007a7a に暗くしたが、暗く濁って見えるため戻した） */
+  --color-points: #009E9E;
+  --color-on-points: #ffffff;
 
   /* Spacing scale (4px base) — 余白・gap・paddingは必ずこのスケールを使う */
   --spacing-xs: 4px;
@@ -60,7 +96,7 @@
   --color-danger-light: rgba(209, 50, 18, 0.08);
 
   /* Horizontal bar gradients (left=bright, right=base color) */
-  --bar-gradient-primary: linear-gradient(90deg, #006CE0, #3b9eff);
+  --bar-gradient-primary: linear-gradient(90deg, #0066D6, #3b9eff);
   --bar-gradient-success: linear-gradient(90deg, #037f0c, #22c55e);
   --bar-gradient-caution: linear-gradient(90deg, #ca8a04, #fbbf24);
   --bar-gradient-danger:  linear-gradient(90deg, #d13212, #f87171);
@@ -109,10 +145,28 @@
   --color-bg-white: #161b22;
   --color-text-main: #e6edf3;
   --color-text-sub: #8b949e;
-  --color-text-light: #6e7681;
+  --color-text-light: #848d97;
   --color-border: #414d5c;
   --color-secondary: #1c2836;
   --color-primary-light: #071D3A;
+  --level-foundational: #7fb24c;
+  --level-business: #f0569a;
+  --level-professional: #a78bfa;
+  --level-specialty: #38bdf8;
+  --level-additional: #2dd4bf;
+  --level-foundational-text: var(--level-foundational);
+  --level-business-text: var(--level-business);
+  --level-professional-text: var(--level-professional);
+  --level-specialty-text: var(--level-specialty);
+  --level-additional-text: var(--level-additional);
+  --level-foundational-on: #0d1117;
+  --level-business-on: #0d1117;
+  --level-associate-on: #0d1117;
+  --level-professional-on: #0d1117;
+  --level-specialty-on: #0d1117;
+  --level-additional-on: #0d1117;
+  --color-points: #2dd4bf;
+  --color-on-points: #0d1117;
   --color-feedback-correct-bg: #0d2114;
   --color-feedback-incorrect-bg: #2d0a07;
   --color-hint-bg: #2d2207;
@@ -175,14 +229,21 @@ html {
 body {
   margin: 0;
   overflow-x: hidden;
-  font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  /* Web フォントは読み込まない（軽さ優先・ビルド時の Google Fonts 取得失敗を避ける）。
+     欧文は OS の UI フォント、和文は OS ごとの標準ゴシックを明示する。
+     以前は next/font の Open Sans を <html> に当てていたが、この指定に上書きされて使われていなかった */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+    'Noto Sans JP', 'Yu Gothic UI', 'Meiryo', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg-main);
   color: var(--color-text-main);
   line-height: 1.5;
+}
+
+/* フォーム部品はブラウザ既定でフォントを継承しないので、本文と揃える */
+button, input, select, textarea {
+  font-family: inherit;
 }
 
 input[type="checkbox"],
@@ -326,9 +387,26 @@ code {
   border-width: 2px;
 }
 
-/* Global Transitions */
+/* Global Transitions — all にするとレイアウト系プロパティまで補間されて重いので、色と影だけ */
 button, a {
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+/* キーボード操作のフォーカスを常に見えるようにする。インラインで outline:'none' を書いた要素が
+   約40か所あり、それに勝たせるため !important（マウス操作では :focus-visible は付かない） */
+:focus-visible {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px;
+}
+
+/* OS の「視差効果を減らす」設定を尊重する。個別の matchMedia 判定に加えて全体でも止める */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 button:active:not(:disabled) {
@@ -472,12 +550,6 @@ button:active:not(:disabled) {
   to   { opacity: 1; transform: none; }
 }
 
-@keyframes portalPulseRing {
-  0%   { box-shadow: 0 4px 18px rgba(255,153,0,0.28), 0 0 0 0 rgba(255,153,0,0.45); }
-  60%  { box-shadow: 0 4px 18px rgba(255,153,0,0.28), 0 0 0 14px rgba(255,153,0,0); }
-  100% { box-shadow: 0 4px 18px rgba(255,153,0,0.28), 0 0 0 0 rgba(255,153,0,0); }
-}
-
 .portal-logo-float {
   display: inline-flex;
   align-items: center;
@@ -493,9 +565,7 @@ button:active:not(:disabled) {
   box-shadow: var(--box-shadow-md) !important;
 }
 
-.portal-cta-pulse {
-  animation: portalPulseRing 2.8s ease-in-out 1.2s infinite;
-}
+
 
 /* ── レスポンシブ ── */
 

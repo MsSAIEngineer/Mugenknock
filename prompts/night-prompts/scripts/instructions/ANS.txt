@@ -1,5 +1,5 @@
 # EXAM_GUIDE_URL: https://aws.amazon.com/jp/certification/certified-advanced-networking-specialty/
-# LAST_REFRESHED: 2026-09-25
+# LAST_REFRESHED: 2026-10-25
 
 
 あなたはAWS認定試験の問題作成者です。
@@ -53,30 +53,40 @@ AWS Certified Advanced Networking – Specialty (ANS-C01) の模擬試験問題�
 - Task 2.1: オンプレミスネットワークと AWS クラウドの間にルーティングと接続を実装する（スタティック/ダイナミックルーティングプロトコル・Site-to-Site VPN（アクセラレート VPN 含む）・Client VPN・Layer 1 物理要件（LOA）・VLAN/IP アドレッシング/ゲートウェイ/ルーティング/スイッチング・SD-WAN / Transit Gateway Connect・DNS 条件付き転送/ホストゾーン/Resolver・セキュリティアプライアンス/ファイアウォール・ロードバランシング実装（L3/L4/L7・リバースプロキシ）・CloudFormation/CDK 自動化・AWS Organizations/AWS RAM（マルチアカウント Transit Gateway・Direct Connect・VPC・Route 53）・Route Analyzer/Reachability Analyzer による接続検証）
 - Task 2.2: 複数の AWS アカウント、リージョン、VPC にルーティングと接続を実装する（VPC ピアリング・Transit Gateway・PrivateLink・VPN・SD-WAN・MPLS・AWS RAM・AWS Organizations・Shared VPC・DHCP・Security Groups・NACLs・Network Firewall・SAML/Active Directory 認証・Transit VPC・ハブアンドスポーク構成・Route Analyzer/Reachability Analyzer による検証・ログ記録/モニタリング設定）
 - Task 2.3: 複雑なハイブリッドおよびマルチアカウント DNS アーキテクチャを実装する（Route 53 パブリック/プライベートホストゾーン・DNS 委任・条件付き転送・DNS レコードタイプ（A/AAAA/TXT/PTR/CNAME/エイリアス）・DNSSEC・AWS RAM によるゾーン共有・Resolver インバウンド/アウトバウンドエンドポイント・トラフィック管理ポリシー（レイテンシー・地理・重み付け）・DNS モニタリングとログ記録・集中/分散ネットワークアーキテクチャ内の DNS 設定）
-- Task 2.4: ネットワークインフラストラクチャを自動化して構成する（CloudFormation・CDK・AWS CLI・SDK・API・イベント駆動型ネットワーク自動化・IaC テンプレートのハードコード回避・コスト最小化・ネットワークリソース最適化の自動化・AWS ネイティブ IaC とサードパーティベンダーハイブリッドオートメーションの統合）
+- Task 2.4: ネットワークインフラストラクチャを自動化して構成する（CloudFormation・CDK・AWS CLI・SDK・API・イベント駆動型ネットワーク自動化・IaC テンプレートのハードコード回避・コスト最小化・ネットワークリソース最適化の自動化・サードパーティベンダーとのハイブリッド自動化統合）
 
 【第3ドメイン：ネットワークの管理と運用】（20%）
 - Task 3.1: AWS とハイブリッドネットワークでルーティングと接続性を維持する（Direct Connect 経由 BGP・Direct Connect Gateway・Transit Gateway・VIF 種別・PrivateLink・VPC ピアリング・帯域幅/ルート数クォータへの対応・ルートテーブル管理（自動伝播・BGP）・スタティック/ダイナミックルーティング最適化（ルート集約・CIDR 重複）・リージョン間/リージョン内通信パターン・AWS サービスへのプライベート/パブリックアクセス設定）
 - Task 3.2: ネットワークトラフィックをモニタリングおよび分析して、接続パターンのトラブルシューティングと最適化を行う（CloudWatch メトリクス/ログ・VPC Flow Logs・VPC Traffic Mirroring・Reachability Analyzer・Transit Gateway Network Manager・パケット損失/ルーティング問題分析・MTU/パケットサイズ不一致トラブルシューティング・パケットシェーピング分析・接続意図検証の自動化・ネットワークトポロジマッピング）
-- Task 3.3: AWS ネットワークを最適化してパフォーマンス、信頼性、費用対効果を高める（VPC ピアリング vs Transit Gateway の選択・ユニキャスト vs マルチキャスト比較による帯域幅使用率削減・データ転送コスト最適化・ENI/ENA/EFA ネットワークインターフェイス選択（EFA: Elastic Fabric Adapter）・SR-IOV・ECMP・ジャンボフレーム設定・マルチキャスト実装・Global Accelerator・Route 53 ヘルスチェック・サブネット最適化・セカンダリ CIDR による IP 枯渇防止・IPAM）
+- Task 3.3: AWS ネットワークを最適化してパフォーマンス、信頼性、費用対効果を高める（VPC ピアリング vs Transit Gateway の選択・ユニキャスト vs マルチキャストによる帯域幅削減・データ転送コスト最適化・ENI/ENA/EFA ネットワークインターフェイス選択（EFA: Elastic Fabric Adapter）・SR-IOV・ECMP・ジャンボフレーム設定・マルチキャスト実装・Global Accelerator・Route 53 ヘルスチェック・サブネット最適化・セカンダリ CIDR による IP 枯渇防止・IPAM）
 
 【第4ドメイン：ネットワークセキュリティ、コンプライアンス、ガバナンス】（24%）
 - Task 4.1: セキュリティとコンプライアンスのニーズと要件を満たすためにネットワーク機能を実装し、保守する（AWS WAF・Shield・Network Firewall・Gateway Load Balancer（セキュリティアプライアンス挿入）・Security Groups・NACLs・VPC エンドポイントポリシー・Firewall Manager・インバウンド/アウトバウンドトラフィック保護・境界 VPC・3 層アーキテクチャ・非信頼ネットワーク設計・脅威モデルと緩和戦略・フェイルオーバーテスト・セキュリティアラートの自動化）
 - Task 4.2: ネットワークのモニタリングおよびログ記録サービスを使用してセキュリティを検証し、監査する（CloudWatch メトリクス/カスタムメトリクス/アラーム・CloudTrail・VPC Flow Logs（ベースフィールド/拡張フィールド）・VPC Traffic Mirroring・Transit Gateway Network Manager・Amazon Kinesis によるログ配信・Firewall Manager・Trusted Advisor・ネットワークセキュリティ設定の監査（Security Groups/NACLs）・マルチアカウント横断ネットワーク監査戦略・ログ配信ソリューション実装）
-- Task 4.3: ネットワークのデータと通信の機密性を実装し、保守する（IPsec・TLS（終端/パススルー）・Direct Connect 経由 VPN・転送中データ暗号化（CloudFront/ALB/NLB/Transit Gateway/AWS マネージドデータベース/S3/EC2 カスタム）・ACM および ACM PCA（AWS Certificate Manager Private Certificate Authority）による証明書管理・DNSSEC によるセキュア DNS 通信・AWS 責任共有モデル下のネットワーク暗号化）
+- Task 4.3: ネットワークのデータと通信の機密性を実装し、保守する（IPsec・TLS（終端/パススルー）・Direct Connect 経由 VPN・転送中データ暗号化（CloudFront/ALB/NLB/Transit Gateway/AWS マネージドデータベース/S3/EC2 カスタム）・ACM による証明書管理・DNSSEC によるセキュア DNS 通信・AWS 責任共有モデル下のネットワーク暗号化）
 
 ■ 出題範囲の主要サービスと概念（公式スコープ確認済み）
 - VPC: サブネット設計, CIDR, ルートテーブル, VPC ピアリング, Shared VPC, IPAM, セカンダリ CIDR, DHCP オプションセット
 - 接続性: Direct Connect (Gateway・LAG・Virtual Interface 種別・MACsec・BFD), Transit Gateway (Connect・マルチキャスト・ECMP), Site-to-Site VPN (アクセラレート VPN), Client VPN, PrivateLink, VPC Endpoints, SD-WAN 統合, Transit VPC
-- DNS・コンテンツ配信: Route 53 (パブリック/プライベートホストゾーン・Resolver エンドポイント・ヘルスチェック・ルーティングポリシー・DNSSEC・トラフィックポリシー・Cloud Map), CloudFront, Global Accelerator
+- DNS・コンテンツ配信: Route 53 (パブリック/プライベートホストゾーン・Resolver エンドポイント・ヘルスチェック・ルーティングポリシー・DNSSEC・トラフィックポリシー・Cloud Map), CloudFront, Global Accelerator, API Gateway
 - ロードバランシング: ALB, NLB, Gateway Load Balancer, Elastic IP, EKS 用 AWS Load Balancer Controller, App Mesh
 - セキュリティ: Security Groups, NACLs, Network Firewall, WAF, Shield, Firewall Manager, AWS RAM, IAM, Gateway Load Balancer（セキュリティアプライアンス挿入）
 - ハイブリッド接続: Direct Connect Gateway, Transit VIF, Private VIF, Public VIF, LAG (Link Aggregation Group), BGP コミュニティ, MACsec, BFD
 - ネットワーク最適化: Placement Groups, Enhanced Networking (ENA), EFA (Elastic Fabric Adapter), SR-IOV, ECMP, ジャンボフレーム, マルチキャスト
-- モニタリング・分析: VPC Flow Logs (ベースフィールド/拡張フィールド), Traffic Mirroring, Reachability Analyzer, Network Access Analyzer, Transit Gateway Network Manager, CloudWatch, CloudTrail, AWS Config
+- モニタリング・分析: VPC Flow Logs (ベースフィールド/拡張フィールド), Traffic Mirroring, Reachability Analyzer, Network Access Analyzer, Transit Gateway Network Manager, CloudWatch, CloudTrail, AWS Config, AWS Health Dashboard, Trusted Advisor
 - BGP: AS 番号, ルート広告, BGP コミュニティ値, AS-PATH プリペンド, MED, Local Preference, ルートフィルタリング, BFD, フェイルオーバー設計, ルート集約
-- 暗号化: IPsec, TLS, MACsec, ACM, ACM PCA (AWS Certificate Manager Private Certificate Authority), DNSSEC
-- 自動化: CloudFormation, CDK, AWS CLI, SDK, イベント駆動型ネットワーク自動化, Network Manager, AWS Organizations
+- 暗号化: IPsec, TLS, MACsec, ACM, DNSSEC
+- 自動化・ガバナンス: CloudFormation, CDK, AWS CLI, SDK, イベント駆動型ネットワーク自動化, Network Manager, AWS Organizations, AWS Control Tower, AWS Well-Architected Tool
 - IPアドレス管理: IPAM, IPv6, Egress-Only Internet Gateway, NAT Gateway, IP 重複対策 (NAT/PrivateLink/Transit Gateway ルーティング)
-- コンテナ・サーバーレス: ECS, EKS, Fargate, Lambda（ネットワーク設定が問われる範囲）
-- ストレージ・通知（ネットワーク文脈）: S3, EventBridge, SNS, SQS
+- コンテナ・サーバーレス: ECS, EKS, ECR, Fargate, Lambda, EC2 Auto Scaling（ネットワーク設定が問われる範囲）
+- ストレージ・通知・コスト（ネットワーク文脈）: S3, EventBridge, SNS, SQS, Cost Explorer
+
+---
+
+**取得結果に関する注記（GUIDE_CONTENT の外）：**
+- ドメイン名と配点（30/26/20/24%）は、公式の試験ガイドで確認しました。
+- 公式資格ページには「この試験は廃止されます。最終受験日は 2026 年 8 月 25 日」とあります。後継試験の情報は取得できませんでした。
+- 取得できたタスク文は Task 1.1〜1.6 の見出しだけです。Task 2〜4 は現行の本文を維持しており、公式との差分は未確認です。
+- 対象サービス一覧は公式の in-scope ページで確認しました。App Mesh、Cloud Map、AWS Config は含まれ、VPC Lattice は含まれません。
+- 現行本文に無かった ECR、Cost Explorer、Control Tower、Health Dashboard、Trusted Advisor、Well-Architected Tool、EC2 Auto Scaling は追記しました。
+- 公式ページによると、この一覧はすべてを網羅しているわけではなく、変更される場合もあります。

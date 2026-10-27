@@ -4,10 +4,10 @@ import { useNavigate, useLocation } from '@/compat/react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { API_ENDPOINT, EXAM_TYPES, EXAM_CONFIGS, EXAM_LEVEL, EXAM_LEVEL_COLORS, isNonAwsExam } from '../constants';
+import { API_ENDPOINT, EXAM_TYPES, EXAM_CONFIGS, EXAM_LEVEL, EXAM_LEVEL_COLORS, levelText, levelLabel, isNonAwsExam } from '../constants';
 import { getPoints, fetchPointsFromServer } from '../utils/points';
 import { loadTargetExamFromServer } from '../utils/preferences';
-import { lockBodyScroll } from '../utils/bodyScrollLock';
+import { lockBodyScroll, isBodyScrollLocked } from '../utils/bodyScrollLock';
 import { initKvSync } from '../utils/kvSync';
 import Breadcrumb from './Breadcrumb';
 import Button from './ui/Button';
@@ -15,7 +15,7 @@ import { setKbMode } from '../utils/keyboardMode';
 import {
   IconHome,
   IconUser, IconChart,
-  IconDumbbell, IconFire, IconMegaphone, IconBell, IconMenu, IconClose, IconChevronLeft, IconMail, IconInfo,
+  IconDumbbell, IconFire, IconMegaphone, IconBell, IconMenu, IconMail, IconInfo,
   IconSparkles, IconBot, IconUserCircle, IconBookOpen, IconBook, IconLayoutGrid, IconSwatchBook,
   IconSun, IconMoon, IconMore, IconChevronDown,
   EXAM_ICON_COMPONENTS,
@@ -26,6 +26,8 @@ type BreadcrumbItem = { label: string; path?: string };
 const NAV_KEYS = [
   { path: '/aws/',             labelKey: 'nav.home',         Icon: IconHome      },
   { path: '/aws/practice',     labelKey: 'nav.practice',     Icon: IconDumbbell  },
+  // 苦手分析・解答履歴・推移・演習量の置き場所（specs/007）。以前はナビから辿れなかった
+  { path: '/aws/stats',        labelKey: 'stats.title',      Icon: IconChart     },
   { path: '/aws/mypage',       labelKey: 'nav.mypage',       Icon: IconUserCircle },
   { path: '/aws/encyclopedia', labelKey: 'nav.encyclopedia', Icon: IconLayoutGrid, bottom: true },
   { path: '/aws/cheatsheet',    labelKey: 'nav.cheatsheet',   Icon: IconSwatchBook, bottom: true },
@@ -36,6 +38,7 @@ const NAV_KEYS = [
 const BOTTOM_TABS = [
   { path: '/aws/',         Icon: IconHome,        ja: 'ホーム',       en: 'Home'     },
   { path: '/aws/practice', Icon: IconDumbbell,    ja: 'トレーニング', en: 'Training' },
+  { path: '/aws/stats',    Icon: IconChart,       ja: '記録',         en: 'Records'  },
   { path: '/aws/mypage',   Icon: IconUserCircle,  ja: 'マイページ',   en: 'My Page'  },
 ];
 
@@ -131,6 +134,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const swipeStartX = useRef<number>(0);
   const swipeStartY = useRef<number>(0);
   const isDraggingH = useRef<boolean>(false);
+  // オーバーレイ上のタッチではタブのスワイプ切替をしない
+  const swipeBlocked = useRef<boolean>(false);
   const SWIPE_THRESHOLD = 72;
   const TAB_PATHS      = [...BOTTOM_TABS.map(t => t.path), '/aws/others'];
   // indexOf 比較用（pathname は末尾スラッシュ除去済みなので揃える）
@@ -176,13 +181,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }, 240);
   };
 
+  // オーバーレイ上のタッチか。オーバーレイは <main> の中（またはポータル先）に描かれるので、
+  // タッチがここまで伝わってきて背後の画面が横スワイプで切り替わっていた。
+  // ① lockBodyScroll 中 ② <main> の外（ポータル）③ <main> 内の position:fixed 要素の中、のどれかなら対象外
+  const isOverlayTouch = (e: React.TouchEvent): boolean => {
+    if (isBodyScrollLocked()) return true;
+    const root = e.currentTarget as HTMLElement;
+    let el = e.target as HTMLElement | null;
+    if (!el || !root.contains(el)) return true;
+    for (; el && el !== root; el = el.parentElement) {
+      if (getComputedStyle(el).position === 'fixed') return true;
+    }
+    return false;
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
+    swipeBlocked.current = isOverlayTouch(e);
+    if (swipeBlocked.current) return;
     swipeStartX.current = e.touches[0].clientX;
     swipeStartY.current = e.touches[0].clientY;
     isDraggingH.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (swipeBlocked.current) return;
     const dx = e.touches[0].clientX - swipeStartX.current;
     const dy = e.touches[0].clientY - swipeStartY.current;
     if (!isDraggingH.current) {
@@ -636,12 +658,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     '/architecture':         [{ label: t('nav.home'), path: '/aws/' }, { label: lang === 'ja' ? 'Webサイトの構成図' : 'Site Architecture' }],
   };
 
+  // 画面の見出し（h1）。読み上げ用で、見た目には出さない（スマホは下部タブ、PC はサイドバーとパンくずで
+  // 今の画面が分かるため、表示すると重複する）。自前で h1 を持つ資格ダッシュボードは除く
+  const pageTitle: string | null = pathname === '/aws/exam-dashboard' ? null
+    : (pathname === '/aws' || pathname === '/aws/') ? t('nav.home')
+    : pathname === '/aws/mypage' ? t('nav.mypage')
+    : pathname === '/aws/others' ? (lang === 'ja' ? 'その他' : 'More')
+    : (breadcrumbs[pathname]?.slice(-1)[0]?.label ?? null);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'inherit' }}>
 
       {/* ── Cookie 同意バナー ── */}
       {!cookieConsent && (
-        <div style={{
+        <div role="region" aria-label={lang === 'ja' ? 'Cookie の利用について' : 'Cookie notice'} style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
           background: 'var(--color-bg-elevated)',
           borderTop: '1px solid var(--color-border)',
@@ -660,7 +690,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </span>
           <button
             onClick={acceptCookies}
-            style={{ flexShrink: 0, padding: '6px 18px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 'var(--border-radius-full)', fontWeight: 700, fontSize: 'var(--font-size-xs)', cursor: 'pointer' }}
+            style={{ flexShrink: 0, padding: '6px 18px', background: 'var(--color-primary)', color: 'var(--color-on-primary)', border: 'none', borderRadius: 'var(--border-radius-full)', fontWeight: 700, fontSize: 'var(--font-size-xs)', cursor: 'pointer' }}
           >
             {lang === 'ja' ? '同意して閉じる' : 'Accept'}
           </button>
@@ -670,7 +700,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* ── 連絡先モーダル ── */}
       {showContact && (
         <div
-          data-kbscope="1"
+          data-kbscope="1" role="dialog" aria-modal="true"
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-md)' }}
           onClick={e => { if (e.target === e.currentTarget) { setShowContact(false); } }}
           onTouchStart={e => e.stopPropagation()}
@@ -747,7 +777,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* ── SPポイント説明モーダル ── */}
       {showPointsInfo && (
         <div
-          data-kbscope="1"
+          data-kbscope="1" role="dialog" aria-modal="true"
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-md)' }}
           onClick={e => { if (e.target === e.currentTarget) setShowPointsInfo(false); }}
           onTouchStart={e => e.stopPropagation()}
@@ -756,7 +786,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: isMobile ? '20px 18px' : '24px 28px', width: '100%', maxWidth: 380, boxShadow: 'var(--box-shadow-md)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ color: '#009E9E', display: 'flex', alignItems: 'center' }}><IconSparkles size={18} /></span>
+                <span style={{ color: 'var(--color-points)', display: 'flex', alignItems: 'center' }}><IconSparkles size={18} /></span>
                 <span style={{ fontWeight: 700, fontSize: 'var(--font-size-base)', color: 'var(--color-text-main)' }}>
                   {lang === 'ja' ? 'SPとは？' : 'What is SP?'}
                 </span>
@@ -775,21 +805,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <div style={{ background: 'var(--color-bg-main)', borderRadius: 8, overflow: 'hidden' }}>
                 {([
                   { level: 'Foundational', pts: 1, exams: 'CLF, AIF' },
+                  { level: 'Business',     pts: 2, exams: 'AIB' },
                   { level: 'Associate',    pts: 2, exams: 'SAA, DVA, SOA, DEA, MLA' },
                   { level: 'Professional', pts: 3, exams: 'SAP, DOP, AIP' },
                   { level: 'Specialty',    pts: 3, exams: 'ANS, SCS' },
+                  { level: 'Additional',   pts: 2, exams: 'ML, DB, NW, SEC' },
                 ] as const).map((row, i, arr) => (
                   <div key={row.level} style={{ display: 'flex', alignItems: 'center', padding: '9px 12px', borderBottom: i < arr.length - 1 ? '1px solid color-mix(in srgb, var(--color-text-light) 40%, transparent)' : 'none' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-text-main)' }}>{row.level}</div>
+                      <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-text-main)' }}>{levelLabel(row.level, lang === 'ja')}</div>
                       <div style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)', marginTop: 1 }}>{row.exams}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, flexShrink: 0 }}>
-                      <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: '#009E9E', fontVariantNumeric: 'tabular-nums' }}>+{row.pts}</span>
+                      <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--color-points)', fontVariantNumeric: 'tabular-nums' }}>+{row.pts}</span>
                       <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)' }}>{lang === 'ja' ? 'SP/問' : 'SP/q'}</span>
                     </div>
                   </div>
                 ))}
+              </div>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: 'var(--spacing-sm)' }}>
+                {lang === 'ja' ? '他の資格の演習に混ざった基礎知識（オリジナル）の問題は、基礎知識の+2で数えます' : 'Original (fundamentals) questions mixed into another exam are counted as +2 each'}
               </div>
             </div>
 
@@ -803,7 +838,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   {lang === 'ja' ? '日めくりサービスの更新' : 'Daily service reroll'}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, flexShrink: 0 }}>
-                  <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: '#009E9E', fontVariantNumeric: 'tabular-nums' }}>30</span>
+                  <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--color-points)', fontVariantNumeric: 'tabular-nums' }}>30</span>
                   <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)' }}>SP</span>
                 </div>
               </div>
@@ -820,6 +855,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         gap: 'var(--spacing-md)', zIndex: 200, flexShrink: 0,
         borderBottom: '1px solid var(--color-border)',
       }}>
+
+        {pageTitle && (
+          <h1 style={{ position: 'absolute', width: 1, height: 1, margin: -1, padding: 0, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }}>
+            {pageTitle}
+          </h1>
+        )}
 
         {/* サービス名（モバイルではロゴアイコンを非表示。ホームへの導線は下部タブバーが担う） */}
         {!isMobile && (
@@ -865,21 +906,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   100% { opacity: 0; transform: translateY(-22px) scale(0.9); }
                 }
               `}</style>
-              <div onClick={() => setShowPointsInfo(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none', position: 'relative', border: '1.5px solid #009E9E', borderRadius: 6, padding: '3px 8px 3px 6px', background: 'rgba(0,158,158,0.05)', cursor: 'pointer' }}>
-                <span style={{ color: '#009E9E', display: 'flex', alignItems: 'center' }}><IconSparkles size={17} /></span>
-                <span style={{ color: '#009E9E', fontWeight: 800, fontSize: 'var(--font-size-sm)', minWidth: '3ch', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{points}<span style={{ fontSize: 'var(--font-size-2xs)', fontWeight: 600, marginLeft: 1 }}>p</span></span>
+              <button type="button" onClick={() => setShowPointsInfo(true)} aria-label={lang === 'ja' ? `ポイント ${points}p（獲得方法を見る）` : `${points} points (how to earn)`} style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none', position: 'relative', border: '1.5px solid var(--color-points)', borderRadius: 6, padding: '3px 8px 3px 6px', background: 'color-mix(in srgb, var(--color-points) 5%, transparent)', cursor: 'pointer', font: 'inherit' }}>
+                <span style={{ color: 'var(--color-points)', display: 'flex', alignItems: 'center' }}><IconSparkles size={17} /></span>
+                <span style={{ color: 'var(--color-points)', fontWeight: 800, fontSize: 'var(--font-size-sm)', minWidth: '3ch', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{points}<span style={{ fontSize: 'var(--font-size-2xs)', fontWeight: 600, marginLeft: 1 }}>p</span></span>
                 {ptsDelta !== null && (
                   <span style={{
                     position: 'absolute', right: -32, top: -2,
                     fontSize: 'var(--font-size-xs)', fontWeight: 800,
-                    color: ptsDelta > 0 ? '#009E9E' : 'var(--color-danger)',
+                    color: ptsDelta > 0 ? 'var(--color-points)' : 'var(--color-danger)',
                     whiteSpace: 'nowrap', pointerEvents: 'none',
                     animation: 'pts-delta-fly 1.8s ease-out forwards',
                   }}>
                     {ptsDelta > 0 ? `+${ptsDelta}p` : `${ptsDelta}p`}
                   </span>
                 )}
-              </div>
+              </button>
             </>
           )}
           {authLoading ? (
@@ -887,6 +928,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           ) : (
             <button
               onClick={() => navigate('/account')}
+              aria-label={user ? (lang === 'ja' ? 'アカウント' : 'Account') : (lang === 'ja' ? 'ログイン' : 'Log in')}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: user ? 'var(--color-primary-light)' : 'transparent',
@@ -928,8 +970,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-main)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = open ? 'var(--color-bg-main)' : 'none'; e.currentTarget.style.color = open ? 'var(--color-text-main)' : 'var(--color-text-sub)'; }}
             title={open ? t('nav.closeMenu') : t('nav.openMenu')}
+            aria-label={open ? t('nav.closeMenu') : t('nav.openMenu')}
+            aria-expanded={open}
           >
-            {open ? <IconClose /> : <IconMenu />}
+            {/* 開いていても「×」にしない。×はページを閉じる操作に見えて意味が伝わらなかった */}
+            <IconMenu />
           </button>
         )}
         {/* デスクトップ: パンくずエリア */}
@@ -975,7 +1020,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     ? `【基礎知識】${targetExam}`
                     : (isMobile ? `AWS ${targetExam}` : ((EXAM_CONFIGS[targetExam]?.fullName ?? targetExam).replace('AWS Certified ', '')));
                   const ExamIcon = EXAM_ICON_COMPONENTS[targetExam];
-                  return <>{'設定目標：'}<span style={{ color: examColor, display: 'inline-flex', alignItems: 'center', gap: 3, verticalAlign: 'middle' }}>{ExamIcon && <ExamIcon size={13} />}{name}</span></>;
+                  return <>{'設定目標：'}<span style={{ color: levelText(examColor), display: 'inline-flex', alignItems: 'center', gap: 3, verticalAlign: 'middle' }}>{ExamIcon && <ExamIcon size={13} />}{name}</span></>;
                 })()}
                 {examDate && (() => {
                   const days = daysUntilExam(examDate);
@@ -1018,7 +1063,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* デスクトップのみ: サイドバー */}
         {!isMobile && (
-          <nav style={{
+          <nav aria-label={lang === 'ja' ? 'サイドメニュー' : 'Side menu'} style={{
             width: open ? 'var(--sidebar-width)' : 0,
             minWidth: open ? 'var(--sidebar-width)' : 0,
             background: 'var(--color-bg-white)',
@@ -1029,18 +1074,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             position: 'relative', zIndex: 999,
           }}>
             <div style={{ width: 'var(--sidebar-width)', paddingTop: 'var(--spacing-sm)', display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <button onClick={toggle} style={{
-                width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                color: 'var(--color-text-light)', padding: '8px 24px',
-                display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                fontSize: 'var(--font-size-xs)', transition: 'all 0.2s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-text-sub)'; e.currentTarget.style.background = 'var(--color-bg-main)'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-text-light)'; e.currentTarget.style.background = 'none'; }}
-                title={t('nav.closeMenu')}
-              >
-                <IconChevronLeft />
-              </button>
+              {/* サイドバーの開閉はヘッダー左のメニューボタンだけにする（以前はここにも「<」があり、同じ操作が2つあった） */}
 
 
               {navItems.filter(item => !(item as any).bottom).map(({ path, labelKey, Icon }) => {
@@ -1201,6 +1235,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           onTouchCancel={isMobile ? handleTouchCancel : undefined}
           style={{
             flex: 1, overflow: 'auto',
+            // 中身が短い画面でもフッターを下端に置く（以前は画面の途中に浮き、下に空白が残った）
+            display: 'flex', flexDirection: 'column',
             background: 'var(--color-bg-main)',
             width: '100%',
             WebkitOverflowScrolling: 'touch',
@@ -1211,8 +1247,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             willChange: swipeOffset !== 0 ? 'transform' : undefined,
           }}
         >
-          {children}
+          <div style={{ flex: '1 0 auto', minWidth: 0 }}>{children}</div>
           <footer style={{
+            flexShrink: 0,
             borderTop: '1px solid color-mix(in srgb, var(--color-text-light) 40%, transparent)',
             padding: '16px var(--spacing-lg)',
             display: 'flex',
@@ -1225,7 +1262,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             marginTop: 'var(--spacing-xl)',
           }}>
             <span>© {new Date().getFullYear()} 無限ノック</span>
-            <span style={{ width: '100%', textAlign: 'center', fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)', opacity: 0.7 }}>
+            <span style={{ width: '100%', textAlign: 'center', fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)' }}>
               {lang === 'ja'
                 ? 'AWSはAmazon Web Services, Inc.の商標です。本サービスはAmazonと無関係の非公式サービスです。'
                 : 'AWS is a trademark of Amazon Web Services, Inc. This is an unofficial service unaffiliated with Amazon.'}
@@ -1248,7 +1285,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── モバイル: 下部タブバー ── */}
       {isMobile && (
-        <nav style={{
+        <nav aria-label={lang === 'ja' ? 'メインメニュー' : 'Main menu'} style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
           height: 56,
           background: 'var(--color-bg-white)',

@@ -25,6 +25,11 @@ function onTouchMove(e: TouchEvent) {
   if (dx > dy) e.preventDefault();
 }
 
+// lockBodyScroll で止めたオーバーレイが1つ以上開いているか
+export function isBodyScrollLocked(): boolean {
+  return lockCount > 0;
+}
+
 export function lockBodyScroll(): () => void {
   if (lockCount === 0) {
     storedScrollY = window.scrollY;

@@ -7,6 +7,7 @@ import { EXAM_INSTRUCTIONS, COMMON_RULES } from '../data/originalInstructions';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
+import MfaSetupCard from '../components/admin/MfaSetupCard';
 import { ServiceIcon, isServiceIconKey, IconChevronDown, IconChevronRight, IconCopy, IconCheck, IconClose, IconCircleX, IconAlertTriangle, IconThumbsUp, IconThumbsDown, IconLightbulb, IconEye, IconPenLine, IconArrowRight, IconArrowLeft, IconPencil, IconTrash, IconRefreshCw } from '../components/Icons';
 import { useTheme, CustomColors } from '../contexts/ThemeContext';
 import { useHorizontalScrollHint } from '../hooks/useHorizontalScrollHint';
@@ -150,6 +151,7 @@ type FixProposal = {
   choices?: string[];
   correctAnswers?: string[];
   explanation?: string;
+  choiceExplanations?: string[];
 };
 
 type ValidityEditLog = {
@@ -180,6 +182,10 @@ type FlaggedQuestion = {
   // 監査で指摘されたが事実誤りではないため自動修正されなかった内容（人の判断が要る）
   auditNote?: string;
   auditFlaggedAt?: string;
+  // 人の確認待ち（docs/10-ops-review.md 4.1〜4.3）。answer-change=AIが正解を変えようとした / ai-delete=AIが削除を提案 / sample=抜き取り検査
+  reviewReason?: string;
+  humanReviewRequestedAt?: string;
+  choiceExplanations?: string[];
   // 旧フィールド（後方互換）
   validityRating?: number;
   validityNote?: string;
@@ -507,6 +513,11 @@ function QuestionPreviewModal({ onClose, initId = '' }: { onClose: () => void; i
 }
 
 export default function Admin() {
+  // 2段階認証の設定欄に出す自分のメール（ID トークンから）
+  const [myEmail, setMyEmail] = useState('');
+  useEffect(() => {
+    fetchAuthSession().then(sess => setMyEmail(String(sess.tokens?.idToken?.payload?.email ?? ''))).catch(() => {});
+  }, []);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
     const h = () => setIsMobile(window.innerWidth < 768);
@@ -971,7 +982,7 @@ export default function Admin() {
 
   const [flaggedQuestions, setFlaggedQuestions] = useState<FlaggedQuestion[]>([]);
   const [loadingFlagged, setLoadingFlagged] = useState(false);
-  const [validityFilter, setValidityFilter] = useState<'all' | 'fixed' | 'hidden' | 'audit'>('all');
+  const [validityFilter, setValidityFilter] = useState<'all' | 'fixed' | 'hidden' | 'audit' | 'review'>('review');
   const [validityTotalCount, setValidityTotalCount] = useState(0);
   const [scanExamFilter, setScanExamFilter] = useState<string>('ALL');
   const [scanSort, setScanSort] = useState<'date_desc' | 'date_asc'>('date_desc');
@@ -981,6 +992,7 @@ export default function Admin() {
   const [flaggedChecked, setFlaggedChecked] = useState(0);
   const [flaggedFixedCount, setFlaggedFixedCount] = useState(0);
   const [flaggedAuditCount, setFlaggedAuditCount] = useState(0);
+  const [flaggedReviewCount, setFlaggedReviewCount] = useState(0);
   const [loadingMoreFlagged, setLoadingMoreFlagged] = useState(false);
   const FLAGGED_PAGE_SIZE = 100;
 
@@ -1082,7 +1094,7 @@ export default function Admin() {
 
   // 絞り込み・並べ替えはサーバ側。ページ内だけに効くと件数表示と食い違うため。
   const flaggedQuery = (
-    filter: 'all' | 'fixed' | 'hidden' | 'audit',
+    filter: 'all' | 'fixed' | 'hidden' | 'audit' | 'review',
     exam: string,
     sort: 'date_desc' | 'date_asc',
     offset: number,
@@ -1097,11 +1109,12 @@ export default function Admin() {
     setFlaggedChecked(data.checkedCount || 0);
     setFlaggedFixedCount(data.fixedCount || 0);
     setFlaggedAuditCount(data.auditCount || 0);
+    setFlaggedReviewCount(data.reviewCount || 0);
     setFlaggedHasMore(!!data.hasMore);
   };
 
   const fetchFlagged = async (
-    filter: 'all' | 'fixed' | 'hidden' | 'audit' = validityFilter,
+    filter: 'all' | 'fixed' | 'hidden' | 'audit' | 'review' = validityFilter,
     exam: string = scanExamFilter,
     sort: 'date_desc' | 'date_asc' = scanSort,
   ) => {
@@ -1135,6 +1148,7 @@ export default function Admin() {
     setFlaggedQuestions(prev => prev.map(x =>
       x.questionId === q.questionId
         ? { ...x, fixProposalJson: undefined, validityNote: '修正適用済',
+            ...(x.humanReviewRequestedAt ? { humanReviewRequestedAt: undefined, reviewReason: undefined, isHidden: false } : {}),
             ...(fix.questionText  ? { questionText: fix.questionText }   : {}),
             ...(fix.choices       ? { choices: fix.choices }             : {}),
             ...(fix.correctAnswers? { correctAnswers: fix.correctAnswers }: {}),
@@ -1142,13 +1156,32 @@ export default function Admin() {
           }
         : x
     ));
+    if (q.humanReviewRequestedAt) setFlaggedReviewCount(c => Math.max(0, c - 1));
   };
 
   const handleRejectFix = async (q: FlaggedQuestion) => {
     await adminFetch(`${API_ENDPOINT}/admin/questions/${q.questionId}/reject-fix`, { method: 'POST' });
     setFlaggedQuestions(prev => prev.map(x =>
-      x.questionId === q.questionId ? { ...x, fixProposalJson: undefined } : x
+      x.questionId === q.questionId
+        ? { ...x, fixProposalJson: undefined, ...(x.humanReviewRequestedAt ? { humanReviewRequestedAt: undefined, reviewReason: undefined, isHidden: false } : {}) }
+        : x
     ));
+    if (q.humanReviewRequestedAt) setFlaggedReviewCount(c => Math.max(0, c - 1));
+  };
+
+  // 人の確認（抜き取り検査・AI の削除提案）。ok=問題なし→表示 / ng=誤りあり→非表示のまま
+  const handleHumanReview = async (q: FlaggedQuestion, result: 'ok' | 'ng') => {
+    const note = result === 'ng' ? (window.prompt('どこが誤りか（任意。検証の観点を足すときの材料になります）') ?? '') : '';
+    const res = await adminFetch(`${API_ENDPOINT}/admin/questions/${q.questionId}/human-review`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ result, note }),
+    });
+    if (!res.ok) { window.alert('記録できませんでした'); return; }
+    setFlaggedQuestions(prev => prev.map(x =>
+      x.questionId === q.questionId ? { ...x, humanReviewRequestedAt: undefined, reviewReason: undefined, isHidden: result === 'ng' } : x
+    ));
+    setFlaggedReviewCount(c => Math.max(0, c - 1));
   };
 
   const handleVisibility = async (q: FlaggedQuestion, hide: boolean) => {
@@ -1176,7 +1209,7 @@ export default function Admin() {
   useEffect(() => { if (tab === 'columnideas') fetchColumnIdeas(); }, [tab]);
   useEffect(() => { if (tab === 'releases') fetchReleases(); }, [tab]);
   useEffect(() => { if (tab === 'announcements') fetchAnnouncements(); }, [tab]);
-  useEffect(() => { if (tab === 'scan') fetchFlagged('all'); }, [tab]);
+  useEffect(() => { if (tab === 'scan') fetchFlagged(validityFilter); }, [tab]);
   useEffect(() => { if (tab === 'messages') fetchMessages(); }, [tab]);
   useEffect(() => { if (tab === 'dailyservice') fetchDailyServices(); }, [tab]);
   useEffect(() => { fetchDailyServices(); }, []); // pre-fetch for tab count
@@ -3229,7 +3262,7 @@ ${tipPromptExamType !== 'ALL' ? `・examType には "${tipPromptExamType}" を�
         return (
           <div>
             {/* 進捗・統計 */}
-            {!loadingFlagged && totalCount > 0 && validityFilter !== 'hidden' && (
+            {!loadingFlagged && totalCount > 0 && validityFilter !== 'hidden' && validityFilter !== 'review' && (
               <div style={{ background: 'var(--color-bg-main)', border: '1px solid #eaeded', borderRadius: 8, padding: '14px 18px', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
                   <div style={{ fontSize: 13, color: 'var(--color-text-sub)' }}>
@@ -3249,6 +3282,7 @@ ${tipPromptExamType !== 'ALL' ? `・examType には "${tipPromptExamType}" を�
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {([
+                  { key: 'review', label: `人の確認待ち (${flaggedReviewCount})` },
                   { key: 'all', label: '全チェック済み' },
                   { key: 'fixed', label: `AI修正済み (${fixedCount})` },
                   { key: 'audit', label: `監査指摘あり (${flaggedAuditCount})` },
@@ -3322,7 +3356,7 @@ ${tipPromptExamType !== 'ALL' ? `・examType には "${tipPromptExamType}" を�
 
             {!loadingFlagged && flaggedQuestions.length === 0 && (
               <p style={{ color: 'var(--color-text-light)', textAlign: 'center', padding: 40 }}>
-                {validityFilter === 'hidden' ? '非表示中の問題はありません' : 'チェック済みの問題はありません'}
+                {validityFilter === 'hidden' ? '非表示中の問題はありません' : validityFilter === 'review' ? '人の確認待ちの問題はありません' : 'チェック済みの問題はありません'}
               </p>
             )}
 
@@ -3345,7 +3379,7 @@ ${tipPromptExamType !== 'ALL' ? `・examType には "${tipPromptExamType}" を�
                     {qDomainName(q as any) && (
                       <span style={{ fontSize: 11, color: '#879596', background: 'var(--color-bg-main)', padding: '2px 8px', borderRadius: 12 }}>{qDomainName(q as any)}</span>
                     )}
-                    {hasEdit ? (
+                    {q.humanReviewRequestedAt ? null : hasEdit ? (
                       <span style={{ fontSize: 12, fontWeight: 700, color: '#d47500', background: '#fdf3e1', padding: '2px 10px', borderRadius: 6, border: '1px solid #f5c98a' }}>
                         AI修正済
                       </span>
@@ -3379,6 +3413,65 @@ ${tipPromptExamType !== 'ALL' ? `・examType には "${tipPromptExamType}" を�
 
                   {/* 問題文 */}
                   <p style={{ fontSize: 13, color: 'var(--color-text-main)', margin: '0 0 8px', lineHeight: 1.6 }}>{q.questionText}</p>
+
+                  {/* 人の確認待ち（docs/10-ops-review.md 4.1〜4.3） */}
+                  {q.humanReviewRequestedAt && (() => {
+                    const proposal: FixProposal | null = (() => { try { return q.fixProposalJson ? JSON.parse(q.fixProposalJson) : null; } catch { return null; } })();
+                    const reasonLabel: Record<string, string> = {
+                      'answer-change': 'AI が正解を変えようとしています。修正案を適用するか却下してください（確認まで非表示）',
+                      'ai-delete': 'AI が削除を提案しています。問題なければ「問題なし」、誤りがあれば「誤りあり」のあと編集か削除を（確認まで非表示）',
+                      'answer-changed-past': '2026-10-27 より前に、AI が人の確認なしで正解を変えた問題です。正しいか確かめてください',
+                      'sample': '抜き取り検査の対象です。選択肢・正解・解説に誤りがないか確かめてください',
+                    };
+                    return (
+                      <div style={{ margin: '0 0 var(--spacing-sm)', border: '1px solid var(--color-primary)', background: 'var(--color-primary-light)', borderRadius: 'var(--border-radius-md)', padding: 'var(--spacing-sm) var(--spacing-md)' }}>
+                        <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--color-primary)', marginBottom: 'var(--spacing-xs)' }}>
+                          人の確認待ち（{new Date(q.humanReviewRequestedAt).toLocaleDateString('ja-JP')}）
+                        </div>
+                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)', lineHeight: 1.6 }}>{reasonLabel[q.reviewReason || 'sample'] ?? q.reviewReason}</div>
+                        {q.validityNote && <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', lineHeight: 1.6, marginTop: 'var(--spacing-xs)', whiteSpace: 'pre-wrap' }}>AI の理由: {q.validityNote}</div>}
+                        {q.choices && (
+                          <ol type="A" style={{ fontSize: 'var(--font-size-sm)', margin: 'var(--spacing-sm) 0 0', paddingLeft: 'var(--spacing-lg)', lineHeight: 1.6 }}>
+                            {q.choices.map((c, i) => (
+                              <li key={i} style={{ fontWeight: q.correctAnswers?.includes(c) ? 700 : 400 }}>
+                                {q.correctAnswers?.includes(c) ? '✓ ' : ''}{c}
+                              </li>
+                            ))}
+                          </ol>
+                        )}
+                        {q.explanation && <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', lineHeight: 1.6, marginTop: 'var(--spacing-sm)', whiteSpace: 'pre-wrap' }}>解説: {q.explanation}</div>}
+                        {proposal && (
+                          <div style={{ marginTop: 'var(--spacing-sm)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--spacing-sm)' }}>
+                            <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--color-text-sub)', marginBottom: 'var(--spacing-xs)' }}>AI の修正案</div>
+                            {proposal.questionText && <div style={{ fontSize: 'var(--font-size-sm)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>問題文: {proposal.questionText}</div>}
+                            {(proposal.choices || q.choices) && (
+                              <ol type="A" style={{ fontSize: 'var(--font-size-sm)', margin: 'var(--spacing-xs) 0 0', paddingLeft: 'var(--spacing-lg)', lineHeight: 1.6 }}>
+                                {(proposal.choices || q.choices || []).map((c, i) => {
+                                  const correct = (proposal.correctAnswers || q.correctAnswers || []).includes(c);
+                                  return <li key={i} style={{ fontWeight: correct ? 700 : 400 }}>{correct ? '✓ ' : ''}{c}</li>;
+                                })}
+                              </ol>
+                            )}
+                            {proposal.explanation && <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', lineHeight: 1.6, marginTop: 'var(--spacing-xs)', whiteSpace: 'pre-wrap' }}>解説: {proposal.explanation}</div>}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap', marginTop: 'var(--spacing-sm)' }}>
+                          {proposal ? (
+                            <>
+                              <Button size="sm" onClick={() => handleApplyFix(q)}>修正案を適用する</Button>
+                              <Button size="sm" variant="outline" onClick={() => handleRejectFix(q)}>却下して元のまま表示</Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => handleHumanReview(q, 'ok')}>問題なし</Button>
+                              <Button size="sm" variant="danger" onClick={() => handleHumanReview(q, 'ng')}>誤りあり</Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
 
                   {/* 修正ログ */}
                   {editLog && (
@@ -3829,6 +3922,7 @@ ${tipPromptExamType !== 'ALL' ? `・examType には "${tipPromptExamType}" を�
       {/* ── 管理者設定 ── */}
       {tab === 'admins' && (
         <div style={{ maxWidth: 560 }}>
+          <MfaSetupCard email={myEmail} />
           <p style={{ fontSize: 13, color: 'var(--color-text-sub)', marginBottom: 20 }}>
             スーパー管理者（{ADMIN_EMAIL}）は常にアクセス可能です。追加の管理者アカウントをここで設定できます。
           </p>

@@ -16,7 +16,7 @@ export default function Breadcrumb({ items, style }: Props) {
   const navigate = useNavigate();
 
   return (
-    <nav style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--font-size-base)', color: 'var(--color-text-sub)', marginBottom: 20, flexWrap: 'wrap', fontWeight: 400, ...style }}>
+    <nav aria-label="パンくずリスト" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--font-size-base)', color: 'var(--color-text-sub)', marginBottom: 20, flexWrap: 'wrap', fontWeight: 400, ...style }}>
       {items.map((item, index) => (
         <React.Fragment key={index}>
           {index > 0 && <span style={{ color: 'var(--color-text-light)', fontSize: 'var(--font-size-sm)' }}>❯</span>}

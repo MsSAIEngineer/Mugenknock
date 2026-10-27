@@ -14,8 +14,8 @@
 | `/aws/exam/setup` | `ExamSetup.tsx` | ❌ | 不要 | 模試の設定 |
 | `/aws/exam/session` | `ExamSession.tsx` | ❌ | 不要 | 模試の解答画面（時間制限） |
 | `/aws/result` | `Result.tsx` | ❌ | 不要 | 採点結果 |
-| `/aws/mypage` | `MyPage.tsx` | ❌ | **要** | 学習状況・苦手分析・ブックマーク |
-| `/aws/stats` | `Stats.tsx` | ❌ | **要** | 成績・履歴 |
+| `/aws/mypage` | `MyPage.tsx` | ❌ | **要** | 自分の設定（目標資格・学習目標・週間達成・取得済資格） |
+| `/aws/stats` | `Stats.tsx` | ❌ | **要** | **記録**（苦手分析・解答履歴・正答率の推移・演習量）。specs/007 |
 | `/aws/encyclopedia` | `ServiceEncyclopedia.tsx` | ❌ | 不要 | AWSサービス図鑑（解放制） |
 | `/aws/cheatsheet` | `CheatSheet.tsx` | ❌ | 不要 | 資格別チートシート（静的データ） |
 | `/aws/exam-dashboard` | `ExamDashboard.tsx` | ❌ | 不要 | 全資格の進捗ダッシュボード |
@@ -33,13 +33,24 @@
 
 ### レイアウト
 
-`app/aws/layout.tsx` が `src/components/Layout.tsx` を適用する。`/aws/*` 以外は素の画面。
+`app/aws/layout.tsx` が `src/components/Layout.tsx` を適用する（クライアント側は `app/aws/AwsShell.tsx`）。`/aws/*` 以外は素の画面。
+
+**タブ名（`<title>`）**: ルートの `app/layout.tsx` は `'use client'` で metadata を書けないため、
+`app/aws/layout.tsx`（サーバーコンポーネント）が `template: '%s | 無限ノック'` を持ち、
+各ルートの `layout.tsx` が画面名だけを `title` に書く（例: `app/aws/practice/layout.tsx` → 「トレーニング | 無限ノック」）。
+`/login`・`/account`・`/about`・`/architecture` も同様に `layout.tsx` で付ける。新しいルートを足すときは `layout.tsx` も足す。
 
 `Layout.tsx`（1,288行）の責務:
-- デスクトップ: 左サイドナビ（ホーム / トレーニング / マイページ + 図鑑・チートシート・お知らせ・リリースノート）
-- モバイル: 下部タブバー（ホーム / トレーニング / マイページ）
+- デスクトップ: 左サイドナビ（ホーム / トレーニング / 記録 / マイページ + 図鑑・チートシート・お知らせ・リリースノート）
+- モバイル: 下部タブバー（ホーム / トレーニング / 記録 / マイページ + その他）
+  - タブの画面は横スワイプで隣のタブへ移る（`Layout.tsx` の `<main>` のタッチ処理）。オーバーレイ上のタッチは対象外
+    （`lockBodyScroll` 中・ポータル先・`<main>` 内の `position: fixed` 要素の中）。以前はパネル等の上でスワイプすると背後の画面が切り替わっていた
 - ヘッダー（ロゴ・お知らせベル・アカウント）、パンくず、フッター
 - キーボードナビゲーション、問い合わせモーダル、AI（ChatGPT/Gemini/Claude）へのリンク
+- 画面の見出し（h1）: 読み上げ用で、PC・スマホとも視覚的に隠す。スマホは下部タブ、PC はサイドバーとパンくずで今の画面が分かり、表示すると重複するため（2026-10-26 本人判断。資格ダッシュボードは自前の h1）
+- サイドバーの開閉はパンくずバー左のメニューボタン（≡）だけ。開いていても×にしない
+- `<main>` は縦の flex で、中身が短い画面でもフッターを下端に置く
+- オーバーレイ（`data-kbscope`）は `role="dialog" aria-modal="true"`。Cookie バナーは `role="region"`
 
 ### ブレークポイント
 
@@ -66,16 +77,30 @@
    実力の現在地   … CombinedDetailModal `inline="score"`
      予想スコアとドメイン別内訳は同じデータの粒度違いなので、サマリー(バー)と
      内訳(ノード)を二重に出さずこの1パネルに統合している
-   推移と記録     … CombinedDetailModal `inline="trend"`
+   予想スコアの推移 … CombinedDetailModal `inline="trend"`（旧「推移と記録」。記録画面の「正答率の推移」と
+                      指標が違うことが分かるよう、指標名を入れた: specs/007）
      セッション別推移・日次最高点・ハイスコア記録を縦に並べる
+     日次最高点は「その日の最高値」なので、ホームの現在値より高いのは仕様
+
+     ■ スコア履歴の記録ルール（グラフと実データをずらさないための決まり）
+     ・記録は成績の再取得(statsSynced)が終わってから行う。待たずに書くと、ページを
+       開いた時点の古いキャッシュから計算した点が残り、ホームの表示とグラフがずれる
+       （実際に、その日に取っていない点が日次最高点になる事故が 2026-10-20 に発生）
+     ・各記録は「直近N問」設定を w として一緒に残す。予想スコアは N で計算が変わるので、
+       N の違う点を同じ線に並べない。グラフは現在の N と一致する点だけを描く
+       （w の無い古い記録は判別できないため現在の N とみなす）
+     ・セッション別推移は sessionScoreLog から取る。sessionScoreHistory は素の数値配列で
+       記録時の N を判別できないため。両者の中身は一致する（log の末尾10件）
+     ・日次最高点の横軸は日付に比例させる。演習しなかった日は履歴に行が無いので、
+       等間隔に描くと 2日空きが1日分と同じ幅になり時間軸が歪む
  右カラム 1fr =「今日の行動」今日やること
    目標演習量
    今日のサービス（日めくり）
    苦手分析（ログイン専用。ゲストは非表示）
-     マイページ苦手分析タブの要約（苦手ドメイン上位2件・頻出ミス問題2件）。
-     20問未満は「あとX問でアンロック」。クリックで /aws/mypage（苦手分析タブ）へ
+     記録画面の苦手分析タブの要約（苦手ドメイン上位2件・頻出ミス問題2件）。
+     20問未満は「あとX問でアンロック」。クリックで /aws/stats（苦手分析タブ）へ
      右カラムを flexDirection:'column' にし、苦手分析カードに flex:1 を付けて
-     左カラムの下端（ページ最下部）までパネルの底を揃える
+     左カラムの下端（ページ最下部）までパネルの底を揃える（未解放のときは中身が1行なので伸ばさない）
 
  モバイルは従来どおり縦一列（変更なし）
    目標演習量 → 予想スコア + ドメイン別正答率 → 今日のサービス
@@ -113,6 +138,10 @@ authLoading 解除
 
 ### 注意点
 
+- 目標資格の選択（`ExamSelectOverlay`）の決定は、文字入りの主ボタン「<資格> を目標にする」。
+  押すとパーティクルを出し「<資格> を学習中」に変わって反映する（以前のアイコンだけのフリップボタンと、動き続ける矢印は廃止）
+- 予想スコアが未算出（未演習）のときは、大きな「—」ではなく「演習すると予想スコアが表示されます」と出す
+- 右カラムの「苦手分析」は、未解放のときは縦に伸ばさない
 - `uid` は `user?.userId ?? 'guest'`。**認証確定前は `'guest'` で localStorage を読んでいる**ため、
   `user` 確定時に正しい uid で再読込する `useEffect` が必要（既にある）
 - 演習開始時は `autoScoreAndClearDrafts(userId, [quick, focused])` で**プライマリ枠2種のみ**確定。
@@ -135,6 +164,9 @@ authLoading 解除
 設定: 資格 / ドメイン選択 / 問題数 / 回答状況フィルタ（未回答・不正解・未正解）/ ブックマーク優先 /
 前提知識を含める（対応資格があり、全ドメイン選択時のみ表示・既定ON）。
 設定は `localStorage.exercisePrefs_<uid>` に保存され kvSync で同期される。
+
+目標資格が未設定のとき（ゲストが直接 URL を開いた場合など）は、設定欄の代わりに
+「まだ目標資格が選ばれていません」と「目標資格を選ぶ」ボタン（ホームへ遷移し、選択オーバーレイが開く）を出す。模試タブも同じ。
 
 開始時のフロー:
 ```
@@ -194,9 +226,14 @@ state が無ければ `localStorage` のドラフトから復元。それも無�
 ```
 選択 → 採点（correctAnswerIndices と比較）
      → 即時に正誤・解説・choiceExplanations を表示
+       （各選択肢の本文の下に「✓ 正解」「✓ 正解（あなたの回答）」「✗ あなたの回答」を出す。色だけで正誤を示さない。右に並べると本文の幅が削られて折り返しが増えるため下に置く）
      → POST /sessions/:id/answers（非同期・待たない）
      → PUT /sessions/:id/progress でドラフト保存
 ```
+
+回答/次へボタンは画面下に固定（PCは右下、スマホは下部タブの上の帯）。どちらもオレンジの主ボタンで、
+回答できない間は灰色の塗り（半透明にしない。下の選択肢が透けて文字が重なったため）。
+スマホの帯は白背景＋上向きの影。本文の最後に固定ボタンぶんの余白を入れ、解説・コラムに重ならないようにする。
 
 ### 完了時
 
@@ -223,7 +260,7 @@ navigate('/aws/result', { state: { results, questions, score, ... } })
     ONにした瞬間だけピンクのパーティクルバースト（`ConfirmBurst` 流用）
   - **👍👎（リアクション）** — `PUT /questions/:id/reaction`。ログイン専用・1ユーザー1問1票
     （`UserQuestionStats(userId,questionId)` の単一属性上書きで構造的に保証）。
-    ONにした瞬間だけポップ演出、色は「しっかり対策」開始ボタンと同じ青緑(`#009E9E`)。
+    ONにした瞬間だけポップ演出、色は「しっかり対策」開始ボタンと同じ青緑(`--color-points`)。
     詳細は `docs/04-api.md` §4.3b、`specs/002-question-reactions/`
   - **⋮** — 「この問題を通報」（`ReportModal` → `POST /questions/:id/report`）／
     「ここまでで採点」（`setShowAbortConfirm`）のメニューを開く
@@ -276,33 +313,44 @@ navigate('/aws/result', { state: { results, questions, score, ... } })
 
 ---
 
-## 5.7 MyPage（`/aws/mypage`）— 1,544行・**ログイン必須**
+## 5.7 MyPage（`/aws/mypage`）— **ログイン必須**
+
+**自分の設定を置く画面。** 2026-10-26 にタブ（目標／苦手分析／履歴）をやめて1ページにした（specs/007）。
+苦手分析と解答履歴は記録画面（§5.8）へ移した。
 
 | セクション | データ源 |
 |---|---|
 | 目標資格・受験日・カウントダウン | `GET /users/me/preferences` |
-| 日次目標の達成率 | `GET /users/me/daily-progress` |
-| 演習量・解放状況 | `GET /users/me/question-stats` |
-| **苦手分析**（ドメイン別・直近10/20/30問） | `GET /users/me/stats` の `recentResults` |
-| 頻出ミス問題 | `GET /users/me/weak-questions?minIncorrect=2` |
-| ブックマーク一覧 | `GET /users/me/bookmarks` → 個別 `GET /questions/:id` |
-| 直近セッション | `GET /users/me/sessions?limit=200` |
+| 学習目標（1日の問題数） | `localStorage.dailyGoal_<uid>` ＋ preferences |
+| 週間達成状況（直近7日） | `GET /users/me/sessions?limit=200` を日別集計（取得失敗時は `dailyQCount_*`） |
+| 取得済資格 | preferences の `obtainedCerts` ＋ localStorage（和集合） |
 
-「しっかり対策を開始する」ボタンは `/aws/` へ `{ startFocused: true }` を渡して遷移し、Home 側で自動起動する。
+**取得済資格の六角形**（`CertHexBadge`）: 中は常に白地（`--color-bg-white`）で、取得済みはレベル色の太い縁＋レベル色のアイコン。
+未取得はグレーの輪郭（`--color-text-light` 45%）だけ。設定オーバーレイのタイルは取得済みでレベル色の枠＋淡い地（`tint(c, 8)`）＋右上に丸いチェック。
 
-`tab` の初期値は `location.state?.tab`（`'analysis' | 'history'`）で外部から指定できる。
-Home の「苦手分析」カード（デスクトップ）は `navigate('/aws/mypage', { state: { tab: 'analysis' } })` で
-このタブへ直接遷移する。
+**古いリンクの転送**: `location.state.tab` が `'analysis' | 'history'` で来たら（古い JS・古いリンク）、
+`/aws/stats` の同じタブへ `replace` で転送する。
 
 ---
 
-## 5.8 Stats（`/aws/stats`）— **ログイン必須**
+## 5.8 記録（`/aws/stats`）— **ログイン必須**
 
-- スコア推移チャート（`ScoreLineChart`）
-- 活動量チャート（`ActivityChart`）
-- ドメイン別正答率（`STATS_GOOD_RATE=70` / `STATS_FAIR_RATE=50` で色分け）
-- セッション履歴 → 展開して `GET /sessions/:id/answers` で問題別の正誤を表示
-- 履歴からその場でブックマーク操作ができる
+**過去の記録をすべて置く画面。** 旧「統計・分析」。2026-10-26 にナビ（サイドバー・下部タブ）へ出した
+（それまでは模試設定のリンク1か所からしか行けなかった）。タブは4つ。初期タブは `location.state.tab` で指定できる
+（`'analysis' | 'history' | 'trend' | 'volume'`。旧 `'performance'` は `'trend'` とみなす）。既定は苦手分析。
+
+| タブ | 中身 | データ源 |
+|---|---|---|
+| 苦手分析 | 苦手ドメイン（集計の窓: 直近10 / 20 / 30問 / 累計）・間違えやすい問題（2回以上）・問題詳細モーダル。Ctrl/Cmd+Enter でしっかり対策を開始 | `GET /users/me/stats`（`recentResults`・累計）・`/users/me/question-stats`・`/users/me/weak-questions?minIncorrect=2` |
+| 解答履歴 | セッション一覧 → 展開して `GET /sessions/:id/answers` の問題別正誤。その場でブックマーク操作 | `GET /users/me/sessions?limit=200` |
+| 正答率の推移 | セッションごとの正答率チャート（`ScoreLineChart`・70%で色分け）・模試の合否 | 同上 |
+| 演習量 | 1回以上解いた問題数／総数・日ごとの演習量（7/14/30日/全期間、`ActivityChart`） | `/users/me/question-stats`・sessions |
+
+- 苦手分析の本体は `src/components/records/WeakAnalysis.tsx`。ホームの苦手分析カードはその要約。
+- ドメイン別の正答率はこの苦手分析タブだけに置く。以前は「ノック成績」タブに累計の正答率が別にあり、
+  マイページ（直近N問）と数字が食い違っていたため、窓の「累計」に統合した。
+- 目標資格は `localStorage.targetExam_<uid>` から読み、`targetExamChanged` イベントで更新する
+  （直接 URL で開いたとき、Layout がサーバから読み込んでイベントを出す）。
 
 ---
 
@@ -313,6 +361,7 @@ Home の「苦手分析」カード（デスクトップ）は `navigate('/aws/m
 - 母数: `GET /daily-service?list=1`（`isServiceUnlockable` を満たすものだけ）
 - 解放状況: `GET /users/me/encyclopedia-unlocks`（ログイン時）/ `localStorage`（ゲスト）
 - 未解放は伏せ字表示、解放済みはアイコン・説明・豆知識・公式ドキュメントリンク
+- 「解放済み」タブが0件のときは、空白にせず「まだ解放したサービスはありません」と「一覧を見る」ボタンを出す
 - 詳細は必要時に `GET /daily-service?serviceId=` で取得
 
 **アイコン解決**は `ServiceIconImg`（`src/components/Icons.tsx`）が
@@ -364,7 +413,7 @@ DB 側は `CheatSheetDeletions` テーブルが「削除予定フラグ」のオ
   なく、文中の強調したい説明的なフレーズ（理由・条件・ポイントの部分文）が対象。
 
 **1. 行頭が `用語：説明` の形（全角コロン、括弧の外側）の場合** — `用語`部分だけが強調される:
-- **ティール（`#009E9E`）＋タップでコピー**: `用語`にASCII英字を含む（例: `SHAP値：...`）、
+- **ティール（`--color-points`）＋タップでコピー**: `用語`にASCII英字を含む（例: `SHAP値：...`）、
   または `EXTRA_COPYABLE_TERMS`（`CheatSheet.tsx` 冒頭の日本語重要語リスト）に載っている場合。
   「試験で調べたくなる・コピーしてAIに聞きたくなる語」が対象。
 - **黒太字（コピー不可）**: 上記に該当しないが「用語として綺麗な形」（30字以内・句読点や改行を含まない・
@@ -432,7 +481,10 @@ DB 側は `CheatSheetDeletions` テーブルが「削除予定フラグ」のオ
 
 - すべてのリクエストは `adminFetch` が `Authorization: Bearer <idToken>` を付ける
 - 「スキャン結果」タブ = `GET /admin/questions/flagged`（妥当性チェックの結果一覧）。
-  `filter=flagged|hidden|audit|fixed` で切り替え、修正案の apply / reject ができる
+  既定は「人の確認待ち」（`filter=review`）。AI が正解を変えようとした修正案は「適用 / 却下」、
+  AI の削除提案と抜き取り検査は「問題なし / 誤りあり」で処理する（docs/10-ops-review.md 4.1〜4.3）。
+  ほかに `filter=hidden|audit|fixed` で切り替える
+- 「管理者設定」タブの先頭で、自分のアカウントの2段階認証（TOTP）を設定できる（`MfaSetupCard`）
 - 「データ削除」タブ = `POST /admin/direct-delete`（メールアドレス指定）
 
 ---
@@ -476,3 +528,18 @@ adsbygoogle.js）と `src/components/ui/AdPlaceholder.tsx`（未使用）も削�
 - 余白・フォントサイズ・影・角丸は `src/index.css` のトークン（`--spacing-*` / `--font-size-*` /
   `--box-shadow-*` / `--border-radius-*`）を使う。**スケール外の生px値は禁止**
 - 画面種別の指示（「Web版」「スマホ版」）は該当ブランチにのみ適用する
+- 色はトークンを使う。文字色は背景に対して WCAG 2.2 AA（4.5:1）を満たす値にしてある
+  - オレンジの主ボタンの文字は濃色（`--color-btn-primary-text: #16191f`）。白は 2.1:1 で読めない
+  - 補足文の薄いグレーは `--color-text-light: #656871`（白地 5.6:1）
+  - 資格レベル色は3系統（ライト/ダーク別値）。`--level-*` は塗り・線・アイコン用の明るい色で、`constants.ts` の
+    `EXAM_LEVEL_COLORS` はこれを参照する。文字は `levelText()` → `--level-*-text`（白地で 4.5:1 以上）、
+    塗りに載せる文字は `levelOn()` → `--level-*-on`（ライトは白で統一、ダークは濃色）。半透明は hex にアルファを足さず `tint(color, pct)` を使う
+  - ポイント・しっかり対策のティールは `--color-points`（#009E9E）、その塗りに載せる文字は `--color-on-points`（白）。
+    小さい文字では 3.3:1 で AA 未満だが、明るさを優先する本人判断（一度 #007a7a に暗くして戻した）
+- 動き: 常時ループする演出は1画面に1つまで（ホームの日めくりカードの光のみ）。ランディングの開始ボタンの脈動は廃止。
+  OS の「視差効果を減らす」設定では `index.css` の全体ルールで止める。`button, a` の transition は色と影だけ
+- キーボードフォーカスは `:focus-visible` で常に見せる（インラインの `outline: 'none'` より優先）
+- トークン違反は `npm run lint:tokens` で検査（増えたら失敗。CLAUDE.md 参照）
+- Web フォントは読み込まない。`body` の `font-family` で欧文は OS の UI フォント、和文は
+  ヒラギノ / Noto Sans JP / Yu Gothic UI / メイリオを指定する（`next/font` は Google Fonts 取得失敗で
+  Cloudflare のビルドを落としたことがあり、しかも `body` 指定に上書きされて使われていなかったため廃止）

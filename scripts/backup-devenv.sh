@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 開発環境のバックアップスクリプト
-# gitignore対象のスクリプト群・systemd設定・ctフック等をS3に日次保存する
+# gitignore対象のスクリプト群・systemd設定・ctフック・共通タイマー claude-timer をS3に日次保存する
 #
 # 使い方:
 #   ./scripts/backup-devenv.sh          # 通常バックアップ
@@ -41,6 +41,15 @@ if [[ "${1:-}" == "--restore" ]]; then
     systemctl --user daemon-reload
     echo "  ✓ systemd 復元完了"
   fi
+  # 共通タイマー claude-timer（本体=独立git / 設定・時計・フック・使用量ログ）を復元し、タイマーを仕込み直す
+  if [ -d "${RESTORE_TMP}/claude-timer/share" ]; then
+    mkdir -p "${HOME}/.local/share/claude-timer" "${HOME}/.config/claude-timer"
+    rsync -a --ignore-existing "${RESTORE_TMP}/claude-timer/share/" "${HOME}/.local/share/claude-timer/"
+    rsync -a --ignore-existing "${RESTORE_TMP}/claude-timer/config/" "${HOME}/.config/claude-timer/"
+    [ -e "${HOME}/.config/claude-timer/mail.conf" ] || ln -s "${HOME}/.mugenknock_mail.conf" "${HOME}/.config/claude-timer/mail.conf"
+    bash "${HOME}/.local/share/claude-timer/install.sh"
+    echo "  ✓ claude-timer 復元完了"
+  fi
   # 実行権限を再付与
   find "${REPO_DIR}/prompts" -name "*.sh" -exec chmod +x {} \;
 
@@ -76,7 +85,17 @@ cp ~/.config/systemd/user/claude-cycle*.service \
    "${STAGING}/systemd/" 2>/dev/null || true
 echo "  ✓ systemd ($(ls ${STAGING}/systemd | wc -l)ファイル)"
 
-# ── 3. バックアップメタ情報
+# ── 3. 共通タイマー claude-timer（プロジェクト外。本体は独立git・リモートなしなのでここで保全する）
+#    mail.conf は SMTP 認証情報(~/.mugenknock_mail.conf)へのリンクなので含めない。
+#    systemd ユニットは install.sh / claude-timer sync が作り直すので含めない。
+if [ -d "${HOME}/.local/share/claude-timer" ]; then
+  mkdir -p "${STAGING}/claude-timer/share" "${STAGING}/claude-timer/config"
+  rsync -a "${HOME}/.local/share/claude-timer/" "${STAGING}/claude-timer/share/"
+  rsync -a --exclude='mail.conf' "${HOME}/.config/claude-timer/" "${STAGING}/claude-timer/config/"
+  echo "  ✓ claude-timer ($(find ${STAGING}/claude-timer -type f | wc -l)ファイル)"
+fi
+
+# ── 4. バックアップメタ情報
 cat > "${STAGING}/backup-info.txt" << INFO_EOF
 date: ${TODAY}
 hostname: $(hostname)
@@ -88,7 +107,7 @@ created_at: $(date -Iseconds)
 bash ${REPO_DIR}/scripts/backup-devenv.sh --restore ${TODAY}
 INFO_EOF
 
-# ── 4. tar.gz 作成 & S3 アップロード
+# ── 5. tar.gz 作成 & S3 アップロード
 tar czf "$ARCHIVE" -C "$STAGING" .
 SIZE=$(du -sh "$ARCHIVE" | cut -f1)
 
@@ -98,7 +117,7 @@ S3_KEY="backups/${TODAY}/devenv_backup_${TODAY}.tar.gz"
 
 echo "[backup] 完了: s3://${BUCKET}/${S3_KEY} (${SIZE})"
 
-# ── 5. 直近のバックアップ一覧を表示
+# ── 6. 直近のバックアップ一覧を表示
 echo ""
 echo "[backup] 保存済みバックアップ一覧:"
 "$AWS" s3 ls "s3://${BUCKET}/backups/" | awk '{print "  " $0}'

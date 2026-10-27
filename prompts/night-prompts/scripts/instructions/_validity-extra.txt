@@ -42,6 +42,7 @@
 - {AIF,AIP,MLA} [fix] Bedrock Model Evaluationのヒューマン評価ワークフォースはCognito/SageMaker Ground Truthのプライベートワークフォースで管理。「IAM Identity Centerでレビュアー割当」は誤り。
 - {AWS} [fix] X-Rayのサンプリング決定はリクエスト受信時に確定。レスポンスコード(5xx等)による事後の上書き・強制トレースは不可。
 - {AIF,AIP,MLA} [fix] 「Bedrock Model Cards」は名称誤り。モデルカードはSageMaker Model Cardsが正式（Bedrock側はモデル評価成果物）。
+- {AWS} [fix] 正解や問題の前提が、特定の AI モデル・サービスの版の機能対応（プロビジョンドスループット・バッチ推論・リージョン・モダリティ等）に依存している場合、その対応を公式ドキュメントで確認する（WebFetch/MCP の回数枠を優先して使ってよい）。確認できなければ、特定の版に依存しない言い方（「上位の大型モデル」「より低コストの小型モデル」等）に直す。前提ごと崩れるなら delete。旧モデル名を最新版の名前に置き換える fix も同じ条件でのみ行う（実例: Claude 3 Opus/Sonnet を Opus 5.5/Sonnet 5.5 に機械的に置換し、PT・バッチ対応が未確認のまま正解の前提を崩した）。
 
 ## 資格別・概念の正確性（AIF/AIP/MLA）
 - {AIF,ML} [warn] AIF評価指標: BLEU=機械翻訳・ROUGE=要約・BERTScore=意味的類似度、の用途取り違え（「翻訳にROUGE」等）は誤り。

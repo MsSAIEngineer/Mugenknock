@@ -37,7 +37,7 @@ if not data.get('success'):
     print('❌ APIエラー:', data.get('errors'))
     sys.exit(1)
 
-STATUS_ICON = {'success':'✅','failure':'❌','canceled':'⚠️','active':'🔄','idle':'💤','queued':'⏳'}
+STATUS_ICON = {'skipped':'⏭ ','success':'✅','failure':'❌','canceled':'⚠️','active':'🔄','idle':'💤','queued':'⏳'}
 
 print('📋 Cloudflare Pages — $PROJECT デプロイ状況')
 print('=' * 60)
@@ -53,7 +53,7 @@ for d in data.get('result', []):
     if filter_env == 'wait':
         pass  # wait モードでは全件確認
 
-    status = d.get('latest_stage', {}).get('status', '')
+    status = 'skipped' if d.get('is_skipped') else d.get('latest_stage', {}).get('status', '')
     icon   = STATUS_ICON.get(status, '❓')
     env_label = '本番' if env == 'production' else '検証'
 
@@ -112,7 +112,8 @@ for d in data.get('result', []):
     # 片方が短縮SHAでも一致させる（APIはフルSHA・引数は7桁のことが多い）
     n = min(len(ch), len(sha))
     if n >= 7 and ch[:n] == sha[:n]:
-        print(d.get('latest_stage', {}).get('status', '') or 'unknown')
+        # Build watch paths（docs や運用スクリプトだけの変更）で飛ばされたコミットは is_skipped が立つ
+        print('skipped' if d.get('is_skipped') else (d.get('latest_stage', {}).get('status', '') or 'unknown'))
         break
 else:
     print('notfound')
@@ -148,6 +149,11 @@ if [ "$FILTER" = "wait" ]; then
           echo "❌ ビルド失敗（#${TARGET_SHA} status: $STATUS）"
           exit 1
         fi
+        ;;
+      skipped)
+        echo ""
+        echo "⏭  ビルド対象外（#${TARGET_SHA}）: Build watch paths で除外したファイルだけの変更なので、Cloudflare はビルドしない"
+        exit 0
         ;;
       notfound)
         # push 直後はまだ Cloudflare 側に登録されていない。登録を待つ。

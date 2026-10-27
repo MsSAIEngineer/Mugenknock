@@ -4,7 +4,7 @@ const { DynamoDBDocumentClient, ScanCommand, GetCommand, QueryCommand, PutComman
 const { CognitoIdentityProviderClient, ListUsersCommand } = require('@aws-sdk/client-cognito-identity-provider');
 const { v4: uuidv4 } = require('uuid');
 const { CognitoJwtVerifier } = require('aws-jwt-verify');
-const { ADMIN_EMAIL, EXAM_DOMAINS } = require('./constants');
+const { ADMIN_EMAIL, EXAM_DOMAINS, COGNITO_CLIENT_IDS } = require('./constants');
 const Stripe = require('stripe');
 const { DEFAULT_DAILY_LIMIT, jstDateKey, countTtlSeconds, isCountedSession, computeLimits } = require('./entitlements');
 const ohineri = require('./ohineri');
@@ -289,7 +289,8 @@ app.use((req, res, next) => {
 const jwtVerifier = CognitoJwtVerifier.create({
   userPoolId: 'ap-northeast-1_KIOFciGhQ',
   tokenUse: 'id',
-  clientId: '16jjrj5m28o6s2k84og8kh2vh3',
+  // Web アプリ（人）と夜間バッチ専用（USER_PASSWORD_AUTH はこちらだけで有効）の2つ。docs/10-ops-review.md 4.9
+  clientId: COGNITO_CLIENT_IDS,
 });
 
 async function getAdminEmails() {
@@ -997,6 +998,9 @@ app.get('/admin/questions/flagged', async (req, res) => {
     } else if (filter === 'hidden') {
       conds.push('isHidden = :hidden');
       values[':hidden'] = true;
+    } else if (filter === 'review') {
+      // 人の確認待ち: AI が正解を変えようとした修正案・AI の削除提案・抜き取り検査（docs/10-ops-review.md 4.1〜4.3）
+      conds.push('attribute_exists(humanReviewRequestedAt)');
     } else if (filter === 'audit') {
       // 監査で「易しすぎ・体裁・模試不適」等を指摘されたが、事実誤りが無いため
       // 自動修正されなかった問題。02 も fix-ng も解消できないので人の判断が要る。
@@ -1010,8 +1014,10 @@ app.get('/admin/questions/flagged', async (req, res) => {
     }
     scanParams.FilterExpression = conds.join(' AND ');
     if (Object.keys(values).length) scanParams.ExpressionAttributeValues = values;
-    scanParams.ProjectionExpression = 'questionId, examType, questionText, #dom, validityCheckedAt, formatCheckedAt, validityEditLog, isHidden, validityRating, validityNote, fixProposalJson, auditNote, auditFlaggedAt';
+    scanParams.ProjectionExpression = 'questionId, examType, questionText, #dom, validityCheckedAt, formatCheckedAt, validityEditLog, isHidden, validityRating, validityNote, fixProposalJson, auditNote, auditFlaggedAt, reviewReason, humanReviewRequestedAt';
     scanParams.ExpressionAttributeNames = { '#dom': 'domain' };
+    // 人の確認待ちは、その場で正誤を判断できるよう本文一式も返す（件数が少ないので 6MB 上限にはかからない）
+    if (filter === 'review') scanParams.ProjectionExpression += ', choices, correctAnswers, explanation, choiceExplanations';
 
     // フィルタ済みアイテム取得 + 全件数を examType-index Query で並行取得
     const EXAM_TYPE_LIST = Object.keys(EXAM_DOMAINS);
@@ -1044,9 +1050,17 @@ app.get('/admin/questions/flagged', async (req, res) => {
       })).length;
     }
 
-    // 監査指摘は「いつ指摘されたか」で並べる方が使いやすい
+    const reviewCount = filter === 'review' ? matched.length : (await scanAll(docClient, {
+      TableName: 'Questions',
+      FilterExpression: 'attribute_exists(humanReviewRequestedAt)',
+      ProjectionExpression: 'questionId',
+    })).length;
+
+    // 監査指摘は「いつ指摘されたか」、確認待ちは「いつ回ってきたか」で並べる方が使いやすい
     const ts = q => (filter === 'audit'
       ? (q.auditFlaggedAt ? new Date(q.auditFlaggedAt).getTime() : 0)
+      : filter === 'review'
+      ? (q.humanReviewRequestedAt ? new Date(q.humanReviewRequestedAt).getTime() : 0)
       : (q.validityCheckedAt ? new Date(q.validityCheckedAt).getTime() : 0));
     scoped.sort((a, b) => (sort === 'date_asc' ? ts(a) - ts(b) : ts(b) - ts(a)));
 
@@ -1058,6 +1072,7 @@ app.get('/admin/questions/flagged', async (req, res) => {
       checkedCount: matched.length,
       fixedCount,
       auditCount,
+      reviewCount,
       totalCount,
       offset,
       hasMore: offset + items.length < scoped.length,
@@ -1093,11 +1108,27 @@ app.post('/admin/questions/:id/apply-fix', async (req, res) => {
       vals[':ci'] = newIndices;
     }
     if (fix.explanation)   { sets.push('explanation = :ex');     vals[':ex'] = fix.explanation; }
+    if (Array.isArray(fix.choiceExplanations)) {
+      const n = (fix.choices || q.choices || []).length;
+      if (fix.choiceExplanations.length === n) { sets.push('choiceExplanations = :ce'); vals[':ce'] = fix.choiceExplanations; }
+    }
+    const now = new Date().toISOString();
+    sets.push('updatedAt = :u'); vals[':u'] = now;
+    let remove = ' REMOVE fixProposalJson';
+    if (fix.choices || fix.correctAnswers) remove += ', globalAttempts, globalCorrect';
+    // 人の確認待ち（AI が正解を変えようとした修正案）なら、確認の結果を残して表示に戻す
+    if (q.humanReviewRequestedAt) {
+      sets.push('isHidden = :f', 'humanReviewedAt = :u', 'humanReviewResult = :r', 'validityEditLog = :log');
+      vals[':f'] = false; vals[':r'] = 'fix-applied';
+      vals[':log'] = JSON.stringify({ action: 'fixed', checkedAt: now, reason: `人が修正案を承認: ${q.validityNote || ''}`, changes: Object.fromEntries(
+        ['questionText', 'choices', 'correctAnswers', 'explanation'].filter(k => fix[k]).map(k => [k, { before: q[k], after: fix[k] }])) });
+      remove += ', humanReviewRequestedAt, reviewReason';
+    }
 
     await docClient.send(new UpdateCommand({
       TableName: 'Questions',
       Key: { questionId: req.params.id },
-      UpdateExpression: 'SET ' + sets.join(', ') + ' REMOVE fixProposalJson',
+      UpdateExpression: 'SET ' + sets.join(', ') + remove,
       ExpressionAttributeValues: vals,
     }));
     res.json({ success: true });
@@ -1111,10 +1142,42 @@ app.post('/admin/questions/:id/apply-fix', async (req, res) => {
 app.post('/admin/questions/:id/reject-fix', async (req, res) => {
   try {
     const docClient = getClient();
+    const result = await docClient.send(new GetCommand({ TableName: 'Questions', Key: { questionId: req.params.id } }));
+    const q = result.Item;
+    if (!q) return res.status(404).json({ error: 'Not found' });
+    // 人の確認待ちの修正案を却下したら、元の内容のまま表示に戻す
+    const update = q.humanReviewRequestedAt
+      ? { UpdateExpression: 'SET isHidden = :f, humanReviewedAt = :u, humanReviewResult = :r REMOVE fixProposalJson, humanReviewRequestedAt, reviewReason',
+          ExpressionAttributeValues: { ':f': false, ':u': new Date().toISOString(), ':r': 'fix-rejected' } }
+      : { UpdateExpression: 'REMOVE fixProposalJson' };
+    await docClient.send(new UpdateCommand({ TableName: 'Questions', Key: { questionId: req.params.id }, ...update }));
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 人の確認（抜き取り検査・AI の削除提案）の結果を記録する。docs/10-ops-review.md 4.1〜4.3
+//   result=ok: 問題なし → 表示に戻す（AI の削除提案を退けたときも同じ）
+//   result=ng: 誤りあり → 非表示のまま残す（直すか消すかは編集・削除ボタンで）
+app.post('/admin/questions/:id/human-review', async (req, res) => {
+  try {
+    const { result, note } = req.body || {};
+    if (!['ok', 'ng'].includes(result)) return res.status(400).json({ error: 'result must be ok or ng' });
+    const docClient = getClient();
+    const got = await docClient.send(new GetCommand({ TableName: 'Questions', Key: { questionId: req.params.id } }));
+    const q = got.Item;
+    if (!q) return res.status(404).json({ error: 'Not found' });
+    if (!q.humanReviewRequestedAt) return res.status(409).json({ error: 'Not in review queue' });
     await docClient.send(new UpdateCommand({
       TableName: 'Questions',
       Key: { questionId: req.params.id },
-      UpdateExpression: 'REMOVE fixProposalJson',
+      UpdateExpression: 'SET humanReviewedAt = :u, humanReviewResult = :r, humanReviewReason = :rr, humanReviewNote = :n, isHidden = :h REMOVE humanReviewRequestedAt, reviewReason',
+      ExpressionAttributeValues: {
+        ':u': new Date().toISOString(), ':r': result, ':rr': q.reviewReason || 'sample',
+        ':n': String(note || '').slice(0, 1000), ':h': result === 'ng',
+      },
     }));
     res.json({ success: true });
   } catch (err) {
@@ -1699,6 +1762,8 @@ app.get('/users/me/sessions', async (req, res) => {
 // ドメイン別正答率）が常に0問表示になっていた。
 // 集計元を「未回答フィルタと同じ UserQuestionStats」に揃えることで、既習数と未演習数が
 // 構造的に整合する（別ソースを持たせると再びズレるため、ここでの導出を正とする）。
+// 苦手分析の「直近30問」まで使うので、ドメインごとに30件返す（PUT /domain-results の保持数と同じ）
+const RECENT_RESULTS_LIMIT = 30;
 app.get('/users/me/stats', async (req, res) => {
   try {
     const docClient = getClient();
@@ -1717,12 +1782,19 @@ app.get('/users/me/stats', async (req, res) => {
     let stats = statsResult.Items || [];
 
     if (examType) {
-      const [qStatsResult, questions] = await Promise.all([
-        docClient.send(new QueryCommand({
+      // 単発 Query は1MBで打ち切られるので全ページたどる。
+      const [qStatsItems, answerItems, questions] = await Promise.all([
+        queryAll(docClient, {
           TableName: T('UserQuestionStats'),
           KeyConditionExpression: 'userId = :uid',
           ExpressionAttributeValues: { ':uid': userId },
-        })),
+        }),
+        queryAll(docClient, {
+          TableName: T('UserAnswers'),
+          KeyConditionExpression: 'userId = :uid',
+          ExpressionAttributeValues: { ':uid': userId },
+          ProjectionExpression: 'questionId, isCorrect, answeredAt',
+        }),
         getAllQuestionsForExam(docClient, examType),
       ]);
       // 出題プールと同じ条件で絞る（/questions と揃えないと既習数が未演習数と合わない）
@@ -1732,7 +1804,7 @@ app.get('/users/me/stats', async (req, res) => {
           .map(q => [q.questionId, qDomainIndex(q.examType, q.domain)])
       );
       const agg = new Map(); // domain index → { correctCount, incorrectCount, answeredCount }
-      for (const s of qStatsResult.Items || []) {
+      for (const s of qStatsItems) {
         const d = domainOf.get(s.questionId);
         if (d === undefined || d < 0) continue;
         const a = agg.get(d) || { correctCount: 0, incorrectCount: 0, answeredCount: 0 };
@@ -1743,10 +1815,34 @@ app.get('/users/me/stats', async (req, res) => {
       }
       // 正準 tagId (`${examType}_${idx}`) の行へマージ。該当行が無いドメインは新規に組み立てる
       // （UserTagStats に行が無くても成績を0問と誤表示させないため）。
+      // 直近の正誤（recentResults）も1問ごとの回答ログ UserAnswers から作る。
+      // 以前はセッション完了・中断時にクライアントが送る PUT /domain-results だけで溜めていたため、
+      // 破棄・上書き・アプリ終了・送信失敗のセッションが抜け、再開後の完了で二重にも入り、
+      // 累計（UserQuestionStats）と食い違っていた。出どころを回答ログに一本化する。
+      const recentByDomain = new Map(); // domain index → boolean[]（古い順・末尾 RECENT_RESULTS_LIMIT 件）
+      answerItems
+        .filter(a => domainOf.has(a.questionId) && domainOf.get(a.questionId) >= 0)
+        .sort((a, b) => (a.answeredAt || '').localeCompare(b.answeredAt || ''))
+        .forEach(a => {
+          const d = domainOf.get(a.questionId);
+          if (!recentByDomain.has(d)) recentByDomain.set(d, []);
+          recentByDomain.get(d).push(!!a.isCorrect);
+        });
       const byTagId = new Map(stats.map(s => [s.tagId, s]));
       for (const [d, a] of agg) {
         const tagId = `${examType}_${d}`;
         byTagId.set(tagId, { ...(byTagId.get(tagId) || { userId, tagId }), ...a });
+      }
+      // この試験の全ドメインで recentResults を回答ログ由来に置き換える（ログに無いドメインは空）
+      for (const [tagId, row] of byTagId) {
+        if (!tagId.startsWith(`${examType}_`)) continue;
+        const d = Number(tagId.slice(examType.length + 1));
+        if (!Number.isInteger(d)) continue;
+        byTagId.set(tagId, { ...row, recentResults: (recentByDomain.get(d) || []).slice(-RECENT_RESULTS_LIMIT) });
+      }
+      for (const [d, r] of recentByDomain) {
+        const tagId = `${examType}_${d}`;
+        if (!byTagId.has(tagId)) byTagId.set(tagId, { userId, tagId, recentResults: r.slice(-RECENT_RESULTS_LIMIT) });
       }
       stats = [...byTagId.values()];
     }

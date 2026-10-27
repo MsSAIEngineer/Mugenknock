@@ -126,7 +126,7 @@ export default function DailyServiceRevealModal({
 
       {/* ── close backdrop ── */}
       <div
-        data-kbscope="1"
+        data-kbscope="1" role="dialog" aria-modal="true"
         onClick={phase === 'waiting' ? handleTap : phase === 'revealed' ? onClose : undefined}
         style={{
           position: 'fixed', inset: 0, zIndex: 9990,

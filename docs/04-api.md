@@ -9,7 +9,7 @@
 
 | 接頭辞 | ミドルウェア | 挙動 |
 |---|---|---|
-| `/admin/*` | `requireAdmin` | Cognito idToken を検証し、email が `ADMIN_EMAIL` または `AppSettings.admins` に含まれること。失敗は 401/403 |
+| `/admin/*` | `requireAdmin` | Cognito idToken を検証し、email が `ADMIN_EMAIL` または `AppSettings.admins` に含まれること。失敗は 401/403。受け付けるアプリクライアントは `COGNITO_CLIENT_IDS`（Web と夜間バッチ専用） |
 | `/users/me/*` | `requireUser` | idToken を検証し、**`req.query.userId` / `req.body.userId` をトークンの `sub` で強制上書き**（IDOR 防止） |
 | それ以外 | なし | `userId` はクライアントの申告をそのまま信用する |
 
@@ -252,6 +252,12 @@ questionId も母集団に合流してから絞る（`GET /questions?includeComp
 > `UserTagStats` には累計カウンタが書き込まれたことがない。集計元を `UserQuestionStats` に
 > 統一することで既習数と未演習数が構造的に整合する。
 
+`examType` 指定時は `recentResults` も、`UserAnswers`（1問ごとの回答ログ）を回答日時順に並べた
+ドメイン別の末尾30件で**置き換える**（出題プールと同じ条件で絞る）。
+`UserTagStats` に溜めた `recentResults` は、セッション完了・中断時にしか送られず、破棄・上書き・
+送信失敗の分が抜け、再開後の完了で二重にも入って累計とずれていたため（2026-10-27）。
+ホーム・記録の苦手分析は必ず `examType` を付けて呼ぶ。
+
 ### `PUT /users/me/domain-results`
 
 ```jsonc
@@ -259,6 +265,8 @@ questionId も母集団に合流してから絞る（`GET /questions?includeComp
 ```
 サーバ側で既存 `recentResults` に**マージして末尾30件**に切る。
 デルタ送信なので、ローカルが空でもサーバの蓄積は壊れない。
+※ 画面は `GET /users/me/stats?examType=` が回答ログから作る `recentResults` を使うため、
+ここで溜めた値は `examType` なしで呼んだときにしか返らない（現在は使っていない）。
 
 ---
 
@@ -364,9 +372,10 @@ questionId も母集団に合流してから絞る（`GET /questions?includeComp
 | PUT | `/admin/questions/:id` | 更新。正解・選択肢が変わると `globalAttempts`/`globalCorrect` を REMOVE |
 | DELETE | `/admin/questions/:id` | 削除（`QuestionTagRelations` も掃除） |
 | GET | `/admin/questions/summary` | 資格別・ドメイン別件数、検証済み数、演習回数。`?sinceDate=` で増分も |
-| GET | `/admin/questions/flagged` | 妥当性タブ。`filter=flagged\|hidden\|audit\|fixed`、limit/offset ページング |
-| POST | `/admin/questions/:id/apply-fix` | `fixProposalJson` を適用し REMOVE |
-| POST | `/admin/questions/:id/reject-fix` | `fixProposalJson` を REMOVE |
+| GET | `/admin/questions/flagged` | 妥当性タブ。`filter=review\|flagged\|hidden\|audit\|fixed`、limit/offset ページング。`review`（人の確認待ち）だけ本文一式（選択肢・正解・解説）も返す。件数バッジ `reviewCount` |
+| POST | `/admin/questions/:id/apply-fix` | `fixProposalJson` を適用し REMOVE（`choiceExplanations` も）。確認待ちだった問題は表示に戻し、`humanReviewResult=fix-applied` と `validityEditLog` を残す |
+| POST | `/admin/questions/:id/reject-fix` | `fixProposalJson` を REMOVE。確認待ちだった問題は元のまま表示に戻す（`fix-rejected`） |
+| POST | `/admin/questions/:id/human-review` | 人の確認の結果 `{result: 'ok'\|'ng', note}`。ok=表示に戻す / ng=非表示のまま。確認待ちでなければ 409 |
 | PUT | `/admin/questions/:id/visibility` | `{ isHidden }` |
 | PUT | `/admin/questions/:id/scheduled-deletion` | `{ reason, date }` で予約、省略で解除 |
 

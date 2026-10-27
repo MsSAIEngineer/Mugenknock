@@ -42,6 +42,9 @@ export default function About() {
 
   return (
     <PageLayout>
+      <h1 style={{ margin: '0 0 var(--spacing-md)', fontSize: 'var(--font-size-h2)', fontWeight: 700, color: 'var(--color-text-main)' }}>
+        {ja ? 'このサイトについて' : 'About'}
+      </h1>
       {/* タブ */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 'var(--spacing-xl)', flexWrap: 'wrap' }}>
         {SECTIONS.map(s => (
@@ -52,7 +55,7 @@ export default function About() {
               padding: '6px 18px', borderRadius: 'var(--border-radius-md)', border: 'none', cursor: 'pointer',
               fontSize: 'var(--font-size-sm)', fontWeight: 600,
               background: section === s.key ? 'var(--color-primary)' : 'var(--color-bg-main)',
-              color: section === s.key ? '#fff' : 'var(--color-text-sub)',
+              color: section === s.key ? 'var(--color-on-primary)' : 'var(--color-text-sub)',
               transition: 'background 0.15s',
             }}
           >
@@ -75,9 +78,9 @@ export default function About() {
 
 function H3({ children }: { children: React.ReactNode }) {
   return (
-    <h3 style={{ fontSize: 'var(--font-size-h3)', fontWeight: 700, color: 'var(--color-text-main)', margin: '2em 0 0.5em' }}>
+    <h2 style={{ fontSize: 'var(--font-size-h3)', fontWeight: 700, color: 'var(--color-text-main)', margin: '2em 0 0.5em' }}>
       {children}
-    </h3>
+    </h2>
   );
 }
 function P({ children }: { children: React.ReactNode }) {

@@ -1,7 +1,7 @@
 #!/bin/bash
 # ローカル夜間バッチ実行(systemd timerから呼ばれる)
 # Fargateはピンのみ。夜間バッチ本体(生成/検証/監査/レポート/日めくり)はローカルで実行する。
-# 資格情報・状態はS3を単一の正として pull→実行→push で同期する。
+# 状態・生成指示は手元（git）が唯一の正。S3 にはログと実行メタだけを写す（2026-10-27〜。以前は Fargate と共有するため S3 と双方向同期していた）。
 set -uo pipefail
 export TZ=Asia/Tokyo
 export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/local/bin:$PATH"
@@ -14,14 +14,9 @@ SC="$REPO/prompts/night-prompts/scripts"
 
 log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
 
-mkdir -p ~/.claude "$SC/state" "$SC/instructions" "$SC/logs" "$REPO/prompts/logs"
+mkdir -p "$SC/state" "$SC/instructions" "$SC/logs" "$REPO/prompts/logs"
 
-# ── pull: 資格情報・状態をS3から ──
-# creds はスマート同期（expiresAtが新しい方を残す＝フレッシュなローカルを古いS3で潰さない）
-log "S3から資格情報・状態を取得..."
-AWS="$AWS" bash "$REPO/scripts/pull-claude-creds.sh" "$S3" || true
-"$AWS" s3 sync "s3://$S3/state/"        "$SC/state/"        --quiet 2>/dev/null || true
-"$AWS" s3 sync "s3://$S3/instructions/" "$SC/instructions/" --quiet 2>/dev/null || true
+# ── pull: 実行メタをS3から ──
 for f in .last_run .claude_history .night_history; do
   "$AWS" s3 cp "s3://$S3/meta/$f" "$REPO/prompts/$f" --quiet 2>/dev/null || true
 done
@@ -40,14 +35,11 @@ FARGATE_MODE=1 SKIP_PING=1 FORCE_NIGHT=1 bash prompts/run-prompts.sh --run
 EC=$?
 log "夜間バッチ完了 (exit $EC)"
 
-# ── push: 更新後の資格情報・状態をS3へ ──
-[ -f ~/.claude/.credentials.json ] && "$AWS" s3 cp ~/.claude/.credentials.json "s3://$S3/claude-auth/.credentials.json" --quiet 2>/dev/null || true
-[ -f ~/.claude.json ] && "$AWS" s3 cp ~/.claude.json "s3://$S3/claude-auth/.claude.json" --quiet 2>/dev/null || true
-"$AWS" s3 sync "$SC/state/"        "s3://$S3/state/"        --quiet 2>/dev/null || true
-"$AWS" s3 sync "$SC/instructions/" "s3://$S3/instructions/" --quiet 2>/dev/null || true
+# ── push: ログ・実行メタをS3へ ──
 "$AWS" s3 sync "$SC/logs/"         "s3://$S3/night-logs/"   --quiet 2>/dev/null || true
 "$AWS" s3 sync "$REPO/prompts/logs/" "s3://$S3/run-logs/"   --quiet 2>/dev/null || true
 for f in .last_run .last_run_date .claude_history .night_history; do
   [ -f "$REPO/prompts/$f" ] && "$AWS" s3 cp "$REPO/prompts/$f" "s3://$S3/meta/$f" --quiet 2>/dev/null || true
 done
+bash "$REPO/scripts/commit-night-assets.sh" || true
 exit $EC

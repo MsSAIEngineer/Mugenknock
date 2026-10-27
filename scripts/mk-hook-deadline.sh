@@ -8,10 +8,11 @@
 # 戻り値: 0=実行してよい / 1=ピン直前または超過のためスキップすべき
 #
 # 以前は各フックが「自分はピンの30分前（15分前）に発動する」と仮定して締切を固定値で計算していた。
-# hooks.conf で発動時刻を変えても締切が追従しないので、ピン時刻の唯一の正（next_ping）から求める。
+# hooks.d/mugenknock.conf で発動時刻を変えても締切が追従しないので、ピン時刻の唯一の正
+# （共通タイマー claude-timer の next_ping。フックには CLAUDE_TIMER_NEXT_PING_FILE で渡される）から求める。
 # next_ping が読めないときだけ、フォールバック（発動からの先行分）で代用する。
 HOOK_MARGIN_MIN="${HOOK_MARGIN_MIN:-3}"
-HOOK_NEXT_PING_FILE="${HOOK_NEXT_PING_FILE:-$HOME/.config/mugenknock/next_ping}"
+HOOK_NEXT_PING_FILE="${HOOK_NEXT_PING_FILE:-${CLAUDE_TIMER_NEXT_PING_FILE:-$HOME/.config/claude-timer/next_ping}}"
 
 hook_deadline() {
   local fallback_lead="$1" out

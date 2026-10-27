@@ -350,10 +350,10 @@ export default function ExamSetup() {
               {lang === 'ja' ? '前回の模試成績' : 'Last Exam Result'}
             </span>
             <button
-              onClick={() => navigate('/aws/stats')}
+              onClick={() => navigate('/aws/stats', { state: { tab: 'trend' } })}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--font-size-sm)', color: 'var(--color-primary)', padding: 0, fontWeight: 600 }}
             >
-              {lang === 'ja' ? 'ノック成績 →' : 'Performance →'}
+              {lang === 'ja' ? '正答率の推移 →' : 'Accuracy →'}
             </button>
           </div>
           {sessionsLoading ? (

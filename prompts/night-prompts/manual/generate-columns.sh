@@ -66,12 +66,7 @@ log "=== コラム生成 (gcs) $(date '+%Y-%m-%d %H:%M:%S') / stage=$API_STAGE /
 
 # ── Cognito 認証 ──
 log "--- Cognito 認証中 ---"
-ADMIN_PASSWORD=$($AWS_CLI ssm get-parameter --name "/quiz-app/admin-password" --with-decryption --query 'Parameter.Value' --output text 2>/dev/null)
-ID_TOKEN=$($AWS_CLI cognito-idp initiate-auth \
-  --auth-flow USER_PASSWORD_AUTH \
-  --auth-parameters USERNAME=yuzuki2002110@gmail.com,PASSWORD="$ADMIN_PASSWORD" \
-  --client-id 16jjrj5m28o6s2k84og8kh2vh3 \
-  --query 'AuthenticationResult.IdToken' --output text 2>/dev/null)
+ID_TOKEN=$(AWS="$AWS_CLI" bash /home/yuzuki/aws-quiz-app/scripts/batch-id-token.sh)
 if [ -z "$ID_TOKEN" ] || [ "$ID_TOKEN" = "None" ]; then
   log "❌ Cognito 認証失敗"; exit 1
 fi

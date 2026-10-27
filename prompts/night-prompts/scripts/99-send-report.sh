@@ -336,6 +336,66 @@ fi
 rm -f "$SVC_ITEMS"
 fi
 
+# ── 1.5 サイト静的コンテンツの現行性（10-check-site-content.sh の最新レポート）──
+# 問題データ以外（サービス図鑑・チートシート）の陳腐化。月1実行なので、
+# 直近30日以内のレポートがあればその要点を載せる。
+SITE_CONTENT_SUMMARY=$(NL="$LOG_DIR" python3 << 'PYEOF'
+import os, glob, re, datetime
+
+md = sorted(glob.glob(os.path.join(os.environ['NL'], 'site-content_*.md')))
+if not md:
+    print('未実施（月1実行）'); raise SystemExit
+
+latest = md[-1]
+m = re.search(r'site-content_(\d{8})_', os.path.basename(latest))
+if m:
+    d = datetime.datetime.strptime(m.group(1), '%Y%m%d').date()
+    age = (datetime.date.today() - d).days
+    if age > 45:
+        print(f'前回実行から{age}日（月1想定を超過。実行されているか要確認）'); raise SystemExit
+    stamp = f'{d:%Y-%m-%d}（{age}日前）'
+else:
+    stamp = '日付不明'
+
+txt = open(latest).read()
+out = [f'最終チェック: {stamp}']
+
+# A. 図鑑: 見出しの件数と、現行でないサービスの一覧（これが要対応）
+ma = re.search(r'### 図鑑に残っているが現行でないサービス(?:（(\d+)件）)?\s*\n((?:- .*\n?)+)', txt)
+if ma:
+    n = ma.group(1)
+    rows = [l.strip()[2:] for l in ma.group(2).splitlines()
+            if l.strip().startswith('- ') and '指摘なし' not in l]
+    if rows:
+        out.append(f'【図鑑】現行でないサービス {n or len(rows)}件')
+        for r in rows:
+            out.append('・' + re.sub(r'\*\*', '', r))
+    else:
+        out.append('【図鑑】現行でないサービス: 指摘なし')
+
+mm = re.search(r'### 試験に関係するのに図鑑へ未掲載(?:（(\d+)件）)?', txt)
+if mm and mm.group(1):
+    out.append(f'【図鑑】試験頻出だが未掲載: {mm.group(1)}件（詳細はレポート参照）')
+
+# B. チートシート: 指摘された項目の見出しだけを拾う
+mb = re.search(r'## B\. チートシート.*?\n(.*)', txt, re.S)
+if mb:
+    body = mb.group(1)
+    heads = re.findall(r'^#### (.+)$', body, re.M)
+    if heads:
+        out.append(f'【チートシート】事実が古い可能性 {len(heads)}件')
+        for h in heads:
+            out.append('・' + h.strip())
+    elif '指摘なし' in body:
+        out.append('【チートシート】指摘なし')
+    elif 'Claude 実行エラー' in body or 'Claude 未検出' in body:
+        out.append('⚠ チートシート確認は未実施（Claude 実行エラー）')
+
+print('\n'.join(out))
+PYEOF
+)
+echo "$SITE_CONTENT_SUMMARY" | head -5 | sed 's/^/  /'
+
 # ── 2. 夜間スクリプト成果をログから集計 ─────────────────────
 echo ""
 echo "--- [2] 夜間スクリプト成果集計 ---"
@@ -1000,6 +1060,13 @@ if [ -x "$_BH_SCRIPT" ]; then
 fi
 echo "$BACKEND_HEALTH" | sed 's/^/  /'
 
+# ── 4.6 人の確認待ち（docs/10-ops-review.md 4.1〜4.4）──────────────
+echo ""
+echo "--- [4.6] 人の確認待ち ---"
+HUMAN_REVIEW=$(python3 "$_d/sample-human-review.py" --summary 2>/dev/null)
+[ -z "$HUMAN_REVIEW" ] && HUMAN_REVIEW="取得失敗"
+echo "$HUMAN_REVIEW" | sed 's/^/  /'
+
 # ── 4.8 テストユーザー データ整合性チェック ──────────────────────
 echo ""
 echo "--- [4.8] テストユーザー データ整合性チェック ---"
@@ -1183,6 +1250,8 @@ data = {
     'test_user_check':sys.argv[24],
     'service_news':sys.argv[25],
     'usage':sys.argv[26],
+    'site_content':sys.argv[27],
+    'human_review':sys.argv[28],
 }
 with open('$REPORT_DATA_FILE', 'w') as f:
     json.dump(data, f, ensure_ascii=False)
@@ -1196,7 +1265,7 @@ with open('$REPORT_DATA_FILE', 'w') as f:
   "$AUDIT_SUMMARY" "$CANARY_COV_SUMMARY" "$DAILY_SUMMARY" \
   "$BACKEND_HEALTH" "$CANARY_AUTH_RESULT" "$COGNITO_NEW" \
   "${CANARY_AUTH_DETAIL:-}" "$TEST_USER_CHECK" "$SERVICE_NEWS" \
-  "$USAGE_SUMMARY"
+  "$USAGE_SUMMARY" "$SITE_CONTENT_SUMMARY" "$HUMAN_REVIEW"
 
 # HTML生成＋メール送信を1つのPythonスクリプトで実行
 SEND_RESULT=$(REPORT_DATA_FILE="$REPORT_DATA_FILE" python3 << 'PYEOF'
@@ -1288,6 +1357,8 @@ db_rpts  = e(d['db_rpts']);  db_exams = e(d['db_exams'])
 db_gen3d = e(d.get('db_gen3d','?')); db_chk3d = e(d.get('db_chk3d','?'))
 cert_html = md_to_html(d['cert']); jst_now  = e(d['jst_now'])
 service_news_html = md_to_html(d.get('service_news', '変更なし（対応不要）'))
+site_content_html = md_to_html(d.get('site_content', '未実施（月1実行）'))
+human_review_html = '<br>'.join(e(l) for l in str(d.get('human_review', '未取得')).splitlines() if l.strip())
 audit_html      = audit_to_html(d.get('audit', '監査未実施'))
 canary_cov_html = audit_to_html(d.get('canary_cov', '整合性チェック未実施'))
 daily_html      = e_lines(d.get('daily', '日めくり情報なし'))
@@ -1415,6 +1486,10 @@ html_body = f"""<!DOCTYPE html>
 <h1>&#127769; 無限ノック 日次稼働レポート</h1>
 <p style="color:#888;font-size:13px;">生成日時: {jst_now} | <a href="https://mugenknock.com">mugenknock.com</a></p>
 
+<h2>0. 人の確認待ち</h2>
+<div class="card" style="font-size:13px;line-height:1.7">{human_review_html}<br>
+  <span style="color:#888">管理画面 → コンテンツ → スキャン結果 →「人の確認待ち」で処理する</span></div>
+
 <h2>1. 夜間スクリプト成果（直近3日分）</h2>
 <div class="card">
   <table>
@@ -1442,11 +1517,14 @@ html_body = f"""<!DOCTYPE html>
   </div>
 </div>
 
-<h2>5. AWS公式情報チェック（直近7日）</h2>
+<h2>5. AWS公式情報チェック</h2>
 <div class="card" style="font-size:13px;line-height:1.7">
   <b>資格試験の変更</b>（新設・廃止・出題範囲／週次・月曜）<br>{cert_html}
   <div style="margin-top:10px;border-top:1px dashed #ddd;padding-top:8px">
     <b>サービスの変更</b>（廃止・新規受付停止など既存問題に影響しうるもの／週次・木曜）<br>{service_news_html}
+  </div>
+  <div style="margin-top:10px;border-top:1px dashed #ddd;padding-top:8px">
+    <b>サイト掲載内容の現行性</b>（サービス図鑑・チートシートの陳腐化／月次）<br>{site_content_html}
   </div>
 </div>
 

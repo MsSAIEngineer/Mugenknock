@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from '@/compat/react-router-dom';
-import { API_ENDPOINT, PASS_RATE, EXAM_DOMAINS, DOMAIN_NAME_EN, EXAM_LEVEL, EXAM_LEVEL_COLORS, qDomainName, isNonAwsExam, companionLabel } from '../constants';
+import { API_ENDPOINT, PASS_RATE, pointsPerCorrect, EXAM_DOMAINS, DOMAIN_NAME_EN, EXAM_LEVEL, EXAM_LEVEL_COLORS, qDomainName, isNonAwsExam, companionLabel } from '../constants';
 import { recordSessionDomainStats, recentForTag } from '../utils/domainStats';
 import { qText } from '../utils/i18nQuestion';
 import { getCached, setCached, deleteCached, deleteCachedByPrefix, DEFAULT_TTL } from '../utils/cache';
@@ -26,7 +26,7 @@ const WAKARANAI = 'わからない';
 // ♡(ブックマーク)ONの色。ポップな変化を出すためピンク。
 const HEART_ACTIVE_COLOR = '#ec4899';
 // 👍👎の色。「しっかり対策」開始ボタンと同じ青緑で揃える。
-const REACTION_ACTIVE_COLOR = '#009E9E';
+const REACTION_ACTIVE_COLOR = 'var(--color-points)';
 // DBによっては correctAnswers に "B. テキスト" のようなラベル接頭辞が付いている場合がある
 const stripLabel = (s: string) => s.replace(/^[A-E]\.\s*/, '');
 
@@ -472,7 +472,7 @@ export default function ExerciseSession() {
       {withActions && (
         <>
           {/* 👍👎 … ログイン専用。合計数は出さず、自分の選択状態のみ示す。
-              色は「しっかり対策」開始ボタンと同じ青緑(#009E9E)に揃える。 */}
+              色は「しっかり対策」開始ボタンと同じ青緑(var(--color-points))に揃える。 */}
           <IconActionButton
             onClick={() => toggleReaction('up')}
             disabled={!userId}
@@ -1006,8 +1006,8 @@ export default function ExerciseSession() {
       deleteCachedByPrefix(`ustats_${userId}`);
       window.dispatchEvent(new CustomEvent('qstatsRefresh'));
       localStorage.setItem(`postSessionRefresh_${userId}`, String(Date.now()));
-      const ptsPerQ = EXAM_LEVEL[examType] === 'Foundational' ? 1 : EXAM_LEVEL[examType] === 'Associate' ? 2 : 3;
-      const earnedPts = results.filter(r => r.isCorrect).length * ptsPerQ;
+      const earnedPts = results.filter(r => r.isCorrect)
+        .reduce((sum, r) => sum + pointsPerCorrect(questions.find((q: Question) => q.questionId === r.questionId)?.examType || examType), 0);
       if (userId && earnedPts > 0) addPoints(userId, earnedPts);
       localStorage.setItem(`sessionScoreAdd_${examType}_${userId}`, '1');
       // 日次演習カウント更新（ログイン時はサーバへアトミック加算＝デバイス間で正しく合算）
@@ -1068,8 +1068,8 @@ export default function ExerciseSession() {
     deleteCachedByPrefix(`ustats_${userId}`);
     window.dispatchEvent(new CustomEvent('qstatsRefresh'));
     localStorage.setItem(`postSessionRefresh_${userId}`, String(Date.now()));
-    const ptsPerQ = EXAM_LEVEL[examType] === 'Foundational' ? 1 : EXAM_LEVEL[examType] === 'Associate' ? 2 : 3;
-    const earnedPts = results.filter(r => r.isCorrect).length * ptsPerQ;
+    const earnedPts = results.filter(r => r.isCorrect)
+      .reduce((sum, r) => sum + pointsPerCorrect(questions.find((q: Question) => q.questionId === r.questionId)?.examType || examType), 0);
     if (userId && earnedPts > 0) addPoints(userId, earnedPts);
     localStorage.setItem(`sessionScoreAdd_${examType}_${userId}`, '1');
     const jstToday2 = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
@@ -1221,6 +1221,17 @@ export default function ExerciseSession() {
       return { ...base, borderColor: 'var(--color-danger)', background: 'var(--color-feedback-incorrect-bg)', color: 'var(--color-danger)' };
     }
     return { ...base, borderColor: 'var(--color-border)', background: 'var(--color-bg-main)', color: 'var(--color-text-sub)' };
+  };
+
+  // 回答後に各選択肢へ付ける正誤ラベル。色だけに頼らず、アイコンと文字でも示す（WCAG 1.4.1）
+  const getChoiceVerdict = (choice: string): 'correct' | 'wrong' | null => {
+    if (!answered || !currentQuestion) return null;
+    const displayQ = (currentQuestion.correctAnswers ? currentQuestion : detail) ?? currentQuestion;
+    if (!displayQ.correctAnswers) return null;
+    const shuffledIdx = shuffledChoices.indexOf(choice);
+    const origIdx = shuffledIdx >= 0 ? origIndices[shuffledIdx] : -1;
+    if (toIdxArr(displayQ.correctAnswerIndices).includes(origIdx)) return 'correct';
+    return selectedAnswers.includes(choice) ? 'wrong' : null;
   };
 
   if (showAbortConfirm) {
@@ -1457,19 +1468,36 @@ export default function ExerciseSession() {
                       {isSelected && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'white' }} />}
                     </div>
                   )}
-                  <span
-                    onClick={!answered && strikeEnabled ? (e) => toggleStrikethrough(choice, e) : undefined}
-                    style={{
-                      flex: 1, minWidth: 0, overflowWrap: 'break-word', wordBreak: 'break-word', lineHeight: 1.55, whiteSpace: 'pre-wrap',
-                      textDecoration: strikeEnabled && struckChoices.has(choice) && !answered ? 'line-through' : 'none',
-                      textDecorationColor: 'var(--color-danger)',
-                      textDecorationThickness: '2px',
-                      cursor: !answered && strikeEnabled ? 'pointer' : 'default',
-                      userSelect: 'none',
-                    }}
-                  >
-                    <strong style={{ marginRight: 2 }}>{CHOICE_LABELS[idx]}.</strong> {stripLabel(choice)}
-                  </span>
+                  {/* 正誤ラベルは本文の下に置く（右に並べると本文の幅が削られ、折り返しが増える） */}
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                    <span
+                      onClick={!answered && strikeEnabled ? (e) => toggleStrikethrough(choice, e) : undefined}
+                      style={{
+                        flex: 1, minWidth: 0, overflowWrap: 'break-word', wordBreak: 'break-word', lineHeight: 1.55, whiteSpace: 'pre-wrap',
+                        textDecoration: strikeEnabled && struckChoices.has(choice) && !answered ? 'line-through' : 'none',
+                        textDecorationColor: 'var(--color-danger)',
+                        textDecorationThickness: '2px',
+                        cursor: !answered && strikeEnabled ? 'pointer' : 'default',
+                        userSelect: 'none',
+                      }}
+                    >
+                      <strong style={{ marginRight: 2 }}>{CHOICE_LABELS[idx]}.</strong> {stripLabel(choice)}
+                    </span>
+                    {(() => {
+                      const verdict = getChoiceVerdict(choice);
+                      if (!verdict) return null;
+                      const ok = verdict === 'correct';
+                      const label = ok
+                        ? (isSelected ? t('exerciseSession.verdictCorrectChosen') : t('exerciseSession.verdictCorrect'))
+                        : t('exerciseSession.verdictWrongChosen');
+                      return (
+                        <span style={{ flexShrink: 0, alignSelf: 'flex-start', marginTop: 'var(--spacing-xs)', display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: ok ? 'var(--color-success)' : 'var(--color-danger)', whiteSpace: 'nowrap' }}>
+                          {ok ? <IconCircleCheck size={16} /> : <IconCircleX size={16} />}
+                          {label}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
               </button>
             );
@@ -1665,12 +1693,12 @@ export default function ExerciseSession() {
             : selectedAnswers.length > 0;
         return createPortal(
         isMobile ? (
-          <div style={{ position: 'fixed', bottom: 56, left: 0, right: 0, zIndex: 150, padding: '8px 16px', display: 'flex', gap: 8 }}>
+          <div style={{ position: 'fixed', bottom: 56, left: 0, right: 0, zIndex: 150, padding: 'var(--spacing-sm) var(--spacing-md)', display: 'flex', gap: 'var(--spacing-sm)', background: 'var(--color-bg-white)', borderTop: '1px solid var(--color-border)', boxShadow: 'var(--box-shadow-up)' }}>
             {!answered ? (
               <button
                 onClick={() => submitAnswer()}
                 disabled={!canSubmit}
-                style={{ flex: 1, height: 44, border: 'none', borderRadius: 22, background: !canSubmit ? 'var(--color-text-light)' : 'var(--color-accent)', color: 'var(--color-btn-primary-text)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !canSubmit ? 'default' : 'pointer', opacity: !canSubmit ? 0.5 : 1 }}
+                style={{ flex: 1, height: 44, border: 'none', borderRadius: 22, background: !canSubmit ? 'var(--color-bg-main)' : 'var(--color-accent)', color: !canSubmit ? 'var(--color-text-light)' : 'var(--color-btn-primary-text)', boxShadow: !canSubmit ? 'inset 0 0 0 1px var(--color-border)' : 'none', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !canSubmit ? 'default' : 'pointer' }}
               >
                 {t('exerciseSession.answer')}
               </button>
@@ -1689,7 +1717,7 @@ export default function ExerciseSession() {
               <button
                 onClick={() => submitAnswer()}
                 disabled={!canSubmit}
-                style={{ height: 44, padding: '0 24px', border: 'none', borderRadius: 22, background: !canSubmit ? 'var(--color-text-light)' : 'var(--color-accent)', color: 'var(--color-btn-primary-text)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !canSubmit ? 'default' : 'pointer', opacity: !canSubmit ? 0.5 : 1, whiteSpace: 'nowrap', boxShadow: 'var(--box-shadow-pop)', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                style={{ height: 44, padding: '0 24px', border: 'none', borderRadius: 22, background: !canSubmit ? 'var(--color-bg-main)' : 'var(--color-accent)', color: !canSubmit ? 'var(--color-text-light)' : 'var(--color-btn-primary-text)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: !canSubmit ? 'default' : 'pointer', whiteSpace: 'nowrap', boxShadow: !canSubmit ? 'inset 0 0 0 1px var(--color-border), var(--box-shadow-pop)' : 'var(--box-shadow-pop)', display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
                 {t('exerciseSession.answer')}
                 <KeyHint />
@@ -1697,7 +1725,7 @@ export default function ExerciseSession() {
             ) : (
               <button
                 onClick={nextQuestion}
-                style={{ height: 44, padding: '0 24px', border: '1.5px solid var(--color-primary)', borderRadius: 22, background: 'var(--color-bg-white)', color: 'var(--color-primary)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'var(--box-shadow-pop)', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                style={{ height: 44, padding: '0 24px', border: 'none', borderRadius: 22, background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'var(--box-shadow-pop)', display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
                 {currentIndex + 1 >= totalCount ? t('exerciseSession.showResult') : t('exerciseSession.next')}
                 <KeyHint />
@@ -1714,7 +1742,7 @@ export default function ExerciseSession() {
         <div style={{ marginTop: 'var(--spacing-xl)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)' }}>
             <span style={{
-              background: 'var(--color-accent-hover)', color: 'white',
+              background: 'var(--color-accent)', color: 'var(--color-btn-primary-text)',
               fontSize: 'var(--font-size-2xs)', fontWeight: 700, letterSpacing: '1.5px',
               padding: '3px 10px', borderRadius: 'var(--border-radius-sm)',
             }}>COLUMN</span>
@@ -1738,6 +1766,8 @@ export default function ExerciseSession() {
           </Card>
         </div>
       )}
+      {/* 画面下に固定した回答/次へボタンが、最後の内容（解説・コラム）に重ならないための余白 */}
+      <div aria-hidden="true" style={{ height: isMobile ? 72 : 80 }} />
     </div>
   );
 }

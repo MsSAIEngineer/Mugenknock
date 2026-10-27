@@ -184,7 +184,7 @@ localStorage.domain_history_<et>_<uid>          … フォールバック
 
 ```
 ドメインの直近正答率 acc を次の優先順で決める:
-  1. recentResults の直近10件（マイページ苦手分析と同じ窓）
+  1. recentResults の直近10件（記録画面の苦手分析の既定の窓と同じ）
   2. 累計 correctCount / (correct + incorrect)
   3. localStorage の domain_history（直近10セッション）
   4. どれも無ければ null
@@ -305,15 +305,17 @@ estimatedScore = Math.round(weightedSum / Σweights × 1000)
 
 | 獲得条件 | ポイント |
 |---|---|
-| 正解1問 | Foundational: 1 / Associate: 2 / Professional・Specialty・Additional: 3 |
+| 正解1問 | Foundational: 1 / Business・Associate・Additional（基礎知識）: 2 / Professional・Specialty: 3 |
 | 日次目標の達成（当日1回のみ） | 10 |
 
 ```js
-ptsPerQ = EXAM_LEVEL[examType] === 'Foundational' ? 1
-        : EXAM_LEVEL[examType] === 'Associate'    ? 2
-        : 3;
-earnedPts = results.filter(r => r.isCorrect).length * ptsPerQ;
+// constants.ts の pointsPerCorrect(examType)。回答した問題自身の examType で決める
+earnedPts = Σ pointsPerCorrect(question.examType) over 正解した results
 ```
+
+他の公式資格の演習に基礎知識（ML/DB/NW/SEC、`includeCompanion`）が混ざったときは、混ざった問題を
+演習中の資格ではなく基礎知識のレベル（Additional = 2）で数える（2026-10-27）。
+模擬試験は全問が同じ資格なので `pointsPerCorrect(examType)` をそのまま使う。
 
 ### 日次ボーナスの二重付与ガード（3重）
 
@@ -371,6 +373,8 @@ serverDaily != null            // サーバ確定値がある時だけ判定す�
 3. PUT /users/me/domain-results（ログイン時のみ）
    { "SAA_0": [true, false] }        ← このセッションの新規分（デルタ）だけ
    サーバ側で既存 recentResults にマージし末尾30件に切る
+   （画面が使う recentResults は GET /users/me/stats?examType= が UserAnswers から作り直す。
+     このデルタは抜け・二重があったため表示には使わない。2026-10-27）
 ```
 
 - localStorage 側のキーは**裸のインデックス文字列**（`"0"`）

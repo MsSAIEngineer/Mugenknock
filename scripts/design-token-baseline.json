@@ -1,0 +1,163 @@
+{
+  "src/components/AdminLayout.tsx": {
+    "spacing": 4
+  },
+  "src/components/AdminRoute.tsx": {
+    "hexColor": 2
+  },
+  "src/components/Breadcrumb.tsx": {
+    "spacing": 1
+  },
+  "src/components/Confetti.tsx": {
+    "hexColor": 9
+  },
+  "src/components/DailyServiceRevealModal.tsx": {
+    "hexColor": 7,
+    "spacing": 12,
+    "borderRadius": 4,
+    "fontSize": 1
+  },
+  "src/components/DomainSelector.tsx": {
+    "spacing": 11,
+    "borderRadius": 1
+  },
+  "src/components/ErrorBoundary.tsx": {
+    "spacing": 4
+  },
+  "src/components/ExamSelectOverlay.tsx": {
+    "hexColor": 1,
+    "spacing": 19,
+    "borderRadius": 4,
+    "fontSize": 1
+  },
+  "src/components/FeatureUnlockModal.tsx": {
+    "hexColor": 1
+  },
+  "src/components/KeyHint.tsx": {
+    "spacing": 2,
+    "borderRadius": 1
+  },
+  "src/components/Layout.tsx": {
+    "spacing": 36,
+    "borderRadius": 3
+  },
+  "src/components/ReportModal.tsx": {
+    "spacing": 7
+  },
+  "src/components/SiteArchitecture.tsx": {
+    "hexColor": 6,
+    "spacing": 6
+  },
+  "src/components/StartTutorialSpotlight.tsx": {
+    "spacing": 3,
+    "hexColor": 2,
+    "borderRadius": 1
+  },
+  "src/components/ui/Badge.tsx": {
+    "hexColor": 1,
+    "spacing": 1
+  },
+  "src/components/ui/Button.tsx": {
+    "spacing": 3
+  },
+  "src/components/ui/MarkdownText.tsx": {
+    "borderRadius": 1,
+    "spacing": 3
+  },
+  "src/views/About.tsx": {
+    "spacing": 3
+  },
+  "src/views/Account.tsx": {
+    "spacing": 37,
+    "borderRadius": 1
+  },
+  "src/views/Admin.tsx": {
+    "hexColor": 85,
+    "spacing": 373,
+    "borderRadius": 132,
+    "fontSize": 294
+  },
+  "src/views/AdminLogin.tsx": {
+    "spacing": 3,
+    "fontSize": 1,
+    "hexColor": 4
+  },
+  "src/views/Announcements.tsx": {
+    "spacing": 4,
+    "hexColor": 1
+  },
+  "src/views/ArchitecturePage.tsx": {
+    "spacing": 3
+  },
+  "src/views/CheatSheet.tsx": {
+    "spacing": 17,
+    "borderRadius": 3,
+    "hexColor": 3
+  },
+  "src/views/ExamDashboard.tsx": {
+    "hexColor": 15,
+    "borderRadius": 4,
+    "spacing": 27
+  },
+  "src/views/ExamSession.tsx": {
+    "spacing": 19,
+    "borderRadius": 8,
+    "hexColor": 2
+  },
+  "src/views/ExamSetup.tsx": {
+    "spacing": 10,
+    "borderRadius": 4,
+    "hexColor": 1
+  },
+  "src/views/ExerciseSession.tsx": {
+    "hexColor": 3,
+    "spacing": 20,
+    "borderRadius": 6
+  },
+  "src/views/Home.tsx": {
+    "spacing": 136,
+    "hexColor": 14,
+    "borderRadius": 26,
+    "fontSize": 3
+  },
+  "src/views/LoginPage.tsx": {
+    "hexColor": 10,
+    "spacing": 2
+  },
+  "src/views/MyPage.tsx": {
+    "hexColor": 1,
+    "spacing": 48,
+    "borderRadius": 4,
+    "fontSize": 1
+  },
+  "src/views/Others.tsx": {
+    "spacing": 8
+  },
+  "src/views/Portal.tsx": {
+    "spacing": 11,
+    "borderRadius": 1
+  },
+  "src/views/Practice.tsx": {
+    "spacing": 53,
+    "hexColor": 9,
+    "borderRadius": 8
+  },
+  "src/views/ReleaseNotes.tsx": {
+    "spacing": 1
+  },
+  "src/views/Result.tsx": {
+    "spacing": 12,
+    "hexColor": 3,
+    "borderRadius": 2
+  },
+  "src/views/ServiceEncyclopedia.tsx": {
+    "borderRadius": 4,
+    "spacing": 24,
+    "hexColor": 2
+  },
+  "src/views/Stats.tsx": {
+    "spacing": 20,
+    "borderRadius": 7,
+    "hexColor": 2
+  }
+}
