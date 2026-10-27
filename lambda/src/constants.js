@@ -1,6 +1,6 @@
 const ADMIN_EMAIL = 'mugenknock@gmail.com';
 // ID トークンを受け付ける Cognito アプリクライアント。[Web アプリ, 夜間バッチ専用]
-const COGNITO_CLIENT_IDS = ['16jjrj5m28o6s2k84og8kh2vh3'];
+const COGNITO_CLIENT_IDS = ['16jjrj5m28o6s2k84og8kh2vh3', 'ncdemo4dght2ehp0nlocot8uu'];
 
 // ドメイン定義は単一マスタ examDomains.json から導出（フロントの src/data/examDomains.json と同一。
 // デプロイ時に deploy-lambda.sh が master を lambda/src/ へ同期する）。
