@@ -56,6 +56,54 @@ except: print('$_rst')
   return 0
 }
 
+# ── サービス図鑑から消した記事（05-check-daily-services.sh が記録）──────────
+# その日に図鑑から記事を消していれば、リリースノートに必ず載せる（2026-10-27 本人指示）。
+# 記事の削除は DB 操作でコミットに出ないため、記録ファイルから決まった文を作って本文に足す。
+REMOVALS_FILE="$_d/state/daily-service-removals.jsonl"
+# 出力: 1行目=日本語の文、2行目=英語の文（その日に削除がなければ何も出さない）
+removal_sentences() {
+  local date="$1"
+  [ -f "$REMOVALS_FILE" ] || return 0
+  REMOVALS_FILE="$REMOVALS_FILE" TARGET_DATE="$date" python3 <<'PYEOF'
+import json, os
+SHORT = {
+    '新規受付が終了しています': ('新規受付終了', 'closed to new customers'),
+    '非推奨となっています': ('非推奨', 'deprecated'),
+    '提供終了（予定）です': ('提供終了', 'end of support'),
+    '別サービスへ統合・改名されました': ('統合・改名', 'renamed or merged'),
+}
+rows, seen = [], set()
+for line in open(os.environ['REMOVALS_FILE'], encoding='utf-8'):
+    try:
+        r = json.loads(line)
+    except Exception:
+        continue
+    if r.get('date') != os.environ['TARGET_DATE'] or r.get('serviceId') in seen:
+        continue
+    seen.add(r.get('serviceId'))
+    if r.get('reason') in SHORT:
+        ja, en = SHORT[r['reason']]
+    elif r.get('source') == 'content-check':
+        ja, en = '実在しないサービス', 'not an actual AWS service'
+    else:
+        ja, en = r.get('reason', ''), r.get('reason', '')
+    rows.append((r.get('name', r.get('serviceId')), ja, en))
+if rows:
+    print('サービス図鑑から次のサービスを削除しました: ' + '、'.join(f'{n}（{j}）' for n, j, _ in rows) + '。')
+    print('Removed from the service encyclopedia: ' + ', '.join(f'{n} ({e})' for n, _, e in rows) + '.')
+PYEOF
+}
+
+# 削除の文だけでリリースノートを作る（コミットが無い日・ユーザー向けの変更が無い日）
+write_removal_only_json() {
+  local out="$1" ja="$2" en="$3"
+  RJA="$ja" REN="$en" python3 -c "
+import json, os
+json.dump({'title': 'サービス図鑑を更新しました！', 'body': os.environ['RJA'],
+           'titleEn': 'Service encyclopedia updated!', 'bodyEn': os.environ['REN']},
+          open('$out', 'w', encoding='utf-8'), ensure_ascii=False)"
+}
+
 # ── 1日分を生成するコア関数 ─────────────────────────────────
 # 戻り値: 0=成功, 1=スキップ（コミットなし or 既存）, 3=レート制限, 4=エラー
 generate_single_date() {
@@ -84,17 +132,29 @@ generate_single_date() {
   local commits
   commits=$(git log github/master --after="${date} 00:00:00" --before="${date} 23:59:59" \
     --format='%s' --no-merges 2>/dev/null || true)
-  if [ -z "$commits" ]; then
-    echo "[release-note] $date にコミットがありません。スキップ。"
-    return 1
-  fi
-  echo "[release-note] $date: $(echo "$commits" | wc -l)件のコミット"
+  local _removals _rm_ja _rm_en
+  _removals=$(removal_sentences "$date")
+  _rm_ja=$(echo "$_removals" | sed -n 1p)
+  _rm_en=$(echo "$_removals" | sed -n 2p)
 
-  # Claudeでリリースノートを生成
   _prompt_file=$(mktemp /tmp/release_note_prompt_XXXX.txt)
   _json_tmp=$(mktemp /tmp/release_json_XXXX.json)
   # shellcheck disable=SC2064
   trap "rm -f '$_prompt_file' '$_json_tmp'" RETURN
+
+  if [ -z "$commits" ]; then
+    if [ -z "$_rm_ja" ]; then
+      echo "[release-note] $date にコミットがありません。スキップ。"
+      return 1
+    fi
+    echo "[release-note] $date: コミットなし・図鑑の削除あり → 削除だけのリリースノートを作ります"
+    write_removal_only_json "$_json_tmp" "$_rm_ja" "$_rm_en"
+    insert_release_note "$_json_tmp" "$date"
+    return $?
+  fi
+  echo "[release-note] $date: $(echo "$commits" | wc -l)件のコミット"
+
+  # Claudeでリリースノートを生成
 
   cat > "$_prompt_file" <<PROMPT_EOF
 あなたはAWS学習アプリ「無限ノック」の開発者です。
@@ -158,10 +218,29 @@ print(text[start:end].strip() if start >= 0 else text.strip())
 
   # ユーザー向け（載せてよい）変更が無い日は Claude が {"skip": true} を返す → 挿入せずスキップ
   if python3 -c "import json,sys; d=json.load(open('$_json_tmp')); sys.exit(0 if d.get('skip') else 1)" 2>/dev/null; then
-    echo "[release-note] $date: ユーザー向けの変更なし（裏側のみ）。スキップ。"
-    return 1
+    if [ -z "$_rm_ja" ]; then
+      echo "[release-note] $date: ユーザー向けの変更なし（裏側のみ）。スキップ。"
+      return 1
+    fi
+    echo "[release-note] $date: ユーザー向けの変更なし・図鑑の削除あり → 削除だけのリリースノートを作ります"
+    write_removal_only_json "$_json_tmp" "$_rm_ja" "$_rm_en"
+  elif [ -n "$_rm_ja" ]; then
+    # モデルの本文に、図鑑から消したサービスの文を必ず足す
+    RJA="$_rm_ja" REN="$_rm_en" python3 -c "
+import json, os
+d = json.load(open('$_json_tmp'))
+d['body'] = d.get('body', '').rstrip() + '\\n' + os.environ['RJA']
+d['bodyEn'] = d.get('bodyEn', '').rstrip() + '\\n' + os.environ['REN']
+json.dump(d, open('$_json_tmp', 'w', encoding='utf-8'), ensure_ascii=False)"
   fi
 
+  insert_release_note "$_json_tmp" "$date"
+  return $?
+}
+
+# リリースノートを DynamoDB に挿入する
+insert_release_note() {
+  local _json_tmp="$1" date="$2"
   echo "[release-note] 生成結果:"
   cat "$_json_tmp"
 

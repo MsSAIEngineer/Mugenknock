@@ -174,6 +174,8 @@ echo "=========================================="
 #   ※判定は事前にカタログ側が claude+WebFetch で確認済みのため、ここはDB更新のみ。
 CATALOG_FILE="$SCRIPT_DIR/state/service-catalog.json"
 GRACE_DAYS=30
+# 図鑑から記事を消したら記録する。generate-release-note.sh がその日のリリースノートに載せる（2026-10-27）
+export REMOVALS_FILE="$SCRIPT_DIR/state/daily-service-removals.jsonl"
 if [ -f "$CATALOG_FILE" ]; then
   echo ""
   echo "--- 提供状態ライフサイクル照合中（猶予 ${GRACE_DAYS}日）---"
@@ -273,6 +275,10 @@ for it in items:
                 '--key', json.dumps({'serviceId': {'S': sid}})], capture_output=True)
             deleted += 1
             print(f'  [削除] {name}: {LABEL.get(st, st)}・猶予{grace}日経過 → 削除')
+            if os.environ.get('DRY_RUN') != '1':
+                with open(os.environ['REMOVALS_FILE'], 'a', encoding='utf-8') as rf:
+                    rf.write(json.dumps({'date': today.isoformat(), 'serviceId': sid, 'name': name,
+                        'reason': LABEL.get(st, st), 'reasonNote': note_reason, 'source': 'lifecycle'}, ensure_ascii=False) + '\n')
         continue
 
     # 未フラグ → 警告を付与（記事は残す）
@@ -580,6 +586,20 @@ for r in results:
     fix = r.get('fix', {})
 
     if action == 'delete':
+        # リリースノートに載せるため、消す前にサービス名を引いて記録する
+        try:
+            got = subprocess.run(['/home/yuzuki/local/bin/aws', 'dynamodb', 'get-item', '--table-name', 'DailyServices',
+                '--key', json.dumps({'serviceId': {'S': sid}}), '--projection-expression', '#n',
+                '--expression-attribute-names', json.dumps({'#n': 'name'}), '--output', 'json'],
+                capture_output=True, text=True)
+            svc_name = json.loads(got.stdout or '{}').get('Item', {}).get('name', {}).get('S', sid)
+            import os
+            from datetime import date as _date
+            with open(os.environ['REMOVALS_FILE'], 'a', encoding='utf-8') as rf:
+                rf.write(json.dumps({'date': _date.today().isoformat(), 'serviceId': sid, 'name': svc_name,
+                    'reason': '内容の確認で実在しないサービスと判定', 'reasonNote': reason, 'source': 'content-check'}, ensure_ascii=False) + '\n')
+        except Exception as e:
+            print(f'  ⚠️ 削除記録の書き込みに失敗: {e}')
         subprocess.run([
             '/home/yuzuki/local/bin/aws', 'dynamodb', 'delete-item',
             '--table-name', 'DailyServices',
