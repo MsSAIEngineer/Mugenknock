@@ -1,5 +1,5 @@
 # EXAM_GUIDE_URL: https://aws.amazon.com/jp/certification/certified-machine-learning-engineer-associate/
-# LAST_REFRESHED: 2026-08-29
+# LAST_REFRESHED: 2026-10-28
 
 
 あなたはAWS認定試験の問題作成者です。
@@ -76,7 +76,7 @@ AWS Certified Machine Learning Engineer – Associate (MLA-C01) の模擬試験�
 【第2ドメイン：ML モデルの開発（26%）】
 - Task 2.1: モデリングアプローチを選択する
   - 知識：ビジネス課題を解くMLアルゴリズムの機能と適切な用途
-  - 知識：特定ビジネス課題へのAI AIサービス活用（Translate・Transcribe・Rekognition・Bedrock）
+  - 知識：特定ビジネス課題へのAIサービス活用（Translate・Transcribe・Rekognition・Bedrock）
   - 知識：モデル選択・アルゴリズム選択における解釈可能性の考慮
   - 知識：SageMaker AI 組み込みアルゴリズムとその適用場面
   - スキル：利用可能データと問題複雑度からMLソリューションの実現可能性を評価
@@ -98,14 +98,14 @@ AWS Certified Machine Learning Engineer – Associate (MLA-C01) の模擬試験�
   - スキル：SageMaker AI スクリプトモードと対応フレームワークを使ったモデル学習（TensorFlow・PyTorch）
   - スキル：カスタムデータセットを使った事前学習済みモデルのファインチューニング（Amazon Bedrock・SageMaker JumpStart）
   - スキル：ハイパーパラメータチューニング実行（SageMaker AI 自動モデルチューニング[AMT]）
-  - スキル：自動ハイパーパラメータ最適化機能の統合
+  - スキル：自動ハイパーパラメータ最適化機能の導入
   - スキル：過学習・未学習・壊滅的忘却の防止（正則化技術・特徴量選択）
   - スキル：複数トレーニングモデルの組み合わせによるパフォーマンス向上（アンサンブル・スタッキング・ブースティング）
   - スキル：モデルサイズ削減（データ型変更・プルーニング・特徴量選択更新・圧縮）
   - スキル：再現性と監査のためのモデルバージョン管理（SageMaker Model Registry）
 
 - Task 2.3: モデルのパフォーマンスを分析する
-  - 知識：モデル評価技術と指標（混同行列・ヒートマップ・F1スコア・精度・適合率・再現率・RMSE・ROC・AUC）
+  - 知識：モデル評価技術と指標（混同行列・ヒートマップ・F1スコア・正解率・適合率・再現率・RMSE・ROC・AUC）
   - 知識：パフォーマンスベースライン作成手法
   - 知識：モデルの過学習・未学習の特定手法
   - 知識：SageMaker Clarify のMLトレーニングデータとモデルへの洞察メトリクス
@@ -121,7 +121,7 @@ AWS Certified Machine Learning Engineer – Associate (MLA-C01) の模擬試験�
 - Task 3.1: 既存アーキテクチャと要件に基づくデプロイインフラストラクチャの選択
   - 知識：デプロイのベストプラクティス（バージョニング・ロールバック戦略）
   - 知識：AWSデプロイサービス（Amazon SageMaker AI）
-  - 知識：リアルタイムおよびバッチでのMLモデル提供手法
+  - 知識：MLモデルをリアルタイム／バッチで提供する方法
   - 知識：本番・テスト環境でのコンピューティングリソースプロビジョニング（CPU・GPU）
   - 知識：デプロイエンドポイントのモデル・エンドポイント要件（サーバーレス・リアルタイム・非同期・バッチ推論）
   - 知識：適切なコンテナの選択（提供済み・カスタマイズ済み）
@@ -139,8 +139,8 @@ AWS Certified Machine Learning Engineer – Associate (MLA-C01) の模擬試験�
   - 知識：IaCオプションのトレードオフとユースケース（AWS CloudFormation・AWS CDK）
   - 知識：コンテナ化の概念とAWSコンテナサービス
   - 知識：スケーラビリティ要件を満たすSageMaker AI エンドポイント自動スケーリングポリシーの活用（需要・時間ベース）
-  - スキル：保守性・スケーラビリティ・コスト効率の高いMLソリューションのベストプラクティス適用（SageMaker AI エンドポイントの自動スケーリング・スポットインスタンスの動的追加・Lambda をエンドポイント背後に配置）
-  - スキル：コンピューティングリソースのプロビジョニング自動化（CloudFormation・AWS CDK）
+  - スキル：保守性・スケーラビリティ・コスト効率の高いMLソリューションのベストプラクティス適用（SageMaker AI エンドポイントの自動スケーリング・スポットインスタンスの動的追加・EC2 インスタンスの使用・Lambda をエンドポイント背後に配置）
+  - スキル：スタック間の通信を含むコンピューティングリソースのプロビジョニング自動化（CloudFormation・AWS CDK）
   - スキル：コンテナのビルドと管理（Amazon ECR・EKS・ECS・SageMaker AI への BYOC）
   - スキル：VPCネットワーク内でのSageMaker AI エンドポイント設定
   - スキル：SageMaker AI SDK を使ったモデルのデプロイとホスティング
@@ -173,13 +173,13 @@ AWS Certified Machine Learning Engineer – Associate (MLA-C01) の模擬試験�
 - Task 4.2: インフラストラクチャとコストをモニタリング・最適化する
   - 知識：MLインフラの主要パフォーマンス指標（使用率・スループット・可用性・スケーラビリティ・耐障害性）
   - 知識：レイテンシーとパフォーマンス問題のトラブルシューティング用モニタリング・オブザーバビリティツール（AWS X-Ray・CloudWatch Lambda Insights・CloudWatch Logs Insights）
-  - 知識：CloudTrail を使ったログ記録・モニタリング・再学習アクティビティの起動方法
+  - 知識：CloudTrail を使った再トレーニングアクティビティのログ記録・モニタリング・呼び出しの方法
   - 知識：インスタンスタイプの違いとパフォーマンスへの影響（メモリ最適化・コンピューティング最適化・汎用・推論最適化）
   - 知識：コスト分析ツールの機能（Cost Explorer・Billing and Cost Management・Trusted Advisor）
   - 知識：コストトラッキングと配分技術（リソースタグ付け）
   - スキル：リソースのトラブルシューティングと分析ツールの設定・使用（CloudWatch Logs・CloudWatch アラーム）
-  - スキル：CloudTrail トレイルの作成
-  - スキル：パフォーマンス指標モニタリング用ダッシュボードの設定（Amazon QuickSight・CloudWatch ダッシュボード）
+  - スキル：CloudTrail 証跡の作成
+  - スキル：パフォーマンス指標モニタリング用ダッシュボードの設定（Amazon Quick・CloudWatch ダッシュボード）
   - スキル：インフラのモニタリング（EventBridge イベント）
   - スキル：インスタンスファミリーとサイズの適正化（SageMaker AI Inference Recommender・AWS Compute Optimizer）
   - スキル：レイテンシーとスケーリング問題のモニタリングと解決
@@ -202,7 +202,7 @@ AWS Certified Machine Learning Engineer – Associate (MLA-C01) の模擬試験�
 ■ 出題範囲の主要サービス（公式 In-Scope リスト準拠）
 
 **Analytics（分析）**
-Amazon Athena・Amazon Data Firehose・Amazon EMR・AWS Glue・AWS Glue DataBrew・AWS Glue Data Quality・Amazon Kinesis・AWS Lake Formation・Amazon Managed Service for Apache Flink・Amazon OpenSearch Service・Amazon QuickSight・Amazon Redshift
+Amazon Athena・Amazon Data Firehose・Amazon EMR・AWS Glue・AWS Glue DataBrew・AWS Glue Data Quality・Amazon Kinesis・AWS Lake Formation・Amazon Managed Service for Apache Flink・Amazon OpenSearch Service・Amazon Quick・Amazon Redshift
 
 **Application Integration（アプリケーション統合）**
 Amazon EventBridge・Amazon MWAA（Managed Workflows for Apache Airflow）・Amazon SNS・Amazon SQS・AWS Step Functions
