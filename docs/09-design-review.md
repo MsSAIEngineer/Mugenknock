@@ -175,6 +175,8 @@ Grant は0件で、CDK で作られたスタックも残っていなかったた
 | ECS クラスタ `mugenknock-batch` | 削除（稼働タスク0） | 不可 |
 | EventBridge Scheduler `mugenknock-ping`（無効・削除済みクラスタ宛て） | 削除（2026-10-27） | 不可 |
 | CodeBuild `mugenknock-image-build` | 削除（2026-10-27）。リポジトリの `scripts/fargate-*.sh`・`Dockerfile.fargate` も削除 | git 履歴から復元可 |
+| IAM ロール `mugenknock-codebuild-role`・`mugenknock-eventbridge-fargate`・`mugenknock-fargate-execution`・`mugenknock-fargate-task`（最終使用 2026-09-08） | インラインポリシーを外して削除（2026-10-27） | 不可 |
+| S3 `mugenknock-fargate-state-…/codebuild/source.zip` | 削除（2026-10-27）。バケットは認証情報・状態の同期に使うので残す | 不可 |
 | EventBridge `mugenknock-batch-failure` ＋ SNS `mugenknock-batch-alerts` | 削除 | 不可 |
 
 削除後、本番サイト・問題取得API・演習APIがすべて HTTP 200 で正常なことを確認済み。
