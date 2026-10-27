@@ -31,6 +31,7 @@
   /* 資格レベル色。constants.ts の EXAM_LEVEL_COLORS / levelText() / levelOn() から参照する。
      --level-*      … 塗り・線・アイコン・グラフ用の明るい色（監査前の色）
      --level-*-text … 文字用。白地で 4.5:1 以上になる濃さ
+     （Foundational・オリジナルの暗い緑は文字では使わず通常の文字色にする。2026-10-27 本人指示）
      --level-*-on   … --level-* の塗りに載せる文字（ライトは白で統一。緑・水色・青緑では 2.5〜3.2:1 で AA 未満だが、
                       黒文字は不評だったため本人判断で白にした 2026-10-26。ダークは濃色）
      半透明にするときは hex にアルファを足さず、constants.ts の tint() を使う */
@@ -40,12 +41,12 @@
   --level-professional: #8b5cf6;
   --level-specialty: #0ea5e9;
   --level-additional: #14b8a6;
-  --level-foundational-text: #47782a;
+  --level-foundational-text: var(--color-text-main);
   --level-business-text: #c0256a;
   --level-associate-text: var(--color-primary);
   --level-professional-text: #7c4ddb;
   --level-specialty-text: #0a74a8;
-  --level-additional-text: #0f766e;
+  --level-additional-text: var(--color-text-main);
   --level-foundational-on: #ffffff;
   --level-business-on: #ffffff;
   --level-associate-on: #ffffff;

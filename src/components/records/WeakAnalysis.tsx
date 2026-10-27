@@ -72,8 +72,10 @@ export default function WeakAnalysis({ userId, targetExam, ja, isMobile }: {
   useEffect(() => {
     if (!userId || !targetExam) return;
     setStatsLoading(true);
+      // 累計（correctCount/incorrectCount）はサーバが examType 指定時にだけ UserQuestionStats から集計して埋める。
+      // 指定しないと「累計」タブが全ドメイン未演習になる。
     Promise.all([
-      fetch(`${API_ENDPOINT}/users/me/stats?userId=${userId}`).then(r => r.json()),
+      fetch(`${API_ENDPOINT}/users/me/stats?userId=${userId}&examType=${targetExam}`).then(r => r.json()),
       fetch(`${API_ENDPOINT}/users/me/question-stats?userId=${userId}&examType=${targetExam}`).then(r => r.json()),
     ]).then(([statsData, qData]) => {
       setDomainStats(statsData.stats ?? []);
