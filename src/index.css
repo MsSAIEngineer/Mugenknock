@@ -14,6 +14,8 @@
   --color-btn-primary-text: #16191f;
   --color-bg-main: #f2f3f3;
   --color-bg-white: #ffffff;
+  /* カード・タイルの地。7か所で使われていたが未定義（透明）だった */
+  --color-bg-card: var(--color-bg-white);
   --color-text-main: #16191f;
   --color-text-sub: #545b64;
   /* Cloudscape の colorTextStatusInactive 相当。旧 #879596 は白地 3.1:1・灰色地 2.8:1 で AA 不足 */

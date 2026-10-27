@@ -31,6 +31,25 @@ function daysUntil(dateStr: string): number {
   return Math.round((examDate.getTime() - today.getTime()) / 86400000);
 }
 
+// 取得済資格の六角形バッジ。取得済みはレベル色で塗り、未取得はグレーの輪郭だけにする
+// （以前は塗りの上に半透明の白で輪郭を描いていて、輪郭がぼやけていた）
+const CERT_HEX = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
+function CertHexBadge({ exam, obtained, color, size, innerBg = 'var(--color-bg-white)', spin }: {
+  exam: string; obtained: boolean; color: string; size: number; innerBg?: string; spin?: boolean;
+}) {
+  const ExamIcon = EXAM_ICON_COMPONENTS[exam];
+  const h = Math.round(size * 1.15);
+  const ring = Math.max(2, Math.round(size * 0.06));
+  return (
+    <div style={{ position: 'relative', width: size, height: h, flexShrink: 0, animation: spin ? 'certHexSpin 0.52s ease' : undefined }}>
+      <div style={{ position: 'absolute', inset: 0, clipPath: CERT_HEX, background: obtained ? color : tint('var(--color-text-light)', 45) }} />
+      <div style={{ position: 'absolute', inset: obtained ? 0 : ring, clipPath: CERT_HEX, background: obtained ? 'transparent' : innerBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: obtained ? levelOn(color) : 'var(--color-text-light)' }}>
+        {ExamIcon && <ExamIcon size={Math.round(size * 0.42)} />}
+      </div>
+    </div>
+  );
+}
+
 export default function MyPage() {
   const { user } = useAuth();
   const { lang } = useLanguage();
@@ -720,26 +739,12 @@ export default function MyPage() {
           <div style={{ marginTop: 'var(--spacing-md)' }}>
                 {/* 取得済資格パネル（クリックでオーバーレイを開く） */}
                 {(() => {
-                  const HEX = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
-                  const CertHex = ({ exam, obtained, color, size = 38 }: { exam: string; obtained: boolean; color: string; size?: number }) => {
-                    const ExamIcon = EXAM_ICON_COMPONENTS[exam];
-                    const inner = Math.round(size * 0.88);
-                    const hexH = Math.round(size * 1.15);
-                    const innerH = Math.round(inner * 1.15);
-                    // 未取得時の縁・アイコンのグレー濃度。塗り(color-bg-main)より濃く保ちつつ少し薄めに。
-                    const grayOpacity = 0.48;
-                    return (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                        <div style={{ position: 'relative', width: size, height: hexH, flexShrink: 0 }}>
-                          <div style={{ position: 'absolute', inset: 0, background: obtained ? color : 'var(--color-text-light)', clipPath: HEX, opacity: obtained ? 1 : grayOpacity }} />
-                          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: inner, height: innerH, background: obtained ? 'var(--color-bg-white)' : 'var(--color-bg-main)', clipPath: HEX, display: 'flex', alignItems: 'center', justifyContent: 'center', color: obtained ? color : 'var(--color-text-light)', opacity: obtained ? 1 : grayOpacity }}>
-                            {ExamIcon && <ExamIcon size={Math.round(size * 0.42)} />}
-                          </div>
-                        </div>
-                        <div style={{ fontSize: 'var(--font-size-3xs)', fontWeight: 800, color: obtained ? levelText(color) : 'var(--color-text-light)', lineHeight: 1 }}>{exam}</div>
-                      </div>
-                    );
-                  };
+                  const CertHex = ({ exam, obtained, color, size = 38 }: { exam: string; obtained: boolean; color: string; size?: number }) => (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                      <CertHexBadge exam={exam} obtained={obtained} color={color} size={size} />
+                      <div style={{ fontSize: 'var(--font-size-3xs)', fontWeight: 800, color: obtained ? levelText(color) : 'var(--color-text-light)', lineHeight: 1 }}>{exam}</div>
+                    </div>
+                  );
                   return (
                     <Card style={{ marginBottom: 'var(--spacing-md)', cursor: 'pointer' }} onClick={() => { setCertConfetti(false); setCertBurst(null); setShowCertOverlay(true); }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-md)' }}>
@@ -772,7 +777,6 @@ export default function MyPage() {
 
                 {/* 取得済資格オーバーレイ */}
                 {showCertOverlay && (() => {
-                  const HEX = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
                   const CERT_LEVELS = [
                     { key: 'Foundational', label: 'Foundational', color: EXAM_LEVEL_COLORS.Foundational, exams: ['CLF', 'AIF'] },
                     { key: 'Business',     label: 'Business',     color: EXAM_LEVEL_COLORS.Business, exams: ['AIB'] },
@@ -810,24 +814,19 @@ export default function MyPage() {
                         <div style={{ display: 'flex', gap: 10, padding: '20px 20px', flexWrap: 'wrap', alignContent: 'flex-start', height: 240, overflowY: 'auto' }}>
                           {currentLevel.exams.map(exam => {
                             const obtained = obtainedCerts.includes(exam);
-                            const ExamIcon = EXAM_ICON_COMPONENTS[exam];
                             const c = currentLevel.color;
                             return (
                               <button
                                 key={exam}
                                 onClick={e => toggleObtainedCert(exam, e.currentTarget)}
-                                style={{ flexShrink: 0, width: 80, padding: '10px 6px 8px', cursor: 'pointer', borderRadius: 10, textAlign: 'center', position: 'relative', border: `2px solid ${obtained ? c : 'var(--color-border)'}`, background: obtained ? c : 'var(--color-bg-card)', animation: justObtained === exam ? 'certObtainPop 0.38s cubic-bezier(.36,.07,.19,.97)' : undefined, transition: 'border-color 0.15s, background 0.15s' }}
+                                style={{ flexShrink: 0, width: 80, padding: '10px 6px 8px', cursor: 'pointer', borderRadius: 10, textAlign: 'center', position: 'relative', border: `2px solid ${obtained ? c : 'var(--color-border)'}`, background: obtained ? tint(c, 8) : 'var(--color-bg-card)', animation: justObtained === exam ? 'certObtainPop 0.38s cubic-bezier(.36,.07,.19,.97)' : undefined, transition: 'border-color 0.15s, background 0.15s' }}
                               >
-                                {obtained && <div style={{ position: 'absolute', top: 4, right: 4, color: levelOn(c), lineHeight: 0 }}><IconCheck size={14} /></div>}
+                                {obtained && <div style={{ position: 'absolute', top: 4, right: 4, width: 18, height: 18, borderRadius: '50%', background: c, color: levelOn(c), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconCheck size={12} /></div>}
                                 {/* 六角形バッジ */}
                                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, perspective: 200 }}>
-                                  <div style={{ width: 40, height: 46, background: obtained ? 'rgba(255,255,255,0.25)' : tint(c, 20), clipPath: HEX, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: justObtained === exam ? 'certHexSpin 0.52s ease' : undefined }}>
-                                    <div style={{ width: 34, height: 39, background: obtained ? 'rgba(255,255,255,0.85)' : 'var(--color-bg-card)', clipPath: HEX, display: 'flex', alignItems: 'center', justifyContent: 'center', color: obtained ? c : 'var(--color-text-light)' }}>
-                                      {ExamIcon && <ExamIcon size={17} />}
-                                    </div>
-                                  </div>
+                                  <CertHexBadge exam={exam} obtained={obtained} color={c} size={40} spin={justObtained === exam} />
                                 </div>
-                                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: obtained ? levelOn(c) : 'var(--color-text-main)', lineHeight: 1 }}>{exam}</div>
+                                <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: obtained ? levelText(c) : 'var(--color-text-sub)', lineHeight: 1 }}>{exam}</div>
                               </button>
                             );
                           })}

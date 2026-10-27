@@ -325,6 +325,9 @@ navigate('/aws/result', { state: { results, questions, score, ... } })
 | 週間達成状況（直近7日） | `GET /users/me/sessions?limit=200` を日別集計（取得失敗時は `dailyQCount_*`） |
 | 取得済資格 | preferences の `obtainedCerts` ＋ localStorage（和集合） |
 
+**取得済資格の六角形**（`CertHexBadge`）: 取得済みはレベル色で塗りつぶしてアイコンを `levelOn()` 色で抜く。
+未取得はグレーの輪郭（`--color-text-light` 45%）だけ。設定オーバーレイのタイルは取得済みでレベル色の枠＋淡い地（`tint(c, 8)`）＋右上に丸いチェック。
+
 **古いリンクの転送**: `location.state.tab` が `'analysis' | 'history'` で来たら（古い JS・古いリンク）、
 `/aws/stats` の同じタブへ `replace` で転送する。
 
