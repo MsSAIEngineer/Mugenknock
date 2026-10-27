@@ -72,12 +72,12 @@ Web版は元々「過去問道場」を参考に、AdSense 収益化のための
 |---|---|
 | `.env.local` | ローカル開発（gitignore 済み）。dev エンドポイントを指す |
 | `.env.development` | `next dev` 用 |
-| `.env.production` | **全ビルドで効くため、preview ビルドも prod API を向く** |
+| `.env.production` | 本番ビルドの API（`/prod`）。Cloudflare Pages の環境変数が無いときの既定 |
 
-Cloudflare Pages ダッシュボード側の環境変数で Production / Preview を分ける想定だが、
-`.env.production` が優先されるため、**現状デプロイ済みフロントは検証環境も `/prod` を叩く**。
-この非対称性が「dev Lambda だけ更新しても本番の挙動が変わらない/その逆」の混乱の原因になるので、
-Lambda を変更したら dev / prod **両方**にデプロイする（`CLAUDE.md` の必須ルール）。
+**検証（Preview）のビルドは `/dev` を向く**（2026-10-28〜）。Cloudflare Pages の Preview 環境変数
+`NEXT_PUBLIC_API_ENDPOINT` が `.env.production` より優先される。以前は変数名の末尾に空白が入っていて
+（`NEXT_PUBLIC_API_ENDPOINT `）名前が一致せず、検証も `/prod` を叩いていた。
+Lambda を変更したら dev / prod **両方**にデプロイする必須ルール（`CLAUDE.md`）は変わらない。
 
 ### Lambda の利用者
 
@@ -197,7 +197,13 @@ git push github develop
 ./scripts/deploy-lambda.sh dev     # 検証（引数なしならブランチから自動判定）
 # 動作確認後、ユーザーの明示指示があれば
 ./scripts/deploy-lambda.sh prod
+./scripts/deploy-lambda.sh status            # live が指している版とコミット
+./scripts/deploy-lambda.sh rollback prod     # 不具合時: live を1つ前の版へ（コードを戻さなくてよい）
 ```
+
+**版とエイリアス（2026-10-28〜）。** デプロイは `lambda/test` を走らせてから（失敗したら中止）、
+`publish-version`（説明に git の SHA）→ エイリアス `live` をその版へ向ける。
+API Gateway のステージ変数 `lambdaFn` は `dev:live` / `prod:live` で、エイリアスを呼ぶ。
 
 **`git push` では Lambda は一切更新されない。** 「git にマージ済み＝本番反映済み」ではない。
 

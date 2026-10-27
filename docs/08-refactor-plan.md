@@ -496,7 +496,7 @@ git rm -r --cached prompts/logs prompts/night-prompts/logs tsconfig.tsbuildinfo
 **提案**: 管理画面用に `validityCheckedAt` や `auditFlaggedAt` の GSI を検討する。
 ただしオンデマンド課金＋管理者1人の利用なので、優先度は低い。
 
-### G-3. `.env.production` が全ビルドで効く
+### G-3. ~~`.env.production` が全ビルドで効く~~ → 2026-10-28 解消（原因は Cloudflare の変数名の末尾の空白。docs/02 §環境変数）
 
 Cloudflare Pages の Preview ビルドも `/prod` API を向くため、
 **検証環境で dev Lambda の変更を確認できない**。

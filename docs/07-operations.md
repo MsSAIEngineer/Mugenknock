@@ -496,11 +496,44 @@ Jev事前スコア（0=問題なし寄り〜1=疑わしい）: 選択肢ヒン�
   いったん入ったら土曜03:00 の `mode-reset` まで切らない。止めるときは `~/.config/mugenknock/autoburn_disabled` を作る
 - 生成は安く、**検証ゲートにだけ WebFetch を残す**方針
 
+### 人の確認（2026-10-28〜。docs/10-ops-review.md 4.1〜4.4）
+
+AI の判断を人が確かめる経路。管理画面「スキャン結果」の「人の確認待ち」に集まり、日次レポートの「0. 人の確認待ち」に件数と一番古い日付が出る。
+
+| 入口 | 何が入るか | 処理 |
+|---|---|---|
+| 検証（02）が正解を変えようとした | 修正案（`fixProposalJson`）。問題は非表示 | 適用 / 却下 |
+| 検証（02）が削除を提案した | 問題を非表示にするだけ（消さない） | 問題なし（表示に戻す）/ 誤りあり（直すか消す） |
+| 抜き取り検査（`sample-human-review.py`、保守の毎日分 9/10） | 28日ごとに20問。半分は直近30日に作成・修正された問題 | 問題なし / 誤りあり。不良率を日次レポートに出す |
+| 過去分（一度だけ `--mark-past`） | 2026-10-27 以前に AI が人の確認なしで正解を変えた問題 | 問題なし / 誤りあり |
+
+- 文言だけの修正（正解の位置が同じ）は、これまでどおり自動で反映する。
+- 監査（`audit-questions.sh -i`）の生成指示の改良は、**既定で提案のみ**（改良レポートに出すだけで `instructions/` は書き換えない）。
+  従来どおり自動で書き換えるときだけ `AUDIT_APPLY_INSTRUCTIONS=1`。
+- 生成指示が変わった日は、日次レポートにそのコミットが出る。
+
+### 生存の見張り（2026-10-28〜）
+
+保守の毎日分（`mugenknock-nightly-noai`）の最後に、CloudWatch のメトリクス `Mugenknock/NightlyHeartbeat` を1送る。
+アラーム `mugenknock-nightly-stopped` が、**2日続けて届かない**と SNS トピック `mugenknock-heartbeat-alarm` からメールする
+（PC 停止・claude-timer の連鎖切れ・フック外れを疑う）。費用は月 約$0.4。
+
+### 夜間バッチの管理 API 認証（2026-10-28〜）
+
+夜間バッチは**専用ユーザー**と**専用アプリクライアント**でログインする（`scripts/batch-id-token.sh`。
+SSM `/quiz-app/batch-username`・`/quiz-app/batch-password`・`/quiz-app/batch-client-id`）。
+`USER_PASSWORD_AUTH` はこのクライアントだけで有効。人の管理者アカウントは2段階認証（TOTP）を付けるので、バッチでは使わない。
+
+### CI
+
+`.github/workflows/ci.yml` が develop・master への push のたびに `tsc --noEmit`・`lint:tokens`・`node --test lambda/test/` を走らせる
+（docs・specs・`*.md` だけの変更では走らない）。デプロイはしない。
+
 ## 7.4 デプロイ・確認スクリプト
 
 | スクリプト | 用途 |
 |---|---|
-| `scripts/deploy-lambda.sh [dev\|prod]` | Lambda デプロイ（引数なしはブランチから判定） |
+| `scripts/deploy-lambda.sh [dev\|prod\|status\|rollback <env> [版]]` | Lambda デプロイ（引数なしはブランチから判定）。`lambda/test` が通ってから版を切り、エイリアス `live` を向ける。`rollback` で1つ前の版へ戻す |
 | `prompts/night-prompts/scripts/cf-deploy-status.sh [prod\|staging\|wait [SHA]]` | Cloudflare Pages のビルド状況。Build watch paths で飛ばされたコミット（`is_skipped`）は「⏭ ビルド対象外」として即座に返る。`wait` は **HEAD（または指定SHA）のビルド**の完了を最大20分待つ。push 直後で未登録の間は待ち続け、登録されないままなら別のエラーとして報告する（旧実装は「最新デプロイ」を見て、push直前の成功ビルドを見て即座に成功と誤報した） |
 | `prompts/night-prompts/scripts/cf-usage.sh` | Cloudflare の使用量 |
 | `prompts/night-prompts/scripts/backend-health-check.sh` | API の疎通確認 |

@@ -207,6 +207,7 @@
 - 引数なし: 現在のブランチを見て自動判定（develop→dev、master→prod）
 - `./scripts/deploy-lambda.sh dev`: 強制的に dev へデプロイ
 - `./scripts/deploy-lambda.sh prod`: 強制的に prod へデプロイ
+- `./scripts/deploy-lambda.sh status` / `rollback <dev|prod> [版]`: live の版の確認 / 1つ前の版へ戻す（2026-10-28〜。デプロイは `lambda/test` が通ってから版を切り、エイリアス `live` を向ける。API Gateway は `<env>:live` を呼ぶ）
 
 ### Lambda 更新ルール（必須・厳守）
 - **Lambda を変更したら `awsquizHandler-dev` と `awsquizHandler-prod` の両方を必ずデプロイする。** これは「原則」ではなく必須。`lambda/` 配下を1行でも変更したコミットは、dev・prod 両方に反映するまで作業完了としない。
@@ -217,12 +218,13 @@
   ※ prod への反映自体は「ブランチ・デプロイルール」に従いユーザーの明示指示が必要。ただし **dev だけ出して prod を出し忘れる／その逆で片側が旧コードのまま放置するのを禁止**する、という意味。prod 反映指示が出たら dev も揃っているか必ず確認する。
 - **`git push` では Lambda は一切更新されない。** push は Cloudflare のフロントビルドのみ。Lambda は必ず `deploy-lambda.sh` で手動デプロイする。**「git にマージ済み＝本番反映済み」ではない**点に注意。
 - 各 Lambda の利用者:
-  - **`awsquizHandler-prod`（/prod）**: 本番 mugenknock.com。**加えて現状は検証(develop preview)のフロントも /prod を叩く**（`.env.production` が全ビルドで効くため）。デプロイ済みフロントは両環境ともこれを使用。
-  - **`awsquizHandler-dev`（/dev）**: ローカル開発（`.env.local`）と**夜間スクリプト**（`01-generate-questions.sh` 等の問題生成・取込）。
+  - **`awsquizHandler-prod`（/prod）**: 本番 mugenknock.com。
+  - 2026-10-28〜 **検証(develop preview)のフロントは /dev を叩く**（以前は Cloudflare の変数名の末尾の空白で /prod を向いていた）。
+  - **`awsquizHandler-dev`（/dev）**: 検証のフロント、ローカル開発（`.env.local`）と**夜間スクリプト**（`01-generate-questions.sh` 等の問題生成・取込）。
 - したがって **prod だけ更新すると夜間生成・ローカルが旧コード / dev だけ更新すると本番が旧コード**になる。手順は「dev に出して検証 → （指示後）prod に反映」の二段で必ず両方更新する。
 - DynamoDB は dev/prod 共通テーブルのためデータは同じ。dev/prod Lambda の違いは「どちらのコードで処理するか」だけ。
 - **デプロイ漏れの実害例（再発防止）**: 出題ドメイン均等化コード（`domainBalancedOrder`, 2026-06-29 に git 追加）を **prod Lambda へ反映し忘れ**、prod が均等化前の旧コードで約1か月ランダム出題を続けた結果、ユーザーの累積ドメイン分布が大きく偏った（最少1問 vs 最多12問）。git にはあるのに本番未デプロイ、が原因。Lambda ロジック変更は「git 反映」で終わらせず必ず **稼働中の Lambda 実機で挙動を確認**する。
-- **検証環境で「新規Lambdaエンドポイントが動かない」ように見えるが実は仕様通りのケース（2026-09-15発覚）**: 検証(develop preview)のフロントは上記の通り `/prod` を叩くため、**dev にだけ新規デプロイしたエンドポイントは検証環境からは404/失敗になる**。実際に問題の👍👎リアクション機能で「保存直後は反映されるがリロードすると消える」という一見バグに見える挙動が起きたが、原因は prod Lambda に未反映なだけだった。新規Lambda機能を検証環境（`https://develop.mugenknock.pages.dev` 等のpreview URL）で確認する際は、**まずローカル（`.env.local`→dev Lambda）で動作確認してから**、検証環境での不一致が「機能のバグ」か「prod未反映という既知の仕様」かを切り分けること。焦って安易に prod デプロイをしない（prod反映はユーザーの明示指示が必要）。
+- **（解消済み）検証環境が /prod を叩いていた件（2026-09-15発覚・2026-10-28解消）**: 以前は検証のフロントが `/prod` を向いていたため、dev にだけ出した新規エンドポイントが検証で404になり、バグと見誤った（👍👎リアクションの件）。今は検証が `/dev` を向くので、**Lambda の変更は dev に出して検証環境で確かめてから** prod に出す。逆に、検証で見えるユーザーデータは `-dev` テーブルの分（本番の記録とは別）になった点に注意。
 
 ---
 

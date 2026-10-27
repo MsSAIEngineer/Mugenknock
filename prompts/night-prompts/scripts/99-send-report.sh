@@ -1060,6 +1060,13 @@ if [ -x "$_BH_SCRIPT" ]; then
 fi
 echo "$BACKEND_HEALTH" | sed 's/^/  /'
 
+# ── 4.6 人の確認待ち（docs/10-ops-review.md 4.1〜4.4）──────────────
+echo ""
+echo "--- [4.6] 人の確認待ち ---"
+HUMAN_REVIEW=$(python3 "$_d/sample-human-review.py" --summary 2>/dev/null)
+[ -z "$HUMAN_REVIEW" ] && HUMAN_REVIEW="取得失敗"
+echo "$HUMAN_REVIEW" | sed 's/^/  /'
+
 # ── 4.8 テストユーザー データ整合性チェック ──────────────────────
 echo ""
 echo "--- [4.8] テストユーザー データ整合性チェック ---"
@@ -1244,6 +1251,7 @@ data = {
     'service_news':sys.argv[25],
     'usage':sys.argv[26],
     'site_content':sys.argv[27],
+    'human_review':sys.argv[28],
 }
 with open('$REPORT_DATA_FILE', 'w') as f:
     json.dump(data, f, ensure_ascii=False)
@@ -1257,7 +1265,7 @@ with open('$REPORT_DATA_FILE', 'w') as f:
   "$AUDIT_SUMMARY" "$CANARY_COV_SUMMARY" "$DAILY_SUMMARY" \
   "$BACKEND_HEALTH" "$CANARY_AUTH_RESULT" "$COGNITO_NEW" \
   "${CANARY_AUTH_DETAIL:-}" "$TEST_USER_CHECK" "$SERVICE_NEWS" \
-  "$USAGE_SUMMARY" "$SITE_CONTENT_SUMMARY"
+  "$USAGE_SUMMARY" "$SITE_CONTENT_SUMMARY" "$HUMAN_REVIEW"
 
 # HTML生成＋メール送信を1つのPythonスクリプトで実行
 SEND_RESULT=$(REPORT_DATA_FILE="$REPORT_DATA_FILE" python3 << 'PYEOF'
@@ -1350,6 +1358,7 @@ db_gen3d = e(d.get('db_gen3d','?')); db_chk3d = e(d.get('db_chk3d','?'))
 cert_html = md_to_html(d['cert']); jst_now  = e(d['jst_now'])
 service_news_html = md_to_html(d.get('service_news', '変更なし（対応不要）'))
 site_content_html = md_to_html(d.get('site_content', '未実施（月1実行）'))
+human_review_html = '<br>'.join(e(l) for l in str(d.get('human_review', '未取得')).splitlines() if l.strip())
 audit_html      = audit_to_html(d.get('audit', '監査未実施'))
 canary_cov_html = audit_to_html(d.get('canary_cov', '整合性チェック未実施'))
 daily_html      = e_lines(d.get('daily', '日めくり情報なし'))
@@ -1476,6 +1485,10 @@ html_body = f"""<!DOCTYPE html>
 </head><body>
 <h1>&#127769; 無限ノック 日次稼働レポート</h1>
 <p style="color:#888;font-size:13px;">生成日時: {jst_now} | <a href="https://mugenknock.com">mugenknock.com</a></p>
+
+<h2>0. 人の確認待ち</h2>
+<div class="card" style="font-size:13px;line-height:1.7">{human_review_html}<br>
+  <span style="color:#888">管理画面 → コンテンツ → スキャン結果 →「人の確認待ち」で処理する</span></div>
 
 <h2>1. 夜間スクリプト成果（直近3日分）</h2>
 <div class="card">

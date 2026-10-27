@@ -9,7 +9,7 @@
 
 | 接頭辞 | ミドルウェア | 挙動 |
 |---|---|---|
-| `/admin/*` | `requireAdmin` | Cognito idToken を検証し、email が `ADMIN_EMAIL` または `AppSettings.admins` に含まれること。失敗は 401/403 |
+| `/admin/*` | `requireAdmin` | Cognito idToken を検証し、email が `ADMIN_EMAIL` または `AppSettings.admins` に含まれること。失敗は 401/403。受け付けるアプリクライアントは `COGNITO_CLIENT_IDS`（Web と夜間バッチ専用） |
 | `/users/me/*` | `requireUser` | idToken を検証し、**`req.query.userId` / `req.body.userId` をトークンの `sub` で強制上書き**（IDOR 防止） |
 | それ以外 | なし | `userId` はクライアントの申告をそのまま信用する |
 
@@ -372,9 +372,10 @@ questionId も母集団に合流してから絞る（`GET /questions?includeComp
 | PUT | `/admin/questions/:id` | 更新。正解・選択肢が変わると `globalAttempts`/`globalCorrect` を REMOVE |
 | DELETE | `/admin/questions/:id` | 削除（`QuestionTagRelations` も掃除） |
 | GET | `/admin/questions/summary` | 資格別・ドメイン別件数、検証済み数、演習回数。`?sinceDate=` で増分も |
-| GET | `/admin/questions/flagged` | 妥当性タブ。`filter=flagged\|hidden\|audit\|fixed`、limit/offset ページング |
-| POST | `/admin/questions/:id/apply-fix` | `fixProposalJson` を適用し REMOVE |
-| POST | `/admin/questions/:id/reject-fix` | `fixProposalJson` を REMOVE |
+| GET | `/admin/questions/flagged` | 妥当性タブ。`filter=review\|flagged\|hidden\|audit\|fixed`、limit/offset ページング。`review`（人の確認待ち）だけ本文一式（選択肢・正解・解説）も返す。件数バッジ `reviewCount` |
+| POST | `/admin/questions/:id/apply-fix` | `fixProposalJson` を適用し REMOVE（`choiceExplanations` も）。確認待ちだった問題は表示に戻し、`humanReviewResult=fix-applied` と `validityEditLog` を残す |
+| POST | `/admin/questions/:id/reject-fix` | `fixProposalJson` を REMOVE。確認待ちだった問題は元のまま表示に戻す（`fix-rejected`） |
+| POST | `/admin/questions/:id/human-review` | 人の確認の結果 `{result: 'ok'\|'ng', note}`。ok=表示に戻す / ng=非表示のまま。確認待ちでなければ 409 |
 | PUT | `/admin/questions/:id/visibility` | `{ isHidden }` |
 | PUT | `/admin/questions/:id/scheduled-deletion` | `{ reason, date }` で予約、省略で解除 |
 

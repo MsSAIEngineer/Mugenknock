@@ -838,6 +838,19 @@ try:
 except Exception:
     pass
 
+def queue_for_review(qid, review_reason, note, proposal=None):
+    """問題を非表示にして「人の確認待ち」に入れる。proposal があれば修正案（fixProposalJson）として残す。"""
+    sets = ['isHidden = :h', 'reviewReason = :rr', 'humanReviewRequestedAt = :t', 'validityCheckedAt = :t', 'validityNote = :n', 'updatedAt = :t']
+    vals = {':h': {'BOOL': True}, ':rr': {'S': review_reason}, ':t': {'S': now}, ':n': {'S': note or ''}}
+    if proposal:
+        sets.append('fixProposalJson = :fp')
+        vals[':fp'] = {'S': json.dumps(proposal, ensure_ascii=False)}
+    subprocess.run(['aws', 'dynamodb', 'update-item', '--table-name', 'Questions',
+        '--key', json.dumps({'questionId': {'S': qid}}),
+        '--condition-expression', 'attribute_exists(questionId)',
+        '--update-expression', 'SET ' + ', '.join(sets),
+        '--expression-attribute-values', json.dumps(vals)], capture_output=True)
+
 for r in results:
     qid = r.get('questionId', '')
     action = r.get('action', 'ok')
@@ -848,14 +861,12 @@ for r in results:
     prev_checked = orig.get('validityCheckedAt', '')[:10] if orig.get('validityCheckedAt') else '未確認'
 
     if action == 'delete':
-        subprocess.run([
-            'aws', 'dynamodb', 'delete-item',
-            '--table-name', 'Questions',
-            '--key', json.dumps({'questionId': {'S': qid}}),
-        ], capture_output=True)
+        # 削除は取り返しがつかないので、AI は消さずに非表示にして人の確認に回す（2026-10-27〜。docs/10-ops-review.md 4.2）。
+        # 管理画面「人の確認待ち」で、削除するか表示に戻すかを決める。
+        queue_for_review(qid, 'ai-delete', reason)
         del_count += 1
         resolved_ids.append(qid)
-        print(f'  [DELETE] {qid}  生成:{created_at}  前回確認:{prev_checked}: {reason}')
+        print(f'  [HOLD ] {qid}  生成:{created_at}  前回確認:{prev_checked}: AI が削除を提案 → 非表示にして人の確認待ち: {reason}')
         continue
 
     if action == 'fix' and not fix:
@@ -942,6 +953,26 @@ for r in results:
                 expr_values[':domidx'] = {'N': str(domain_idx)}
                 changes['domain'] = {'before': orig.get('domain'), 'after': domain_idx}
             # 旧 tags フィールドは書き込まない（domain 整数インデックスが正準。tags は REMOVE で削除）
+
+        # ── 正解が変わる修正は自動で反映しない（2026-10-27〜。docs/10-ops-review.md 4.2）──
+        # 正解の取り違えはいちばん害が大きいので、修正案（fixProposalJson）として残し、問題は非表示にして
+        # 管理画面「人の確認待ち」で適用／却下を決める。選択肢の文言だけ変わる（正解の位置が同じ）修正は従来どおり反映する。
+        _orig_ch = orig.get('choices', []) or []
+        _orig_idx = orig.get('correctAnswerIndices')
+        if not isinstance(_orig_idx, list) or not _orig_idx:
+            _orig_idx = [_orig_ch.index(c) for c in (orig.get('correctAnswers') or []) if c in _orig_ch]
+        _new_idx = [eff_choices.index(c) for c in eff_ca if c in eff_choices]
+        if sorted(int(i) for i in _orig_idx) != sorted(_new_idx):
+            proposal = {k: v for k, v in {
+                'questionText': fix.get('questionText'), 'choices': fix.get('choices'),
+                'correctAnswers': stripped_ca or None, 'explanation': fix.get('explanation'),
+                'choiceExplanations': fix.get('choiceExplanations'),
+            }.items() if v}
+            queue_for_review(qid, 'answer-change', reason, proposal)
+            fix_count += 1
+            resolved_ids.append(qid)
+            print(f'  [HOLD ] {qid}  生成:{created_at}  前回確認:{prev_checked}: 正解が変わる修正（{sorted(_orig_idx)}→{sorted(_new_idx)}）→ 修正案にして人の確認待ち: {reason}')
+            continue
 
         # ── 決定的チェック: fix 適用後に正解が「極端に」長くないか ──
         # 正解が最長になること自体は一定割合で許容する方針（長さと正解を無相関にし

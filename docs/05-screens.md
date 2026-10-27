@@ -481,7 +481,10 @@ DB 側は `CheatSheetDeletions` テーブルが「削除予定フラグ」のオ
 
 - すべてのリクエストは `adminFetch` が `Authorization: Bearer <idToken>` を付ける
 - 「スキャン結果」タブ = `GET /admin/questions/flagged`（妥当性チェックの結果一覧）。
-  `filter=flagged|hidden|audit|fixed` で切り替え、修正案の apply / reject ができる
+  既定は「人の確認待ち」（`filter=review`）。AI が正解を変えようとした修正案は「適用 / 却下」、
+  AI の削除提案と抜き取り検査は「問題なし / 誤りあり」で処理する（docs/10-ops-review.md 4.1〜4.3）。
+  ほかに `filter=hidden|audit|fixed` で切り替える
+- 「管理者設定」タブの先頭で、自分のアカウントの2段階認証（TOTP）を設定できる（`MfaSetupCard`）
 - 「データ削除」タブ = `POST /admin/direct-delete`（メールアドレス指定）
 
 ---

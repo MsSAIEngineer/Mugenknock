@@ -70,7 +70,9 @@ items.filter(q => !q.isHidden && !!q.validityCheckedAt)
 | `validityRating` | 同上 | 1〜5。`<= 2` は管理画面「要確認」に出る |
 | `validityNote` | 同上 | 検証コメント |
 | `validityEditLog` | 同上 | AI が修正した履歴。存在＝「AI修正済み」バッジ |
-| `fixProposalJson` | 同上 | 未適用の修正案。管理画面から apply / reject |
+| `fixProposalJson` | 同上 | 未適用の修正案。管理画面から apply / reject。2026-10-28〜、**正解の位置が変わる修正**は自動で反映せずここに入る |
+| `humanReviewRequestedAt` / `reviewReason` | 02・`sample-human-review.py` | **人の確認待ち**。`answer-change`（AI が正解を変えようとした。非表示）/ `ai-delete`（AI が削除を提案。非表示）/ `sample`（月1回の抜き取り検査）/ `answer-changed-past`（2026-10-27 以前に AI が正解を変えた問題） |
+| `humanReviewedAt` / `humanReviewResult` / `humanReviewReason` / `humanReviewNote` | 管理者 | 人の確認の結果。`ok` / `ng` / `fix-applied` / `fix-rejected`。抜き取りの不良率は `humanReviewReason=sample` の ok/ng から出す（日次レポート） |
 | `formatCheckedAt` | （旧 `06-fix-format.sh`・2026-10-27 削除。既存データに残るだけ） | 体裁チェック済み |
 | `linebreakCheckedAt` | `09-check-linebreaks.sh` | 改行整形済み（Haiku・非空白文字の変化は破棄） |
 | `translationCheckedAt` | （旧 `03-check-translation.sh`・2026-10-27 削除。既存データに残るだけ） | 翻訳チェック済み |

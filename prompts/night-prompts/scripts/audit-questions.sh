@@ -767,6 +767,18 @@ ALLOWED = {'_common-rules.txt', '_validity-extra.txt'} | {f"{e}.txt" for e in AW
 
 changes = obj.get('changes') or []
 applied, skipped = [], []
+# 生成指示の自動改良は既定で「提案のみ」（2026-10-27〜。docs/10-ops-review.md 4.4）。
+# 良くなったかを確かめる手段がないまま指示を書き換えないため。人が改良レポートを読み、採るものを手で反映する。
+# 従来どおり自動で書き換えるときだけ AUDIT_APPLY_INSTRUCTIONS=1 を付ける。
+PROPOSE_ONLY = os.environ.get('AUDIT_APPLY_INSTRUCTIONS') != '1'
+def _write(path, content):
+    if PROPOSE_ONLY:
+        return
+    os.makedirs(backup, exist_ok=True)
+    if os.path.isfile(path):
+        shutil.copy2(path, os.path.join(backup, os.path.basename(path)))
+    with open(path, 'w') as f:
+        f.write(content)
 def _norm(s): return ''.join((s or '').split())
 # 肥大化防止の上限。append は超過すると見送り、edit は「縮小 or 現状維持」なら上限超過でも許可
 # （edit による統合・短縮こそが肥大化を解消する手段のため）。
@@ -797,12 +809,8 @@ for ch in changes:
         # 肥大化防止: 上限を超えるファイルへは追記しない。以後は edit(統合/短縮) で分量を減らす方針。
         if len(old) + len(ap) + 1 > MAX_CHARS:
             skipped.append((fn, f'サイズ上限({MAX_CHARS}字)超過のため追記見送り（現在{len(old)}字）。edit による統合/短縮を推奨')); continue
-        os.makedirs(backup, exist_ok=True)
-        if os.path.isfile(p):
-            shutil.copy2(p, os.path.join(backup, fn))
         new_content = old + ('\n' if old and not old.endswith('\n') else '') + ap + '\n'
-        with open(p, 'w') as f:
-            f.write(new_content)
+        _write(p, new_content)
         applied.append((fn, 'append', rationale, ap))
 
     elif op == 'edit':
@@ -833,10 +841,7 @@ for ch in changes:
         # edit は分量を増やさないのが原則。増える場合のみ上限を課す（縮小・維持は常に許可）。
         if len(new_content) > len(old) and len(new_content) > MAX_CHARS:
             skipped.append((fn, f'edit後にサイズ上限({MAX_CHARS}字)超過のため見送り')); continue
-        os.makedirs(backup, exist_ok=True)
-        shutil.copy2(p, os.path.join(backup, fn))
-        with open(p, 'w') as f:
-            f.write(new_content)
+        _write(p, new_content)
         _delta = len(new_content) - len(old)
         applied.append((fn, 'edit', rationale, f"- {find}\n+ {repl}\n(差分 {_delta:+d}字)"))
 
@@ -846,26 +851,29 @@ for ch in changes:
 # 改良レポート(md)
 lines = [f"# プロンプト改良レポート ({os.environ['DATE']})", '',
          '## 改良方針', obj.get('summary', '(なし)'), '',
-         f"## 適用 {len(applied)}件 / 見送り {len(skipped)}件", '']
+         (f"## 提案 {len(applied)}件（未適用。採るものは人が instructions/ に手で反映する）/ 見送り {len(skipped)}件" if PROPOSE_ONLY
+          else f"## 適用 {len(applied)}件 / 見送り {len(skipped)}件"), '']
 for fn, kind, rationale, detail in applied:
     head = '末尾に追記' if kind == 'append' else '既存文を修整(edit)'
     lines += [f"### ✅ {fn}（{head}）", f"**理由:** {rationale}", '', '```', detail, '```', '']
 for fn, why in skipped:
     lines.append(f"- ⏭️ {fn}: {why}")
-if applied:
+if applied and not PROPOSE_ONLY:
     lines += ['', f"バックアップ: {backup}"]
 with open(report, 'w') as f:
     f.write('\n'.join(lines) + '\n')
 
 # コンソール出力
 print(f"改良方針: {obj.get('summary','(なし)')}")
-print(f"適用 {len(applied)}件 / 見送り {len(skipped)}件")
+print(f"{'提案（未適用）' if PROPOSE_ONLY else '適用'} {len(applied)}件 / 見送り {len(skipped)}件")
 for fn, kind, rationale, _ in applied:
     print(f"  ✅ {fn}[{kind}] — {rationale[:80]}")
 for fn, why in skipped:
     print(f"  ⏭️ {fn} — {why}")
 print(f"改良レポート: {report}")
-if applied:
+if applied and PROPOSE_ONLY:
+    print("※ 提案のみ。instructions/ は書き換えていません（反映するなら改良レポートを読んで手で直す）。")
+elif applied:
     print(f"バックアップ: {backup}")
     print("※ 次回以降の生成(01)・検証(02)からこの改良が反映されます。")
 PYEOF

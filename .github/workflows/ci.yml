@@ -1,0 +1,23 @@
+# push のたびに型・デザイントークン・Lambda のテストを走らせる（2026-10-27〜。docs/10-ops-review.md 4.7）。
+# デプロイは別（フロント=Cloudflare Pages、Lambda=scripts/deploy-lambda.sh。後者もデプロイ前に同じテストを走らせる）。
+name: ci
+on:
+  push:
+    branches: [develop, master]
+    paths-ignore: ['docs/**', 'specs/**', '**/*.md', 'prompts/night-prompts/logs/**', 'prompts/logs/**']
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix lambda/src
+      - run: npm run gen:instructions
+      - run: npx tsc --noEmit
+      - run: npm run lint:tokens
+      - run: node --test lambda/test/
