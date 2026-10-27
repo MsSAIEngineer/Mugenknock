@@ -14,6 +14,7 @@
 | [07-operations.md](07-operations.md) | 夜間バッチ・systemd タイマー・E2E・運用手順 | 自動化まわりを触りたい |
 | [08-refactor-plan.md](08-refactor-plan.md) | 構成上の問題点と改善提案（優先度付き） | 技術的負債を返したい |
 | [09-design-review.md](09-design-review.md) | 設計レビュー（速度・苦手分析・費用・スクリプト効率） | 何を直すと効くか知りたい |
+| [10-ops-review.md](10-ops-review.md) | 運営の仕組みのレビュー（出し方・データ・生成と検証・夜間・管理画面） | 運営の仕組みを直したい |
 | [website-manifest.txt](website-manifest.txt) | **制作意図・哲学（作者の原文）** | 判断に迷ったとき |
 | [archive/](archive/) | 2026-04 時点の旧ドキュメント（内容は現状と乖離） | 経緯を知りたいときだけ |
 
