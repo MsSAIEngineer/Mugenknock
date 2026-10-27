@@ -501,7 +501,7 @@ Jev事前スコア（0=問題なし寄り〜1=疑わしい）: 選択肢ヒン�
 | スクリプト | 用途 |
 |---|---|
 | `scripts/deploy-lambda.sh [dev\|prod]` | Lambda デプロイ（引数なしはブランチから判定） |
-| `prompts/night-prompts/scripts/cf-deploy-status.sh [prod\|staging\|wait [SHA]]` | Cloudflare Pages のビルド状況。`wait` は **HEAD（または指定SHA）のビルド**の完了を最大20分待つ。push 直後で未登録の間は待ち続け、登録されないままなら別のエラーとして報告する（旧実装は「最新デプロイ」を見て、push直前の成功ビルドを見て即座に成功と誤報した） |
+| `prompts/night-prompts/scripts/cf-deploy-status.sh [prod\|staging\|wait [SHA]]` | Cloudflare Pages のビルド状況。Build watch paths で飛ばされたコミット（`is_skipped`）は「⏭ ビルド対象外」として即座に返る。`wait` は **HEAD（または指定SHA）のビルド**の完了を最大20分待つ。push 直後で未登録の間は待ち続け、登録されないままなら別のエラーとして報告する（旧実装は「最新デプロイ」を見て、push直前の成功ビルドを見て即座に成功と誤報した） |
 | `prompts/night-prompts/scripts/cf-usage.sh` | Cloudflare の使用量 |
 | `prompts/night-prompts/scripts/backend-health-check.sh` | API の疎通確認 |
 | `scripts/backup-devenv.sh` | 開発環境のバックアップ |
