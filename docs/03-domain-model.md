@@ -76,6 +76,7 @@ items.filter(q => !q.isHidden && !!q.validityCheckedAt)
 | `humanReviewedAt` / `humanReviewResult` / `humanReviewReason` / `humanReviewNote` | 管理者 | 人の確認の結果。`ok` / `ng` / `fix-applied` / `fix-rejected`。抜き取りの不良率は `humanReviewReason=sample` の ok/ng から出す（日次レポート） |
 | `formatCheckedAt` | （旧 `06-fix-format.sh`・2026-10-27 削除。既存データに残るだけ） | 体裁チェック済み |
 | `linebreakCheckedAt` | `09-check-linebreaks.sh` | 改行整形済み（Haiku・非空白文字の変化は破棄） |
+| `followUpQuestions` / `followUpBasis` | `11-add-follow-up-questions.py` | 回答後に出す「もっと知りたい」質問 `[{angle, text, createdAt}]`（最大3）と、作ったときの選択肢のハッシュ（FNV-1a 32bit。`src/utils/followUp.ts` と同じ計算）。ハッシュが今の選択肢と合わない質問は出さない。specs/009 |
 | `translationCheckedAt` | （旧 `03-check-translation.sh`・2026-10-27 削除。既存データに残るだけ） | 翻訳チェック済み |
 | `auditNote` / `auditFlaggedAt` | `audit-questions.sh` | 監査で「易しすぎ・模試不適」等を指摘（事実誤りではないので自動修正されない＝人の判断が要る） |
 | `isHidden` | 管理者 | 非表示（出題プールから除外） |

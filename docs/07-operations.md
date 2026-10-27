@@ -46,14 +46,15 @@ Claude のサブスクリプションは5時間単位でトークンが回復す
 | `claude-timer-prelog` | ピン1分前 | （共通）枠の終わり際の `/usage` を `~/.config/claude-timer/usage.log` に記録 |
 | `claude-timer-watchdog` | 2時間おき | （共通）連鎖切れの検知・修復 |
 | `claude-timer-hook-mugenknock-1` | ピン30分前 | `local-validity-hook-run.sh` — 妥当性検証（`02-check-validity -n 1000`） |
-| `claude-timer-hook-mugenknock-2` | ピン20分前 | `local-generate-hook-run.sh` — 問題生成（`01-generate-questions --hard` を累計1000問まで繰り返す） |
+| `claude-timer-hook-mugenknock-2` | ピン25分前 | `local-followup-hook-run.sh` — 「もっと知りたい」質問の付与（`11-add-follow-up-questions.py -n 1000`・Haiku。2026-10-28〜） |
+| `claude-timer-hook-mugenknock-3` | ピン20分前 | `local-generate-hook-run.sh` — 問題生成（`01-generate-questions --hard` を累計1000問まで繰り返す） |
 
 フックの番号は `hooks.d/mugenknock.conf` の行順（`ct hooks list`）。`ct off` のとき（`hooks_enabled` が無いとき）は
 conf の `require=` により仕込まれない。どちらのフックも
 **締切は次のピンの3分前**で、`next_ping` から求める（`scripts/mk-hook-deadline.sh`。パスは claude-timer が
 `CLAUDE_TIMER_NEXT_PING_FILE` で渡す）。発動時刻を conf で変えても締切が追従する。
 ピンの直前に発動した場合（遅延起動など）は何もせずスキップする。
-`next_ping` が読めないときだけ、発動からの先行分（検証30分・生成20分）で代用する。
+`next_ping` が読めないときだけ、発動からの先行分（検証30分・質問25分・生成20分）で代用する。
 2つは並走し、トークンは共有する。1000問は「枠が尽きるまで止まらない」ための上限で、実際に処理できる
 件数はトークンで決まる（検証は1回100〜150問程度）。
 
@@ -472,6 +473,19 @@ Jev事前スコア（0=問題なし寄り〜1=疑わしい）: 選択肢ヒン�
   「同程度に疑わしいものの中で古い順」を成立させるための設計上の代償。精度の面では
   粗くする必要はない（ノイズを均しても AUC は変わらないため）ので、日付優先を弱めてよければ
   `JEV_TRIAGE_BAND=0.1` で連続値とほぼ同じ効率になる。
+
+### 「もっと知りたい」質問の付与（11。2026-10-28〜・specs/009）
+
+`prompts/night-prompts/scripts/11-add-follow-up-questions.py`。演習画面で回答後に出す質問（利用者が自分の AI に聞く用）を Questions に付ける。
+使い切りモードのフック（ピン25分前）で動き、手動ではエイリアス `afq`（`afq -n 50 [-c 10] [-D HH:MM] [--dry-run]`）。
+
+- **1周で1問1つ・最大3つ。** 有効な質問が少ない問題から順に付ける（全問が1つになってから2つ目へ）。
+- 角度は `term`（他の選択肢の用語）/ `diff`（正解と他の違い・使い分け）/ `whatif`（条件が違ったら）/ `why`（仕組み）/ `limits`（制限・料金・注意点）。
+  1問の中で重ねない。偏らないよう、問題ごとにまだ使っていない角度をランダムに勧め、合わないときだけモデルが別の角度を選ぶ。
+- モデルは Haiku（`--tools "" --strict-mcp-config`）。書く前に機械的に検査する（1行・12〜120文字・「？」で終わる・「この問題」「選択肢」等で問題を指さない・
+  オリジナル資格は AWS/Amazon を含まない・角度の重複なし）。
+- 作ったときの選択肢のハッシュを `followUpBasis` に残す。02 や管理画面で選択肢が直されたら、画面は古い質問を出さず、次の付与で捨てて付け直す。
+  書き込みは条件 `choices = :ch` 付き。
 
 ### 通報チェック（03）の多層防御
 

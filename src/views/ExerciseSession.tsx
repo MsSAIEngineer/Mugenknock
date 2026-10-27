@@ -19,6 +19,7 @@ import { ConfirmBurst } from '../components/ExamSelectOverlay';
 import { IconBookOpen, IconBean, IconCopy, IconCheck, IconCircleCheck, IconCircleX, IconHeart, IconThumbsUp, IconThumbsDown, IconMoreVertical, IconInfinity } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 import { isKbMode } from '../utils/keyboardMode';
+import { validFollowUps, type FollowUpQuestion } from '../utils/followUp';
 
 type Tip = { tipId: string; title: string; content: string; examType: string };
 
@@ -49,6 +50,8 @@ type Question = {
   globalCorrect?: number;
   scheduledDeletionReason?: string;
   scheduledDeletionDate?: string;
+  followUpQuestions?: FollowUpQuestion[];
+  followUpBasis?: string;
 };
 
 // correctAnswerIndices が稀に単一回答問題でスカラー値（数値）として保存されていることがあり、
@@ -118,6 +121,36 @@ const CopyButton = ({ getText }: { getText: () => string }) => {
       }}
     >
       {copied ? <IconCheck size={13} /> : <IconCopy size={13} />}
+    </button>
+  );
+};
+
+// 「もっと知りたいとき」の1行。行全体を押すと質問文だけをコピーする（specs/009）。
+const FollowUpRow = ({ text }: { text: string }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <button
+      onClick={copy}
+      title={copied ? 'コピー済み' : '質問をコピー'}
+      aria-label={`${text}（質問をコピー）`}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', width: '100%', minHeight: 44,
+        padding: 'var(--spacing-sm) var(--spacing-md)', textAlign: 'left', cursor: 'pointer',
+        background: 'var(--color-bg-white)', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius-md)',
+        color: 'var(--color-text-main)', fontSize: 'var(--font-size-sm2)', lineHeight: 1.6, fontFamily: 'inherit',
+      }}
+    >
+      <span style={{ flex: 1, overflowWrap: 'anywhere' }}>{text}</span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', flexShrink: 0, fontSize: 'var(--font-size-xs)', color: copied ? 'var(--color-success)' : 'var(--color-text-sub)' }}>
+        {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+        {copied ? 'コピー済み' : 'コピー'}
+      </span>
     </button>
   );
 };
@@ -1734,6 +1767,24 @@ export default function ExerciseSession() {
           </div>
         ),
         document.body
+        );
+      })()}
+
+      {/* もっと知りたいとき（回答後・コラムの上。質問文をコピーして利用者の AI に聞いてもらう。specs/009） */}
+      {answered && currentQuestion && (() => {
+        const displayQ = (currentQuestion.correctAnswers ? currentQuestion : detail) ?? currentQuestion;
+        const fus = validFollowUps({ ...displayQ, choices: displayQ.choices ?? currentQuestion.choices });
+        if (fus.length === 0) return null;
+        return (
+          <div style={{ marginTop: 'var(--spacing-xl)' }}>
+            <p style={{ fontWeight: 700, color: 'var(--color-text-main)', margin: '0 0 var(--spacing-xs)', fontSize: 'var(--font-size-base)' }}>もっと知りたいとき</p>
+            <p style={{ color: 'var(--color-text-sub)', margin: '0 0 var(--spacing-sm)', fontSize: 'var(--font-size-xs)' }}>
+              押すと質問をコピーします。お使いの AI に貼って聞いてみてください。
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+              {fus.map((f, i) => <FollowUpRow key={`${currentQuestion.questionId}-${i}`} text={f.text} />)}
+            </div>
+          </div>
         );
       })()}
 
