@@ -114,7 +114,7 @@ P(基礎知識を取る) = 基礎知識の残り / (公式の残り + 基礎知�
 - しっかり対策（`Home.tsx` の `startFocusedExercise`）は、フロントで公式と基礎知識を**同じプールから重み付き抽出**する
   （フィルタ有効時に公式を先に抽出する分岐は廃止）
 - 旧実装は、バケット（ドメイン）数が公式側4・基礎側6のとき同値が公式優先で解決され、
-  先頭が `MLA 20%/60%`（固定）になっていた。テスト: `lambda/test/selection.test.js`（`node --test lambda/test/`）
+  先頭が `MLA 20%/60%`（固定）になっていた。テスト: `lambda/test/selection.test.js`（`node --test 'lambda/test/*.test.js'`。Node 22 ではディレクトリ指定だとテストを見つけられない）
 
 ### 実装が2箇所にある
 

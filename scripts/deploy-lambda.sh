@@ -75,7 +75,7 @@ cp "$REPO_ROOT/src/data/examDomains.json" "$LAMBDA_SRC/examDomains.json"
 echo "✓ Synced examDomains.json"
 
 # テスト（失敗したらデプロイしない）
-(cd "$REPO_ROOT/lambda" && node --test test/ >/tmp/lambda-test.log 2>&1) || {
+(cd "$REPO_ROOT/lambda" && node --test 'test/*.test.js' >/tmp/lambda-test.log 2>&1) || {
   echo "❌ lambda/test が失敗したのでデプロイしません（ログ: /tmp/lambda-test.log）"; tail -20 /tmp/lambda-test.log; exit 1; }
 echo "✓ lambda/test: $(grep -E '^# pass' /tmp/lambda-test.log | sed 's/# //')"
 
