@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from '@/compat/react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { API_ENDPOINT, EXAM_TYPES, EXAM_CONFIGS, EXAM_LEVEL, EXAM_LEVEL_COLORS, levelText, isNonAwsExam } from '../constants';
+import { API_ENDPOINT, EXAM_TYPES, EXAM_CONFIGS, EXAM_LEVEL, EXAM_LEVEL_COLORS, levelText, levelLabel, isNonAwsExam } from '../constants';
 import { getPoints, fetchPointsFromServer } from '../utils/points';
 import { loadTargetExamFromServer } from '../utils/preferences';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
@@ -786,13 +786,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <div style={{ background: 'var(--color-bg-main)', borderRadius: 8, overflow: 'hidden' }}>
                 {([
                   { level: 'Foundational', pts: 1, exams: 'CLF, AIF' },
+                  { level: 'Business',     pts: 3, exams: 'AIB' },
                   { level: 'Associate',    pts: 2, exams: 'SAA, DVA, SOA, DEA, MLA' },
                   { level: 'Professional', pts: 3, exams: 'SAP, DOP, AIP' },
                   { level: 'Specialty',    pts: 3, exams: 'ANS, SCS' },
+                  { level: 'Additional',   pts: 3, exams: 'ML, DB, NW, SEC' },
                 ] as const).map((row, i, arr) => (
                   <div key={row.level} style={{ display: 'flex', alignItems: 'center', padding: '9px 12px', borderBottom: i < arr.length - 1 ? '1px solid color-mix(in srgb, var(--color-text-light) 40%, transparent)' : 'none' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-text-main)' }}>{row.level}</div>
+                      <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-text-main)' }}>{levelLabel(row.level, lang === 'ja')}</div>
                       <div style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)', marginTop: 1 }}>{row.exams}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, flexShrink: 0 }}>

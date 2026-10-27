@@ -305,7 +305,7 @@ estimatedScore = Math.round(weightedSum / Σweights × 1000)
 
 | 獲得条件 | ポイント |
 |---|---|
-| 正解1問 | Foundational: 1 / Associate: 2 / Professional・Specialty・Additional: 3 |
+| 正解1問 | Foundational: 1 / Associate: 2 / Business・Professional・Specialty・Additional: 3 |
 | 日次目標の達成（当日1回のみ） | 10 |
 
 ```js

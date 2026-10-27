@@ -14,7 +14,7 @@ import {
   IconCalendarNotebook, IconTarget, IconAnnoyed, IconList,
   IconSparkles, IconChevronRight, IconChevronDown, IconLock, IconFlag, IconStar, IconTrendingUp, IconPenLine,
   IconSprout, IconBox, IconBot, IconCode2, IconCloud, IconDatabase, IconBrain, IconVectorSquare, IconFileCodeCorner, IconAtom, IconShieldIcon, IconWaypoints,
-  EXAM_ICON_COMPONENTS, IconSave, IconSaveCheck, IconCopy, IconCheck, IconTrophy, IconCircleCheck, IconCircleX, IconExternalLink, IconFileText,
+  EXAM_ICON_COMPONENTS, IconSave, IconSaveCheck, IconCopy, IconCheck, IconTrophy, IconCircleCheck, IconCircleX, IconExternalLink, IconFileText, IconTrash,
 } from '../components/Icons';
 import ExamSelectOverlay, { EXAM_DESC, EXAM_URLS, EXAM_GUIDE_PDF_URLS, ConfirmBurst } from '../components/ExamSelectOverlay';
 import Confetti from '../components/Confetti';
@@ -629,8 +629,8 @@ export default function MyPage() {
                         style={{ flex: 1, border: '1px solid var(--color-border)', borderRadius: 8, padding: '8px 10px', fontSize: 'var(--font-size-base)', background: 'var(--color-bg-white)', color: 'var(--color-text-main)', cursor: 'pointer' }}
                       />
                       {editExamDate && (
-                        <button onClick={() => setEditExamDate('')} style={{ padding: '6px 10px', border: '1px solid var(--color-border)', borderRadius: 8, background: 'transparent', cursor: 'pointer', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)' }}>
-                          {ja ? '削除' : 'Clear'}
+                        <button onClick={() => setEditExamDate('')} aria-label={ja ? '受験日を消す' : 'Clear exam date'} title={ja ? '受験日を消す' : 'Clear exam date'} style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', border: '1px solid var(--color-border)', background: 'transparent', cursor: 'pointer', color: 'var(--color-text-sub)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <IconTrash size={18} />
                         </button>
                       )}
                     </div>

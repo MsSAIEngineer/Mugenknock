@@ -2700,9 +2700,11 @@ export default function Home() {
                 if (primaryMode === 'focused') { const fp = loadFocusedPrefs(uid); savedFocusedPrefsRef.current = fp; setDraftFocusedPrefs({ ...fp }); setShowFocusedModal(true); }
                 else { const p = loadQuickPrefs(uid); const d = { ...p, domains: storedDomainsToNames(targetExam ?? 'SAA', p.domains) }; savedQuickPrefsRef.current = d; setDraftPrefs(d); setShowQuickModal(true); }
               }}
-              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, width: 132, border: `1.5px solid ${primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)'}`, borderRadius: 'var(--border-radius-full)', background: 'var(--color-bg-white)', cursor: 'pointer', color: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)', fontWeight: 600, fontSize: 'var(--font-size-base)' }}
+              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, border: `1.5px solid ${primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)'}`, borderRadius: '50%', background: 'var(--color-bg-white)', cursor: 'pointer', color: primaryMode === 'focused' ? 'var(--color-points)' : 'var(--color-primary)' }}
+              aria-label={ja ? '設定' : 'Settings'}
+              title={ja ? '設定' : 'Settings'}
             >
-              {ja ? '設定' : 'Settings'}
+              <IconSettings size={18} />
             </button>
           </div>
         </div>
