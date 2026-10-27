@@ -398,7 +398,7 @@ Cloudflare Pages 上でも**1.5〜2分**（直近10回の実測 84〜137秒。cl
 - 資格レベル色は `EXAM_LEVEL_COLORS`（`constants.ts`）だけを使い、画面ごとに色表を書かない。
   実体は CSS 変数（`--level-*`）なので、`${color}33` のように hex のアルファを足せない。半透明は `tint(color, pct)`。
   `EXAM_LEVEL_COLORS` は塗り・線用の明るい色。**文字に使うときは `levelText(color)`**（`--level-*-text`）、
-  **塗りに文字を載せるときは `levelOn(color)`**（`--level-*-on`。白か濃色のうち読める方）を通す。
+  **塗りに文字を載せるときは `levelOn(color)`**（`--level-*-on`。ライトは白で統一、ダークは濃色）を通す。
 - 正誤・状態を色だけで示さない。アイコンか文字を添える。
 
 ## 出題ドメイン配分の方針（確定）

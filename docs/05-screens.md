@@ -325,7 +325,7 @@ navigate('/aws/result', { state: { results, questions, score, ... } })
 | 週間達成状況（直近7日） | `GET /users/me/sessions?limit=200` を日別集計（取得失敗時は `dailyQCount_*`） |
 | 取得済資格 | preferences の `obtainedCerts` ＋ localStorage（和集合） |
 
-**取得済資格の六角形**（`CertHexBadge`）: 取得済みはレベル色で塗りつぶしてアイコンを `levelOn()` 色で抜く。
+**取得済資格の六角形**（`CertHexBadge`）: 中は常に白地（`--color-bg-white`）で、取得済みはレベル色の太い縁＋レベル色のアイコン。
 未取得はグレーの輪郭（`--color-text-light` 45%）だけ。設定オーバーレイのタイルは取得済みでレベル色の枠＋淡い地（`tint(c, 8)`）＋右上に丸いチェック。
 
 **古いリンクの転送**: `location.state.tab` が `'analysis' | 'history'` で来たら（古い JS・古いリンク）、
@@ -530,7 +530,7 @@ adsbygoogle.js）と `src/components/ui/AdPlaceholder.tsx`（未使用）も削�
   - 補足文の薄いグレーは `--color-text-light: #656871`（白地 5.6:1）
   - 資格レベル色は3系統（ライト/ダーク別値）。`--level-*` は塗り・線・アイコン用の明るい色で、`constants.ts` の
     `EXAM_LEVEL_COLORS` はこれを参照する。文字は `levelText()` → `--level-*-text`（白地で 4.5:1 以上）、
-    塗りに載せる文字は `levelOn()` → `--level-*-on`。半透明は hex にアルファを足さず `tint(color, pct)` を使う
+    塗りに載せる文字は `levelOn()` → `--level-*-on`（ライトは白で統一、ダークは濃色）。半透明は hex にアルファを足さず `tint(color, pct)` を使う
   - ポイント・しっかり対策のティールは `--color-points`（#009E9E）、その塗りに載せる文字は `--color-on-points`（白）。
     小さい文字では 3.3:1 で AA 未満だが、明るさを優先する本人判断（一度 #007a7a に暗くして戻した）
 - 動き: 常時ループする演出は1画面に1つまで（ホームの日めくりカードの光のみ）。ランディングの開始ボタンの脈動は廃止。

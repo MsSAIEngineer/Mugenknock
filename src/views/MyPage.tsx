@@ -31,19 +31,19 @@ function daysUntil(dateStr: string): number {
   return Math.round((examDate.getTime() - today.getTime()) / 86400000);
 }
 
-// 取得済資格の六角形バッジ。取得済みはレベル色で塗り、未取得はグレーの輪郭だけにする
-// （以前は塗りの上に半透明の白で輪郭を描いていて、輪郭がぼやけていた）
+// 取得済資格の六角形バッジ。中は常に白地（ダークでは地色）で、縁とアイコンの色だけで状態を示す:
+// 取得済み = レベル色の太い縁＋レベル色のアイコン、未取得 = グレーの細い縁＋グレーのアイコン
 const CERT_HEX = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
-function CertHexBadge({ exam, obtained, color, size, innerBg = 'var(--color-bg-white)', spin }: {
-  exam: string; obtained: boolean; color: string; size: number; innerBg?: string; spin?: boolean;
+function CertHexBadge({ exam, obtained, color, size, spin }: {
+  exam: string; obtained: boolean; color: string; size: number; spin?: boolean;
 }) {
   const ExamIcon = EXAM_ICON_COMPONENTS[exam];
   const h = Math.round(size * 1.15);
-  const ring = Math.max(2, Math.round(size * 0.06));
+  const ring = Math.max(2, Math.round(size * (obtained ? 0.09 : 0.06)));
   return (
     <div style={{ position: 'relative', width: size, height: h, flexShrink: 0, animation: spin ? 'certHexSpin 0.52s ease' : undefined }}>
       <div style={{ position: 'absolute', inset: 0, clipPath: CERT_HEX, background: obtained ? color : tint('var(--color-text-light)', 45) }} />
-      <div style={{ position: 'absolute', inset: obtained ? 0 : ring, clipPath: CERT_HEX, background: obtained ? 'transparent' : innerBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: obtained ? levelOn(color) : 'var(--color-text-light)' }}>
+      <div style={{ position: 'absolute', inset: ring, clipPath: CERT_HEX, background: 'var(--color-bg-white)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: obtained ? color : 'var(--color-text-light)' }}>
         {ExamIcon && <ExamIcon size={Math.round(size * 0.42)} />}
       </div>
     </div>
