@@ -173,6 +173,8 @@ Grant は0件で、CDK で作られたスタックも残っていなかったた
 | Secrets Manager `mugenknock/fargate/env` | 30日の復旧猶予つき削除 | 2026-10-31まで復旧可 |
 | ECR `mugenknock-night-batch`（3イメージ・1GB） | `--force` 削除 | **不可**（イメージは再ビルド可能） |
 | ECS クラスタ `mugenknock-batch` | 削除（稼働タスク0） | 不可 |
+| EventBridge Scheduler `mugenknock-ping`（無効・削除済みクラスタ宛て） | 削除（2026-10-27） | 不可 |
+| CodeBuild `mugenknock-image-build` | 削除（2026-10-27）。リポジトリの `scripts/fargate-*.sh`・`Dockerfile.fargate` も削除 | git 履歴から復元可 |
 | EventBridge `mugenknock-batch-failure` ＋ SNS `mugenknock-batch-alerts` | 削除 | 不可 |
 
 削除後、本番サイト・問題取得API・演習APIがすべて HTTP 200 で正常なことを確認済み。

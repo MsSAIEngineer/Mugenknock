@@ -485,7 +485,6 @@ Jev事前スコア（0=問題なし寄り〜1=疑わしい）: 選択肢ヒン�
 | `prompts/night-prompts/scripts/cf-usage.sh` | Cloudflare の使用量 |
 | `prompts/night-prompts/scripts/backend-health-check.sh` | API の疎通確認 |
 | `scripts/backup-devenv.sh` | 開発環境のバックアップ |
-| `scripts/backfill-question-accuracy.sh` | `globalAttempts`/`globalCorrect` の補正 |
 
 Cloudflare API トークンは `~/.bashrc` の `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` から読む。
 

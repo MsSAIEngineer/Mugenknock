@@ -71,9 +71,9 @@ items.filter(q => !q.isHidden && !!q.validityCheckedAt)
 | `validityNote` | 同上 | 検証コメント |
 | `validityEditLog` | 同上 | AI が修正した履歴。存在＝「AI修正済み」バッジ |
 | `fixProposalJson` | 同上 | 未適用の修正案。管理画面から apply / reject |
-| `formatCheckedAt` | `06-fix-format.sh` | 体裁チェック済み |
+| `formatCheckedAt` | （旧 `06-fix-format.sh`・2026-10-27 削除。既存データに残るだけ） | 体裁チェック済み |
 | `linebreakCheckedAt` | `09-check-linebreaks.sh` | 改行整形済み（Haiku・非空白文字の変化は破棄） |
-| `translationCheckedAt` | `03-check-translation.sh` | 翻訳チェック済み |
+| `translationCheckedAt` | （旧 `03-check-translation.sh`・2026-10-27 削除。既存データに残るだけ） | 翻訳チェック済み |
 | `auditNote` / `auditFlaggedAt` | `audit-questions.sh` | 監査で「易しすぎ・模試不適」等を指摘（事実誤りではないので自動修正されない＝人の判断が要る） |
 | `isHidden` | 管理者 | 非表示（出題プールから除外） |
 | `scheduledDeletionReason` / `scheduledDeletionDate` | 管理者 | 予約削除。`check-scheduled-deletions.sh` が当日以前を実削除 |
