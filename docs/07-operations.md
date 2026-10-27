@@ -130,20 +130,37 @@ ct hooks list / add <分前> <スクリプト> [ラベル] / rm <#> / edit
   集計は `claude-timer report`
 - `~/.config/claude-timer/mail.conf` → `~/.mugenknock_mail.conf`（ピン失敗の通知メール）
 
-### 状態の同期（S3）
+### 夜間バッチのファイルの置き場（2026-10-27〜）
 
-バケット `mugenknock-fargate-state-<accountId>`。
+**手元（git の作業ツリー）が唯一の正。** 以前は Fargate と共有するため、状態・生成指示・認証情報を
+S3 バケット `mugenknock-fargate-state-<accountId>` と pull → 実行 → push で双方向同期していた。
+手元だけで動かす今は不要なうえ、手で直した `instructions` が次の実行で S3 の内容に巻き戻る原因だったので廃止した。
+Claude の認証情報（OAuth）を S3 に上げるのもやめ、S3 の写しは削除済み。
 
-| プレフィックス | 内容 |
-|---|---|
-| `creds/` | Claude のサブスクリプション OAuth 認証情報（**APIキーではない**） |
-| `state/` | 各夜間スクリプトの進捗状態（`claimed.json`, `service-catalog.json` 等） |
-| `instructions/` | 資格別の問題生成指示（`refresh-exam-guide.sh` が更新） |
-| `meta/` | `.last_run` / `.last_run_date` / `.claude_history` / `.night_history` |
+| 種類 | ファイル | 扱い |
+|---|---|---|
+| 改良される資産 | `instructions/*.txt`・`state/service-catalog.json`・そこから作る `src/data/originalInstructions.ts` | git で追跡。バッチ自身が `scripts/commit-night-assets.sh` で develop に `chore(night):` のコミットを作る |
+| 実行状態 | `state/` のそれ以外（`question_counts.json`・`last_domain_idx.json`・`daily-service-removals.jsonl` 等） | gitignore（追跡しない） |
 
-各スクリプトは **pull → 実行 → push** で同期する。
-`creds` は「`expiresAt` が新しい方を残す」スマート同期（フレッシュなローカルを古いS3で潰さない）。
-`.last_run_date` は二重実行防止の要なので盲目上書きしない。
+`commit-night-assets.sh` は、保守の毎日分（`mugenknock-nightly-noai` の 8/9）と、検証・生成フックの終わりに走る。
+
+- develop にいるときだけ動く。
+- 対象ファイルだけを `git commit --only` でコミットする。人がステージ中のものは巻き込まない。
+- push は、origin/develop の上に自分のコミットが1つ乗っただけのときに限る。手元に未 push の別コミットがあれば push しない。
+- `chore(night):` のコミットはリリースノートの対象外（`generate-release-note.sh` が除く）。
+
+S3 のバケットに残るのは、ログ（`night-logs/`・`run-logs/`）、実行メタ（`meta/`）、canary の結果、レポートの送信済みマーカー（`report-sent/`）だけ。
+`.last_run_date` は二重実行防止の要なので、盲目的に上書きしない（`local-night-run.sh`）。
+
+### サイトのビルドを走らせるパス（Cloudflare Pages の Build watch paths）
+
+運用だけの push ではビルドしない。プロジェクト `mugenknock` の `path_excludes`（本番・検証共通）:
+`docs/*` `specs/*` `e2e/*` `lambda/*` `*.md` `*.sh` `*.py` `prompts/logs/*` `prompts/scripts/*`
+`prompts/night-prompts/logs/*` `prompts/night-prompts/e2e/*` `prompts/night-prompts/manual/*`
+`prompts/night-prompts/texts/*` `prompts/night-prompts/scripts/state/*`。
+**`instructions/` はビルドが読む（`originalInstructions.ts` の元）ので除外しない。**
+除外は include より先に判定されるため、`prompts/*` のように丸ごと除外すると `instructions/` まで外れる。
+新しくビルドが読むファイルを `prompts/` や `scripts/` に置くときは、この一覧に掛からないか確認する。
 
 ## 7.3 夜間バッチ
 

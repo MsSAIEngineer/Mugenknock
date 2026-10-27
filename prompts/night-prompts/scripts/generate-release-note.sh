@@ -131,7 +131,7 @@ generate_single_date() {
   git fetch github master --quiet 2>/dev/null || true
   local commits
   commits=$(git log github/master --after="${date} 00:00:00" --before="${date} 23:59:59" \
-    --format='%s' --no-merges 2>/dev/null || true)
+    --format='%s' --no-merges 2>/dev/null | grep -v '^chore(night):' || true)
   local _removals _rm_ja _rm_en
   _removals=$(removal_sentences "$date")
   _rm_ja=$(echo "$_removals" | sed -n 1p)
@@ -296,7 +296,9 @@ if [ "${1:-}" = "--backfill" ]; then
   TODAY=$(date +%Y-%m-%d)
   cd "$REPO_DIR"
   git fetch github master --quiet 2>/dev/null || true
-  ALL_COMMIT_DATES=$(git log github/master --format='%ad' --date=format:'%Y-%m-%d' --no-merges 2>/dev/null \
+  # 夜間バッチの自動コミット（chore(night):。commit-night-assets.sh）は利用者向けの変更ではないので数えない
+  ALL_COMMIT_DATES=$(git log github/master --format='%ad%x09%s' --date=format:'%Y-%m-%d' --no-merges 2>/dev/null \
+    | grep -v $'\tchore(night):' | cut -f1 \
     | sort -u \
     | awk -v today="$TODAY" '$0 < today')
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 # 生成フック(systemd timerから呼ばれる)
 # 各ピンサイクルの20分前に問題生成(01-generate-questions --hard)を累計1000問まで走らせ、
-# トークン回復(=次のピン)の数分前で止める。資格情報・状態はS3と同期する。
+# トークン回復(=次のピン)の数分前で止める。ログだけ S3 に写す。
 # ※ 30分前フック(local-validity-hook-run.sh)が妥当性チェック(02-check-validity)を担当する。
 #
 # 01 は1回の実行で「需要比が最大の資格」を選び、1ドメイン GEN_DOMAIN_CAP(既定20)問までを作って終わる
@@ -23,13 +23,9 @@ log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
 # フック無効(ct off)なら何もしない。タイマー未arm時の保険(stale発火対策)。
 [ -f "$HOME/.config/mugenknock/hooks_enabled" ] || { log "フック無効(ct off) のためスキップ"; exit 0; }
 
-mkdir -p ~/.claude "$SC/state" "$SC/instructions" "$SC/logs"
+mkdir -p "$SC/state" "$SC/instructions" "$SC/logs"
 
 # pull
-# creds はスマート同期（expiresAtが新しい方を残す＝フレッシュなローカルを古いS3で潰さない）
-AWS="$AWS" bash "$REPO/scripts/pull-claude-creds.sh" "$S3" || true
-"$AWS" s3 sync "s3://$S3/state/"        "$SC/state/"        --quiet 2>/dev/null || true
-"$AWS" s3 sync "s3://$S3/instructions/" "$SC/instructions/" --quiet 2>/dev/null || true
 
 # deadline = 次のピン(=トークン回復)の MARGIN_MIN 分前。next_ping から求める（mk-hook-deadline.sh）。
 # -D は「判定時に走行中のチャンクは完走」する仕様なので、そのはみ出し(1チャンク≒1分)も
@@ -61,10 +57,7 @@ while [ "$TOTAL" -lt "$TARGET" ] && [ "$(date +%s)" -lt "$HOOK_DEADLINE_EPOCH" ]
 done
 log "完了 (累計${TOTAL}問 / ${ROUND}回 / exit $EC)"
 
-# push
-[ -f ~/.claude/.credentials.json ] && "$AWS" s3 cp ~/.claude/.credentials.json "s3://$S3/claude-auth/.credentials.json" --quiet 2>/dev/null || true
-[ -f ~/.claude.json ] && "$AWS" s3 cp ~/.claude.json "s3://$S3/claude-auth/.claude.json" --quiet 2>/dev/null || true
-"$AWS" s3 sync "$SC/state/"        "s3://$S3/state/"        --quiet 2>/dev/null || true
-"$AWS" s3 sync "$SC/instructions/" "s3://$S3/instructions/" --quiet 2>/dev/null || true
+# push（ログだけ）
 "$AWS" s3 sync "$SC/logs/"         "s3://$S3/night-logs/"   --quiet 2>/dev/null || true
+bash "$REPO/scripts/commit-night-assets.sh" || true
 exit $EC

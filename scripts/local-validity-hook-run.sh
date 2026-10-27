@@ -19,12 +19,9 @@ log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
 # フック無効(ct off)なら何もしない。タイマー未arm時の保険(stale発火対策)。
 [ -f "$HOME/.config/mugenknock/hooks_enabled" ] || { log "フック無効(ct off) のためスキップ"; exit 0; }
 
-mkdir -p ~/.claude "$SC/state" "$SC/instructions" "$SC/logs"
+mkdir -p "$SC/state" "$SC/instructions" "$SC/logs"
 
 # pull
-AWS="$AWS" bash "$REPO/scripts/pull-claude-creds.sh" "$S3" || true
-"$AWS" s3 sync "s3://$S3/state/"        "$SC/state/"        --quiet 2>/dev/null || true
-"$AWS" s3 sync "s3://$S3/instructions/" "$SC/instructions/" --quiet 2>/dev/null || true
 
 # deadline = 次のピン(=トークン回復)の MARGIN_MIN 分前。next_ping から求める（mk-hook-deadline.sh）。
 # -D は「判定時に走行中のチャンクは完走」する仕様なので、そのはみ出し(1チャンク≒数十秒)も
@@ -41,12 +38,7 @@ FARGATE_MODE=1 bash prompts/night-prompts/scripts/02-check-validity.sh -n 1000 -
 EC=$?
 log "完了 (exit $EC)"
 
-# push
-[ -f ~/.claude/.credentials.json ] && \
-    "$AWS" s3 cp ~/.claude/.credentials.json "s3://$S3/claude-auth/.credentials.json" --quiet 2>/dev/null || true
-[ -f ~/.claude.json ] && \
-    "$AWS" s3 cp ~/.claude.json "s3://$S3/claude-auth/.claude.json" --quiet 2>/dev/null || true
-"$AWS" s3 sync "$SC/state/"        "s3://$S3/state/"        --quiet 2>/dev/null || true
-"$AWS" s3 sync "$SC/instructions/" "s3://$S3/instructions/" --quiet 2>/dev/null || true
+# push（ログだけ）
 "$AWS" s3 sync "$SC/logs/"         "s3://$S3/night-logs/"   --quiet 2>/dev/null || true
+bash "$REPO/scripts/commit-night-assets.sh" || true
 exit $EC

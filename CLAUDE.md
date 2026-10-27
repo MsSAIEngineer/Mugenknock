@@ -119,7 +119,8 @@
 2. docs の更新が要る変更は、同じコミットに docs を含めている。
 3. コミットは**自分の変更だけ**。`git diff` で中身を確認し、ファイル名を指定して add する
    （`git add -A` / `git add <dir>` は使わない）。夜間バッチが自動更新する
-   `prompts/night-prompts/scripts/state/*.json`・`instructions/*.txt` や、他セッションの作りかけは含めない。
+   `instructions/*.txt`・`state/service-catalog.json` や、他セッションの作りかけは含めない
+   （これらはバッチが `scripts/commit-night-assets.sh` で自分でコミットする。それ以外の `state/` は gitignore 済み）。
 4. push したら、次の「ビルドは成功まで見届ける」に従う。
 
 **自動にしない（従来どおりユーザーの明示指示が必要）**:

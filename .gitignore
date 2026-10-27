@@ -33,8 +33,9 @@ yarn-error.log*
 questions/*.json
 
 # 夜間バッチ（prompts/）
-# スクリプト・生成指示・state は「資産」として追跡する（差分で変化を追うため）。
-# 実行のたびに増減するログとランタイム状態だけを無視する。
+# スクリプトと、バッチが改良する資産（instructions/*.txt・state/service-catalog.json）は追跡する。
+# 資産はバッチ自身が scripts/commit-night-assets.sh で develop にコミットする（2026-10-27〜）。
+# 実行のたびに書き換わるログと実行状態は無視する（作業ツリーに溜めない。手の変更と混ざると巻き込み事故の元）。
 #   ※ 以前は prompts/ ごと無視したうえで末尾に !prompts/ で打ち消しており、
 #     結局全ファイルが追跡され、夜間バッチが走るたび git status が数百行汚れていた。
 prompts/logs/
@@ -51,6 +52,8 @@ prompts/night-prompts/.claude_rate_limit_reset
 prompts/tips_backup_*.json
 prompts/night-prompts/scripts/__pycache__/
 prompts/night-prompts/scripts/instructions/*.bak
+prompts/night-prompts/scripts/state/*
+!prompts/night-prompts/scripts/state/service-catalog.json
 
 # TypeScript のビルドキャッシュ（生成物）
 tsconfig.tsbuildinfo
