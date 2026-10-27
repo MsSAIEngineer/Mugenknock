@@ -64,7 +64,7 @@ conf の `require=` により仕込まれない。どちらのフックも
 | ユニット | 起動 | 実行内容 |
 |---|---|---|
 | `mugenknock-canary` | 毎日 23:50 | Playwright カナリアテスト → S3 |
-| `mugenknock-nightly-noai` | **ピン+10分**（その日の最初・下記） | 夜間処理: 削除予定チェック → 通報是正 → 試験ガイド更新 → サービスカタログ更新 → **図鑑の廃止照合**（`05-check-daily-services.sh --lifecycle-only`）→ サイト掲載内容チェック（`10`・30日以内実行済みならスキップ）→ リリースノート（前日分）→ 日次レポート |
+| `mugenknock-nightly-noai` | **ピン+10分**（その日の最初・下記） | 夜間処理: 削除予定チェック → 通報是正 → 試験ガイド更新 → サービスカタログ更新 → **図鑑の廃止照合**（`05-check-daily-services.sh --lifecycle-only`）→ サイト掲載内容チェック（`10`・30日以内実行済みならスキップ）→ リリースノート（前日分）→ 資産のコミット → 抜き取り検査 → **本人の成績の同期（検証→本番。`scripts/sync-user-data.py`・下記）** → 日次レポート |
 | `mugenknock-daily-services-weekly` | **ピン+10分**（前回から7日以上・毎日分の後） | 図鑑の新設サービス記事化（`04 -n 3`）→ 図鑑記事の体裁チェック（`05 -n 5`）。どちらも sonnet |
 
 **サイト保守はトークン回復後に走らせる（2026-10-27〜）。** 上の2ユニットにタイマーは無い。
@@ -142,7 +142,7 @@ Claude の認証情報（OAuth）を S3 に上げるのもやめ、S3 の写し�
 | 改良される資産 | `instructions/*.txt`・`state/service-catalog.json`・そこから作る `src/data/originalInstructions.ts` | git で追跡。バッチ自身が `scripts/commit-night-assets.sh` で develop に `chore(night):` のコミットを作る |
 | 実行状態 | `state/` のそれ以外（`question_counts.json`・`last_domain_idx.json`・`daily-service-removals.jsonl` 等） | gitignore（追跡しない） |
 
-`commit-night-assets.sh` は、保守の毎日分（`mugenknock-nightly-noai` の 8/9）と、検証・生成フックの終わりに走る。
+`commit-night-assets.sh` は、保守の毎日分（`mugenknock-nightly-noai` の 8/11）と、検証・生成フックの終わりに走る。
 
 - develop にいるときだけ動く。
 - 対象ファイルだけを `git commit --only` でコミットする。人がステージ中のものは巻き込まない。
@@ -504,7 +504,7 @@ AI の判断を人が確かめる経路。管理画面「スキャン結果」�
 |---|---|---|
 | 検証（02）が正解を変えようとした | 修正案（`fixProposalJson`）。問題は非表示 | 適用 / 却下 |
 | 検証（02）が削除を提案した | 問題を非表示にするだけ（消さない） | 問題なし（表示に戻す）/ 誤りあり（直すか消す） |
-| 抜き取り検査（`sample-human-review.py`、保守の毎日分 9/10） | 28日ごとに20問。半分は直近30日に作成・修正された問題 | 問題なし / 誤りあり。不良率を日次レポートに出す |
+| 抜き取り検査（`sample-human-review.py`、保守の毎日分 9/11） | 28日ごとに20問。半分は直近30日に作成・修正された問題 | 問題なし / 誤りあり。不良率を日次レポートに出す |
 | 過去分（一度だけ `--mark-past`） | 2026-10-27 以前に AI が人の確認なしで正解を変えた問題 | 問題なし / 誤りあり |
 
 - 文言だけの修正（正解の位置が同じ）は、これまでどおり自動で反映する。
@@ -699,3 +699,20 @@ S3 `mugenknock-error-logs/canary-logs/` にアップロードする。
 /home/yuzuki/local/bin/aws dynamodb scan --table-name Questions --output json > /tmp/q.json
 # questionText を持たない行・examType が正規コード以外の行を洗い出す
 ```
+
+## 本人のアカウントの成績の同期（検証→本番。2026-10-28〜）
+
+ユーザーデータのテーブルは dev/prod で分けたまま（検証のコードが本番の全ユーザーの記録に書き込まないように）、
+**本人のアカウント（yuzukisera00@gmail.com）だけ**を毎晩 `scripts/sync-user-data.py` で検証→本番へ写す。
+本人は普段は検証で演習し、ときどき本番の画面で比べるため（本人決定）。保守の毎日分（`mugenknock-nightly-noai`）の 10/11。
+
+| テーブル | 写し方 |
+|---|---|
+| `Sessions` / `UserAnswers` | 足し合わせ（本番にしかない記録も残る） |
+| `UserQuestionStats` / `UserTagStats` / `UserPoints` | 検証にある項目で本番を上書き |
+| `EncyclopediaUnlocks` | 解放済みの一覧を足し合わせ（日付は早いほう） |
+| `UserEntitlements` / `UserDailyCounts` | 写さない（検証は Stripe のテスト用キー） |
+
+- 書き込む前に、書き込み先の本人の記録を `prompts/night-prompts/scripts/state/user-sync-backup/` に JSON で残す（本番は PITR でも戻せる）。
+- `--init` は本番→検証の置き換え（2026-10-28 に1回実行済み）。`--dry-run` で件数だけ見られる。
+- 本番で解いた分の問題別の正誤・ポイントは、翌晩に検証の値で上書きされる（解答履歴は残る）。

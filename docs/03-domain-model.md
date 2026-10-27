@@ -4,7 +4,8 @@
 
 すべて `ap-northeast-1` / オンデマンド課金（PAY_PER_REQUEST）。
 
-`-dev` / `-prod` 接尾辞が付くのは `lambda/src/app.js` の `SPLIT_TABLES` に列挙された6つのみ。
+`-dev` / `-prod` 接尾辞が付くのは `lambda/src/app.js` の `SPLIT_TABLES` に列挙されたテーブルのみ。
+本人のアカウントだけは毎晩、検証→本番へ写している（`docs/07-operations.md`「本人のアカウントの成績の同期」）。
 
 | テーブル | PK | SK | 分離 | 内容 |
 |---|---|---|---|---|
