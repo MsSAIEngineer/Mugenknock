@@ -1789,7 +1789,7 @@ export default function ExerciseSession() {
         if (fus.length === 0) return null;
         return (
           <div style={{ marginTop: 'var(--spacing-xl)' }}>
-            <SectionLabel bg="var(--color-primary)" color="var(--color-on-primary)">ASK AI</SectionLabel>
+            <SectionLabel bg="var(--color-accent)" color="var(--color-btn-primary-text)">ASK AI</SectionLabel>
             <Card padding="var(--spacing-xs) var(--spacing-lg)">
               {fus.map((f, i) => <FollowUpRow key={`${currentQuestion.questionId}-${i}`} text={f.text} first={i === 0} />)}
             </Card>

@@ -28,6 +28,11 @@ Lambda は変えない。`GET /questions` は内部項目（`INTERNAL_QUESTION_F
 
 Haiku に足りない場合でも、検査が内容の体裁を保証する。中身の正しさまでは保証しない（質問なので、誤っていても利用者に誤った知識は渡らない。答えは利用者の AI が出す）。
 
+## 検証（02）での是正
+
+02 の問題リストに ASK AI 質問を載せ、問題と無関係・前提が誤り・意味が通らない・自明な質問だけ `followUpDrop:[番号]` で外させる（action とは独立）。
+書き込みは条件 `followUpQuestions = :old` 付き。外すだけにして、作り直しは 11 に任せる（02 は Sonnet で高いので文を書かせない）。
+
 ## 起動
 
 - 使い切りモードのフック: `~/.config/claude-timer/hooks.d/mugenknock.conf` に `-25|scripts/local-followup-hook-run.sh|…` を足す（`require=hooks_enabled` の下）。
