@@ -13,13 +13,13 @@ mugenknock は `~/.config/claude-timer/hooks.d/mugenknock.conf` に「ピンの 
 ```
         ~/.config/claude-timer/next_ping        ← 唯一の正（次回ピン時刻・全プロジェクト共通）
                           │ claude-timer sync が読む
-   ┌────────────┬─────────┴──────┬──────────────┐
-   ▼            ▼                ▼              ▼
-hook-mugenknock-1  hook-mugenknock-2  prelog       ping            （mugenknock の常設タイマー）
-(ピン30分前)        (ピン20分前)        (ピン1分前)   (ピン時刻)        canary 23:50
-妥当性検証          問題生成            /usage を     claude を起こし   nightly-noai 00:05
-02-check-validity   01-generate        usage.log に  /usage で次回     mode-reset 土03:00
-(最大1000問)        (累計1000問)        記録          時刻を決めて再仕込み
+   ┌────────────┬─────────┴──────┬──────────────┬──────────────────┐
+   ▼            ▼                ▼              ▼                  ▼
+hook-mugenknock-1  hook-mugenknock-2  prelog       ping             hook-mugenknock-maint-1   （mugenknock の常設タイマー）
+(ピン30分前)        (ピン20分前)        (ピン1分前)   (ピン時刻)         (ピン10分後)               canary 23:50
+妥当性検証          問題生成            /usage を     claude を起こし    サイト保守                 mode-reset 土03:00
+02-check-validity   01-generate        usage.log に  /usage で次回      nightly-noai(日1回)
+(最大1000問)        (累計1000問)        記録          時刻を決めて再仕込み daily-services-weekly(週1回)
 ```
 
 - すべて **one-shot 絶対時刻タイマー**（`Persistent=true`）。PC停止中に逃した発火は次回起動時に走る
@@ -64,8 +64,15 @@ conf の `require=` により仕込まれない。どちらのフックも
 | ユニット | 起動 | 実行内容 |
 |---|---|---|
 | `mugenknock-canary` | 毎日 23:50 | Playwright カナリアテスト → S3 |
-| `mugenknock-nightly-noai` | 毎日 00:05 | 夜間処理: 削除予定チェック → 通報是正 → 試験ガイド更新 → サービスカタログ更新 → **図鑑の廃止照合**（`05-check-daily-services.sh --lifecycle-only`）→ サイト掲載内容チェック（`10`・30日以内実行済みならスキップ）→ リリースノート（前日分）→ 日次レポート |
-| `mugenknock-daily-services-weekly` | 日 00:30 | 図鑑の新設サービス記事化（`04 -n 3`）→ 図鑑記事の体裁チェック（`05 -n 5`）。どちらも sonnet |
+| `mugenknock-nightly-noai` | **ピン+10分**（その日の最初・下記） | 夜間処理: 削除予定チェック → 通報是正 → 試験ガイド更新 → サービスカタログ更新 → **図鑑の廃止照合**（`05-check-daily-services.sh --lifecycle-only`）→ サイト掲載内容チェック（`10`・30日以内実行済みならスキップ）→ リリースノート（前日分）→ 日次レポート |
+| `mugenknock-daily-services-weekly` | **ピン+10分**（前回から7日以上・毎日分の後） | 図鑑の新設サービス記事化（`04 -n 3`）→ 図鑑記事の体裁チェック（`05 -n 5`）。どちらも sonnet |
+
+**サイト保守はトークン回復後に走らせる（2026-10-27〜）。** 上の2ユニットにタイマーは無い。
+claude-timer のフック `~/.config/claude-timer/hooks.d/mugenknock-maint.conf`（`+10`）が
+`scripts/local-maintenance-hook-run.sh` を呼び、毎日分はその日まだなら、週1回分は前回から7日以上なら
+`systemctl --user start` する（実行済みの印は `~/.config/mugenknock/maintenance_daily_last` / `maintenance_weekly_last`）。
+通常は夜間の最初のピン（0〜4時台）で走り、PC が止まっていた日は起動後の最初のピンで走る。
+問題の検証・生成のスイッチ（`ct on/off`・`require=`）とは別ファイルにして、`ct off` でも保守は止まらないようにしている。
 
 **夜間監査の部分再開（2026-10-27）。** トークン節約で止めた夜間バッチのうち、軽いサイト保守だけを上の2ユニットへ移した。
 頻度は用途で決めた: リリースノートはコミットのある日しか claude を呼ばないので毎晩、サイト掲載内容チェックは

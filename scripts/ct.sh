@@ -94,7 +94,7 @@ show_status() {
   echo "── systemd タイマー ──"
   systemctl --user list-timers \
     'claude-timer-ping.timer' 'claude-timer-hook-mugenknock-*.timer' \
-    'mugenknock-canary.timer' 'mugenknock-nightly-noai.timer' \
+    'mugenknock-canary.timer' \
     --all --no-legend 2>/dev/null \
     | awk '{printf "  %-40s next %s %s\n", $NF, $2, $3}' \
     || echo "  (タイマー未設定 — ct sync で作成)"
