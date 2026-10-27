@@ -152,6 +152,8 @@ SK が `` `${sessionId}#${questionId}#${ISO8601}` `` という**複合文字列*
 `correctCount` / `incorrectCount` は**このテーブルには書き込まれない**。
 `GET /users/me/stats?examType=` は `UserQuestionStats` から集計してマージした値を返す
 （別ソースを持つとズレるため、集計元を「未回答フィルタと同じ `UserQuestionStats`」に統一している）。
+同じ理由で、`examType` 指定時は `recentResults` も `UserAnswers` から作り直した値で置き換える
+（このテーブルの `recentResults` はセッション単位の送信で抜け・二重があった。2026-10-27）。
 
 ## 3.4 AppSettings（汎用KVS）
 

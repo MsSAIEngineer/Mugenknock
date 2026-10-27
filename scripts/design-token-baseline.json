@@ -126,7 +126,7 @@
   },
   "src/views/MyPage.tsx": {
     "hexColor": 1,
-    "spacing": 49,
+    "spacing": 48,
     "borderRadius": 4,
     "fontSize": 1
   },

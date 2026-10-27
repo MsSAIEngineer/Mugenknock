@@ -371,6 +371,8 @@ serverDaily != null            // サーバ確定値がある時だけ判定す�
 3. PUT /users/me/domain-results（ログイン時のみ）
    { "SAA_0": [true, false] }        ← このセッションの新規分（デルタ）だけ
    サーバ側で既存 recentResults にマージし末尾30件に切る
+   （画面が使う recentResults は GET /users/me/stats?examType= が UserAnswers から作り直す。
+     このデルタは抜け・二重があったため表示には使わない。2026-10-27）
 ```
 
 - localStorage 側のキーは**裸のインデックス文字列**（`"0"`）

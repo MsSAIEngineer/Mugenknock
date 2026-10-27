@@ -252,6 +252,12 @@ questionId も母集団に合流してから絞る（`GET /questions?includeComp
 > `UserTagStats` には累計カウンタが書き込まれたことがない。集計元を `UserQuestionStats` に
 > 統一することで既習数と未演習数が構造的に整合する。
 
+`examType` 指定時は `recentResults` も、`UserAnswers`（1問ごとの回答ログ）を回答日時順に並べた
+ドメイン別の末尾30件で**置き換える**（出題プールと同じ条件で絞る）。
+`UserTagStats` に溜めた `recentResults` は、セッション完了・中断時にしか送られず、破棄・上書き・
+送信失敗の分が抜け、再開後の完了で二重にも入って累計とずれていたため（2026-10-27）。
+ホーム・記録の苦手分析は必ず `examType` を付けて呼ぶ。
+
 ### `PUT /users/me/domain-results`
 
 ```jsonc
@@ -259,6 +265,8 @@ questionId も母集団に合流してから絞る（`GET /questions?includeComp
 ```
 サーバ側で既存 `recentResults` に**マージして末尾30件**に切る。
 デルタ送信なので、ローカルが空でもサーバの蓄積は壊れない。
+※ 画面は `GET /users/me/stats?examType=` が回答ログから作る `recentResults` を使うため、
+ここで溜めた値は `examType` なしで呼んだときにしか返らない（現在は使っていない）。
 
 ---
 

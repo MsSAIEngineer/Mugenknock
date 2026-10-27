@@ -1699,6 +1699,8 @@ app.get('/users/me/sessions', async (req, res) => {
 // ドメイン別正答率）が常に0問表示になっていた。
 // 集計元を「未回答フィルタと同じ UserQuestionStats」に揃えることで、既習数と未演習数が
 // 構造的に整合する（別ソースを持たせると再びズレるため、ここでの導出を正とする）。
+// 苦手分析の「直近30問」まで使うので、ドメインごとに30件返す（PUT /domain-results の保持数と同じ）
+const RECENT_RESULTS_LIMIT = 30;
 app.get('/users/me/stats', async (req, res) => {
   try {
     const docClient = getClient();
@@ -1717,12 +1719,19 @@ app.get('/users/me/stats', async (req, res) => {
     let stats = statsResult.Items || [];
 
     if (examType) {
-      const [qStatsResult, questions] = await Promise.all([
-        docClient.send(new QueryCommand({
+      // 単発 Query は1MBで打ち切られるので全ページたどる。
+      const [qStatsItems, answerItems, questions] = await Promise.all([
+        queryAll(docClient, {
           TableName: T('UserQuestionStats'),
           KeyConditionExpression: 'userId = :uid',
           ExpressionAttributeValues: { ':uid': userId },
-        })),
+        }),
+        queryAll(docClient, {
+          TableName: T('UserAnswers'),
+          KeyConditionExpression: 'userId = :uid',
+          ExpressionAttributeValues: { ':uid': userId },
+          ProjectionExpression: 'questionId, isCorrect, answeredAt',
+        }),
         getAllQuestionsForExam(docClient, examType),
       ]);
       // 出題プールと同じ条件で絞る（/questions と揃えないと既習数が未演習数と合わない）
@@ -1732,7 +1741,7 @@ app.get('/users/me/stats', async (req, res) => {
           .map(q => [q.questionId, qDomainIndex(q.examType, q.domain)])
       );
       const agg = new Map(); // domain index → { correctCount, incorrectCount, answeredCount }
-      for (const s of qStatsResult.Items || []) {
+      for (const s of qStatsItems) {
         const d = domainOf.get(s.questionId);
         if (d === undefined || d < 0) continue;
         const a = agg.get(d) || { correctCount: 0, incorrectCount: 0, answeredCount: 0 };
@@ -1743,10 +1752,34 @@ app.get('/users/me/stats', async (req, res) => {
       }
       // 正準 tagId (`${examType}_${idx}`) の行へマージ。該当行が無いドメインは新規に組み立てる
       // （UserTagStats に行が無くても成績を0問と誤表示させないため）。
+      // 直近の正誤（recentResults）も1問ごとの回答ログ UserAnswers から作る。
+      // 以前はセッション完了・中断時にクライアントが送る PUT /domain-results だけで溜めていたため、
+      // 破棄・上書き・アプリ終了・送信失敗のセッションが抜け、再開後の完了で二重にも入り、
+      // 累計（UserQuestionStats）と食い違っていた。出どころを回答ログに一本化する。
+      const recentByDomain = new Map(); // domain index → boolean[]（古い順・末尾 RECENT_RESULTS_LIMIT 件）
+      answerItems
+        .filter(a => domainOf.has(a.questionId) && domainOf.get(a.questionId) >= 0)
+        .sort((a, b) => (a.answeredAt || '').localeCompare(b.answeredAt || ''))
+        .forEach(a => {
+          const d = domainOf.get(a.questionId);
+          if (!recentByDomain.has(d)) recentByDomain.set(d, []);
+          recentByDomain.get(d).push(!!a.isCorrect);
+        });
       const byTagId = new Map(stats.map(s => [s.tagId, s]));
       for (const [d, a] of agg) {
         const tagId = `${examType}_${d}`;
         byTagId.set(tagId, { ...(byTagId.get(tagId) || { userId, tagId }), ...a });
+      }
+      // この試験の全ドメインで recentResults を回答ログ由来に置き換える（ログに無いドメインは空）
+      for (const [tagId, row] of byTagId) {
+        if (!tagId.startsWith(`${examType}_`)) continue;
+        const d = Number(tagId.slice(examType.length + 1));
+        if (!Number.isInteger(d)) continue;
+        byTagId.set(tagId, { ...row, recentResults: (recentByDomain.get(d) || []).slice(-RECENT_RESULTS_LIMIT) });
+      }
+      for (const [d, r] of recentByDomain) {
+        const tagId = `${examType}_${d}`;
+        if (!byTagId.has(tagId)) byTagId.set(tagId, { userId, tagId, recentResults: r.slice(-RECENT_RESULTS_LIMIT) });
       }
       stats = [...byTagId.values()];
     }

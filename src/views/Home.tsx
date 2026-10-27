@@ -1197,6 +1197,9 @@ function clearUserData(uid: string) {
   sessionStorage.removeItem(`_ts_ustats_${uid}`);
 }
 
+// 成績キャッシュのキー。目標資格を切り替えたとき別の資格の値を出さないよう資格別に持つ。
+const statsCacheKey = (userId: string, exam: string | null) => exam ? `ustats_${userId}_${exam}` : `ustats_${userId}`;
+
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const { lang } = useLanguage();
@@ -1422,7 +1425,10 @@ export default function Home() {
   // ── 成績フェッチ（stale-while-revalidate） ─────────────────────────
   const TS_KEY = (uid: string) => `_ts_ustats_${uid}`;
 
-  const doFetchStats = useCallback(async (userId: string, background: boolean, delayMs = 0) => {
+  // examType を付けると、サーバが累計（correctCount/incorrectCount）と直近の正誤（recentResults）を
+  // 1問ごとの回答ログから集計して返す。付けないと UserTagStats の生の行（抜け・二重のある recentResults）になる。
+  // キャッシュは資格別に持つ（statsCacheKey）。
+  const doFetchStats = useCallback(async (userId: string, exam: string | null, background: boolean, delayMs = 0) => {
     abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
@@ -1434,7 +1440,7 @@ export default function Home() {
           ctrl.signal.addEventListener('abort', () => { clearTimeout(t); rej(new Error('aborted')); });
         });
       }
-      const r = await fetch(`${API_ENDPOINT}/users/me/stats?userId=${userId}`, { signal: ctrl.signal });
+      const r = await fetch(`${API_ENDPOINT}/users/me/stats?userId=${userId}${exam ? `&examType=${exam}` : ''}`, { signal: ctrl.signal });
       const d = await r.json();
 
       // 管理者リセット検知: resetAt が更新されていたらローカルデータを消去してリロード
@@ -1449,7 +1455,7 @@ export default function Home() {
       }
 
       const stats: DomainStat[] = d.stats ?? [];
-      setCached(`ustats_${userId}`, stats, DEFAULT_TTL);
+      setCached(statsCacheKey(userId, exam), stats, DEFAULT_TTL);
       sessionStorage.setItem(TS_KEY(userId), String(Date.now()));
       setDomainStats(stats);
       setLastUpdated(new Date());
@@ -1463,13 +1469,13 @@ export default function Home() {
     if (!user || statsLoading || statsRefreshing) return;
     deleteCachedByPrefix(`ustats_${user.userId}`);
     sessionStorage.removeItem(TS_KEY(user.userId));
-    doFetchStats(user.userId, false);
-  }, [user, statsLoading, statsRefreshing, doFetchStats]);
+    doFetchStats(user.userId, targetExam, false);
+  }, [user, targetExam, statsLoading, statsRefreshing, doFetchStats]);
 
   useEffect(() => {
     if (!user) { if (!authLoading) { setDomainStats([]); setLastUpdated(null); setStatsSynced(true); } return; }
     setStatsSynced(false);
-    const cached = getCached<DomainStat[]>(`ustats_${user.userId}`);
+    const cached = getCached<DomainStat[]>(statsCacheKey(user.userId, targetExam));
     const tsRaw = sessionStorage.getItem(TS_KEY(user.userId));
     if (tsRaw) setLastUpdated(new Date(parseInt(tsRaw)));
 
@@ -1481,12 +1487,12 @@ export default function Home() {
     if (cached !== null) {
       setDomainStats(cached);
       // セッション直後なら遅延バックグラウンド更新（楽観的キャッシュが古いデータを上書きしないよう少し待つ）
-      doFetchStats(user.userId, true, isPostSession ? 2000 : 0);
+      doFetchStats(user.userId, targetExam, true, isPostSession ? 2000 : 0);
     } else {
-      doFetchStats(user.userId, false, isPostSession ? 2000 : 0);
+      doFetchStats(user.userId, targetExam, false, isPostSession ? 2000 : 0);
     }
     return () => { abortRef.current?.abort(); };
-  }, [user?.userId, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.userId, authLoading, targetExam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!user || !targetExam) { setServerScoreHistory(null); setServerSessionHistory(null); setServerSessionScoreLog(null); return; }

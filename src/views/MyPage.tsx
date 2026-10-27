@@ -31,23 +31,36 @@ function daysUntil(dateStr: string): number {
   return Math.round((examDate.getTime() - today.getTime()) / 86400000);
 }
 
-// 取得済資格の六角形バッジ。中は常に白地（ダークでは地色）で、縁とアイコンの色だけで状態を示す:
-// 取得済み = レベル色の太い縁＋レベル色のアイコン、未取得 = グレーの細い縁＋グレーのアイコン
-const CERT_HEX = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
-function CertHexBadge({ exam, obtained, color, size, spin }: {
-  exam: string; obtained: boolean; color: string; size: number; spin?: boolean;
+// 六角形バッジ。中は常に白地（ダークでは地色）で、縁とアイコンの色だけで状態を示す:
+// 取得済み = レベル色の縁＋レベル色のアイコン、未取得 = グレーの縁＋グレーのアイコン。
+// 縁は clip-path の二重重ねだと斜辺だけ太さが変わって見えるため、SVG の stroke で描いて全辺を同じ太さにする。
+// 縁の太さは全バッジ共通（幅の6%・最小2px）で、目標資格・取得済み・未取得で揃える。
+function HexBadge({ Icon, color, iconColor, size, spin }: {
+  Icon?: React.FC<{ size?: number }>; color: string; iconColor?: string; size: number; spin?: boolean;
 }) {
-  const ExamIcon = EXAM_ICON_COMPONENTS[exam];
   const h = Math.round(size * 1.15);
-  const ring = Math.max(2, Math.round(size * (obtained ? 0.09 : 0.06)));
+  const sw = Math.max(2, Math.round(size * 0.06));
+  const x0 = sw / 2, x1 = size - sw / 2, y0 = sw / 2, y1 = h - sw / 2;
+  const inner = y1 - y0;
+  const points = [
+    [size / 2, y0], [x1, y0 + inner * 0.25], [x1, y0 + inner * 0.75],
+    [size / 2, y1], [x0, y0 + inner * 0.75], [x0, y0 + inner * 0.25],
+  ].map(([x, y]) => `${x},${y}`).join(' ');
   return (
     <div style={{ position: 'relative', width: size, height: h, flexShrink: 0, animation: spin ? 'certHexSpin 0.52s ease' : undefined }}>
-      <div style={{ position: 'absolute', inset: 0, clipPath: CERT_HEX, background: obtained ? color : tint('var(--color-text-light)', 45) }} />
-      <div style={{ position: 'absolute', inset: ring, clipPath: CERT_HEX, background: 'var(--color-bg-white)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: obtained ? color : 'var(--color-text-light)' }}>
-        {ExamIcon && <ExamIcon size={Math.round(size * 0.42)} />}
+      <svg width={size} height={h} viewBox={`0 0 ${size} ${h}`} style={{ position: 'absolute', inset: 0, overflow: 'visible' }} aria-hidden>
+        <polygon points={points} fill="var(--color-bg-white)" style={{ stroke: color }} strokeWidth={sw} strokeLinejoin="round" />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: iconColor ?? color }}>
+        {Icon && <Icon size={Math.round(size * 0.42)} />}
       </div>
     </div>
   );
+}
+function CertHexBadge({ exam, obtained, color, size, spin }: {
+  exam: string; obtained: boolean; color: string; size: number; spin?: boolean;
+}) {
+  return <HexBadge Icon={EXAM_ICON_COMPONENTS[exam]} color={obtained ? color : tint('var(--color-text-light)', 45)} iconColor={obtained ? color : 'var(--color-text-light)'} size={size} spin={spin} />;
 }
 
 export default function MyPage() {
@@ -259,14 +272,6 @@ export default function MyPage() {
           <>
             {/* 六角形バッジ共通ヘルパー */}
             {(() => {
-              const HexBadge = ({ panelColor, ExamIcon }: { panelColor: string; ExamIcon?: React.FC<{ size?: number }> }) => (
-                <div style={{ width: 46, height: 53, flexShrink: 0, background: panelColor, clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 41, height: 48, background: 'var(--color-bg-white)', clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: panelColor }}>
-                    {ExamIcon && <ExamIcon size={22} />}
-                  </div>
-                </div>
-              );
-
               const ExamCardContent = () => {
                 if (!targetExam) return <span style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-light)' }}>{ja ? '目標資格を設定する' : 'Set target exam'}</span>;
                 const full = (EXAM_CONFIGS[targetExam]?.fullName ?? '').replace('AWS Certified ', '');
@@ -278,7 +283,7 @@ export default function MyPage() {
                 const mainNode = main;
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <HexBadge panelColor={panelColor} ExamIcon={ExamIcon} />
+                    <HexBadge Icon={ExamIcon} color={panelColor} size={46} />
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 'var(--font-size-h3)', color: levelText(panelColor), lineHeight: 1.3 }}>{mainNode}</div>
                       {level && <div style={{ fontWeight: 700, fontSize: 'var(--font-size-h3)', color: levelText(panelColor), lineHeight: 1.3 }}>{level}</div>}
@@ -803,9 +808,9 @@ export default function MyPage() {
                           <button onClick={() => setShowCertOverlay(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-text-light)', fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
                         </div>
                         {/* レベルタブ */}
-                        <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', gap: 'var(--spacing-xs)', padding: '0 var(--spacing-md)', borderBottom: '1px solid var(--color-border)', flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none' }}>
                           {CERT_LEVELS.map(lv => (
-                            <button key={lv.key} onClick={() => setCertOverlayLevel(lv.key)} style={{ flex: 1, padding: '10px 4px', border: 'none', borderBottom: `3px solid ${certOverlayLevel === lv.key ? lv.color : 'transparent'}`, background: 'transparent', cursor: 'pointer', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: certOverlayLevel === lv.key ? levelText(lv.color) : 'var(--color-text-light)', transition: 'color 0.15s' }}>
+                            <button key={lv.key} ref={el => { if (el && certOverlayLevel === lv.key) el.scrollIntoView({ inline: 'center', block: 'nearest' }); }} onClick={() => setCertOverlayLevel(lv.key)} style={{ flex: '1 0 auto', whiteSpace: 'nowrap', padding: '10px var(--spacing-sm)', border: 'none', borderBottom: `3px solid ${certOverlayLevel === lv.key ? lv.color : 'transparent'}`, background: 'transparent', cursor: 'pointer', fontSize: 'var(--font-size-xs)', fontWeight: 700, color: certOverlayLevel === lv.key ? levelText(lv.color) : 'var(--color-text-light)', transition: 'color 0.15s' }}>
                               {lv.label}
                             </button>
                           ))}
