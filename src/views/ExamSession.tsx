@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from '@/compat/react-router-dom';
-import { API_ENDPOINT, EXAM_CONFIGS, PASS_RATE, EXAM_LEVEL } from '../constants';
+import { API_ENDPOINT, EXAM_CONFIGS, PASS_RATE, pointsPerCorrect } from '../constants';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { recordSessionDomainStats } from '../utils/domainStats';
 import { qText, qChoiceAt } from '../utils/i18nQuestion';
@@ -334,7 +334,7 @@ export default function ExamSession() {
       deleteCachedByPrefix(`ustats_${userId}`);
       window.dispatchEvent(new CustomEvent('qstatsRefresh'));
       localStorage.setItem(`postSessionRefresh_${userId}`, String(Date.now()));
-      const ptsPerQAbort = EXAM_LEVEL[examType] === 'Foundational' ? 1 : EXAM_LEVEL[examType] === 'Associate' ? 2 : 3;
+      const ptsPerQAbort = pointsPerCorrect(examType);
       const earnedPtsAbort = correctCount * ptsPerQAbort;
       if (userId && earnedPtsAbort > 0) addPoints(userId, earnedPtsAbort);
       const jstTodayAbort = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
@@ -418,7 +418,7 @@ export default function ExamSession() {
       deleteCachedByPrefix(`ustats_${userId}`);
       window.dispatchEvent(new CustomEvent('qstatsRefresh'));
       localStorage.setItem(`postSessionRefresh_${userId}`, String(Date.now()));
-      const ptsPerQ = EXAM_LEVEL[examType] === 'Foundational' ? 1 : EXAM_LEVEL[examType] === 'Associate' ? 2 : 3;
+      const ptsPerQ = pointsPerCorrect(examType);
       const earnedPts = correctCount * ptsPerQ;
       if (userId && earnedPts > 0) addPoints(userId, earnedPts);
       const jstToday = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from '@/compat/react-router-dom';
-import { API_ENDPOINT, PASS_RATE, EXAM_DOMAINS, DOMAIN_NAME_EN, EXAM_LEVEL, EXAM_LEVEL_COLORS, qDomainName, isNonAwsExam, companionLabel } from '../constants';
+import { API_ENDPOINT, PASS_RATE, pointsPerCorrect, EXAM_DOMAINS, DOMAIN_NAME_EN, EXAM_LEVEL, EXAM_LEVEL_COLORS, qDomainName, isNonAwsExam, companionLabel } from '../constants';
 import { recordSessionDomainStats, recentForTag } from '../utils/domainStats';
 import { qText } from '../utils/i18nQuestion';
 import { getCached, setCached, deleteCached, deleteCachedByPrefix, DEFAULT_TTL } from '../utils/cache';
@@ -1006,8 +1006,8 @@ export default function ExerciseSession() {
       deleteCachedByPrefix(`ustats_${userId}`);
       window.dispatchEvent(new CustomEvent('qstatsRefresh'));
       localStorage.setItem(`postSessionRefresh_${userId}`, String(Date.now()));
-      const ptsPerQ = EXAM_LEVEL[examType] === 'Foundational' ? 1 : EXAM_LEVEL[examType] === 'Associate' ? 2 : 3;
-      const earnedPts = results.filter(r => r.isCorrect).length * ptsPerQ;
+      const earnedPts = results.filter(r => r.isCorrect)
+        .reduce((sum, r) => sum + pointsPerCorrect(questions.find((q: Question) => q.questionId === r.questionId)?.examType || examType), 0);
       if (userId && earnedPts > 0) addPoints(userId, earnedPts);
       localStorage.setItem(`sessionScoreAdd_${examType}_${userId}`, '1');
       // 日次演習カウント更新（ログイン時はサーバへアトミック加算＝デバイス間で正しく合算）
@@ -1068,8 +1068,8 @@ export default function ExerciseSession() {
     deleteCachedByPrefix(`ustats_${userId}`);
     window.dispatchEvent(new CustomEvent('qstatsRefresh'));
     localStorage.setItem(`postSessionRefresh_${userId}`, String(Date.now()));
-    const ptsPerQ = EXAM_LEVEL[examType] === 'Foundational' ? 1 : EXAM_LEVEL[examType] === 'Associate' ? 2 : 3;
-    const earnedPts = results.filter(r => r.isCorrect).length * ptsPerQ;
+    const earnedPts = results.filter(r => r.isCorrect)
+      .reduce((sum, r) => sum + pointsPerCorrect(questions.find((q: Question) => q.questionId === r.questionId)?.examType || examType), 0);
     if (userId && earnedPts > 0) addPoints(userId, earnedPts);
     localStorage.setItem(`sessionScoreAdd_${examType}_${userId}`, '1');
     const jstToday2 = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);

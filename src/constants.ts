@@ -164,6 +164,18 @@ export const EXAM_LEVEL: Record<string, string> = {
   SEC: 'Additional',
 };
 
+// 正解1問あたりのポイント。**回答した問題自身の examType** で決める（2026-10-27）。
+// 他の公式資格の演習に混ざった基礎知識（ML/DB/NW/SEC）は、演習中の資格ではなく基礎知識のポイント（2）で数える。
+// Foundational: 1 / Business・Associate・Additional(基礎知識): 2 / Professional・Specialty: 3
+export function pointsPerCorrect(examType: string): number {
+  switch (EXAM_LEVEL[examType]) {
+    case 'Foundational': return 1;
+    case 'Professional':
+    case 'Specialty': return 3;
+    default: return 2;
+  }
+}
+
 // 資格レベル色の唯一の定義。実体は src/index.css の --level-*（ライト/ダークで値が変わる）。
 // これは塗り・線用の明るい色。文字に使うときは levelText()、塗りに文字を載せるときは levelOn() を通す。
 // CSS 変数なので hex にアルファを足す書き方（`${c}33`）はできない。半透明は tint() を使う。

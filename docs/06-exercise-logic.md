@@ -305,15 +305,17 @@ estimatedScore = Math.round(weightedSum / Σweights × 1000)
 
 | 獲得条件 | ポイント |
 |---|---|
-| 正解1問 | Foundational: 1 / Associate: 2 / Business・Professional・Specialty・Additional: 3 |
+| 正解1問 | Foundational: 1 / Business・Associate・Additional（基礎知識）: 2 / Professional・Specialty: 3 |
 | 日次目標の達成（当日1回のみ） | 10 |
 
 ```js
-ptsPerQ = EXAM_LEVEL[examType] === 'Foundational' ? 1
-        : EXAM_LEVEL[examType] === 'Associate'    ? 2
-        : 3;
-earnedPts = results.filter(r => r.isCorrect).length * ptsPerQ;
+// constants.ts の pointsPerCorrect(examType)。回答した問題自身の examType で決める
+earnedPts = Σ pointsPerCorrect(question.examType) over 正解した results
 ```
+
+他の公式資格の演習に基礎知識（ML/DB/NW/SEC、`includeCompanion`）が混ざったときは、混ざった問題を
+演習中の資格ではなく基礎知識のレベル（Additional = 2）で数える（2026-10-27）。
+模擬試験は全問が同じ資格なので `pointsPerCorrect(examType)` をそのまま使う。
 
 ### 日次ボーナスの二重付与ガード（3重）
 

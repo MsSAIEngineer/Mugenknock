@@ -805,11 +805,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <div style={{ background: 'var(--color-bg-main)', borderRadius: 8, overflow: 'hidden' }}>
                 {([
                   { level: 'Foundational', pts: 1, exams: 'CLF, AIF' },
-                  { level: 'Business',     pts: 3, exams: 'AIB' },
+                  { level: 'Business',     pts: 2, exams: 'AIB' },
                   { level: 'Associate',    pts: 2, exams: 'SAA, DVA, SOA, DEA, MLA' },
                   { level: 'Professional', pts: 3, exams: 'SAP, DOP, AIP' },
                   { level: 'Specialty',    pts: 3, exams: 'ANS, SCS' },
-                  { level: 'Additional',   pts: 3, exams: 'ML, DB, NW, SEC' },
+                  { level: 'Additional',   pts: 2, exams: 'ML, DB, NW, SEC' },
                 ] as const).map((row, i, arr) => (
                   <div key={row.level} style={{ display: 'flex', alignItems: 'center', padding: '9px 12px', borderBottom: i < arr.length - 1 ? '1px solid color-mix(in srgb, var(--color-text-light) 40%, transparent)' : 'none' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -822,6 +822,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </div>
                   </div>
                 ))}
+              </div>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: 'var(--spacing-sm)' }}>
+                {lang === 'ja' ? '他の資格の演習に混ざった基礎知識（オリジナル）の問題は、基礎知識の+2で数えます' : 'Original (fundamentals) questions mixed into another exam are counted as +2 each'}
               </div>
             </div>
 
