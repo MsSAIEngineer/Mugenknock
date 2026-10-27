@@ -7,7 +7,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { API_ENDPOINT, EXAM_TYPES, EXAM_CONFIGS, EXAM_LEVEL, EXAM_LEVEL_COLORS, levelText, levelLabel, isNonAwsExam } from '../constants';
 import { getPoints, fetchPointsFromServer } from '../utils/points';
 import { loadTargetExamFromServer } from '../utils/preferences';
-import { lockBodyScroll } from '../utils/bodyScrollLock';
+import { lockBodyScroll, isBodyScrollLocked } from '../utils/bodyScrollLock';
 import { initKvSync } from '../utils/kvSync';
 import Breadcrumb from './Breadcrumb';
 import Button from './ui/Button';
@@ -134,6 +134,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const swipeStartX = useRef<number>(0);
   const swipeStartY = useRef<number>(0);
   const isDraggingH = useRef<boolean>(false);
+  // オーバーレイ上のタッチではタブのスワイプ切替をしない
+  const swipeBlocked = useRef<boolean>(false);
   const SWIPE_THRESHOLD = 72;
   const TAB_PATHS      = [...BOTTOM_TABS.map(t => t.path), '/aws/others'];
   // indexOf 比較用（pathname は末尾スラッシュ除去済みなので揃える）
@@ -179,13 +181,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }, 240);
   };
 
+  // オーバーレイ上のタッチか。オーバーレイは <main> の中（またはポータル先）に描かれるので、
+  // タッチがここまで伝わってきて背後の画面が横スワイプで切り替わっていた。
+  // ① lockBodyScroll 中 ② <main> の外（ポータル）③ <main> 内の position:fixed 要素の中、のどれかなら対象外
+  const isOverlayTouch = (e: React.TouchEvent): boolean => {
+    if (isBodyScrollLocked()) return true;
+    const root = e.currentTarget as HTMLElement;
+    let el = e.target as HTMLElement | null;
+    if (!el || !root.contains(el)) return true;
+    for (; el && el !== root; el = el.parentElement) {
+      if (getComputedStyle(el).position === 'fixed') return true;
+    }
+    return false;
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
+    swipeBlocked.current = isOverlayTouch(e);
+    if (swipeBlocked.current) return;
     swipeStartX.current = e.touches[0].clientX;
     swipeStartY.current = e.touches[0].clientY;
     isDraggingH.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (swipeBlocked.current) return;
     const dx = e.touches[0].clientX - swipeStartX.current;
     const dy = e.touches[0].clientY - swipeStartY.current;
     if (!isDraggingH.current) {
