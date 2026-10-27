@@ -7,18 +7,31 @@ set -uo pipefail
 export PATH="/home/yuzuki/local/bin:$PATH"
 unset ANTHROPIC_API_KEY
 
+# --lifecycle-only: 冒頭の決定的な処理（0. 提供状態ライフサイクル・0.5 重複削除）だけを実行して終える。
+# claude を使わないので、トークン節約で止めている夜間バッチとは別に、毎晩の
+# mugenknock-nightly-noai（カタログ更新の直後）から呼ぶ（2026-10-27）。
+LIFECYCLE_ONLY=0
+DRY_RUN=0
+for _a in "$@"; do
+  [ "$_a" = "--lifecycle-only" ] && LIFECYCLE_ONLY=1
+  [ "$_a" = "--dry-run" ] && { LIFECYCLE_ONLY=1; DRY_RUN=1; }
+done
+export DRY_RUN
+
 _find_claude() {
   [ -x /usr/local/bin/claude ] && { echo /usr/local/bin/claude; return; }
   local _cv; _cv=$(command -v claude 2>/dev/null)
   [ -n "$_cv" ] && [ -x "$_cv" ] && { echo "$_cv"; return; }
 }
 CLAUDE_CMD=$(_find_claude)
-if [ -z "${CLAUDE_CMD:-}" ]; then
+if [ "$LIFECYCLE_ONLY" -eq 1 ]; then
+  CLAUDE_CMD="${CLAUDE_CMD:-unused}"
+elif [ -z "${CLAUDE_CMD:-}" ]; then
   echo "⚠️  claude バイナリ未検出。30秒後にリトライします..." >&2
   sleep 30
   CLAUDE_CMD=$(_find_claude)
 fi
-if [ -z "${CLAUDE_CMD:-}" ] || [ ! -x "${CLAUDE_CMD:-}" ]; then
+if [ "$LIFECYCLE_ONLY" -eq 0 ] && { [ -z "${CLAUDE_CMD:-}" ] || [ ! -x "${CLAUDE_CMD:-}" ]; }; then
   echo "❌ claude コマンドが見つかりません" >&2; exit 1
 fi
 
@@ -100,6 +113,8 @@ usage: 05-check-daily-services.sh [-n N] [-D HH:MM] [-h]
 
   -n N       チェック件数 (default: 20)
   -D HH:MM   処理終了時刻 (JST)。この時刻を過ぎたチャンクはスキップ
+  --lifecycle-only  提供状態ライフサイクルと重複削除だけ実行して終える（claude 不要）
+  --dry-run         --lifecycle-only を DynamoDB を書き換えずに実行し、何をするかだけ表示する
   -h         このヘルプを表示
 
 挙動:
@@ -119,6 +134,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -n) BATCH_SIZE="${2:?-n requires N}"; shift 2 ;;
     -D) DEADLINE="${2:?-D requires HH:MM}"; shift 2 ;;
+    --lifecycle-only|--dry-run) shift ;;
     -h|--help) show_help; exit 0 ;;
     *) echo "不明なオプション: $1" >&2; show_help >&2; exit 1 ;;
   esac
@@ -143,7 +159,7 @@ PYEOF
 fi
 
 {
-check_rate_limit
+[ "$LIFECYCLE_ONLY" -eq 0 ] && check_rate_limit
 echo "=========================================="
 echo "日めくりサービス体裁チェック開始: $(date)"
 echo "バッチサイズ: ${BATCH_SIZE}件 / チャンクサイズ: ${CHUNK_SIZE}件"
@@ -165,6 +181,11 @@ if [ -f "$CATALOG_FILE" ]; then
   /home/yuzuki/local/bin/aws dynamodb scan --table-name DailyServices --output json 2>/dev/null > "$_LC_TMP" || echo '{}' > "$_LC_TMP"
   CATALOG_FILE="$CATALOG_FILE" GRACE_DAYS="$GRACE_DAYS" DS_TMP="$_LC_TMP" python3 << 'PYEOF'
 import json, os, re, subprocess
+def _run(cmd, **kw):
+    # DRY_RUN=1 のときは DynamoDB を書き換えず、何をするかだけ表示する
+    if os.environ.get('DRY_RUN') == '1':
+        return None
+    return subprocess.run(cmd, **kw)
 from datetime import datetime, timezone, date
 
 AWS = '/home/yuzuki/local/bin/aws'
@@ -180,13 +201,25 @@ def norm(s):
 # カタログ: 正規化名 → status情報（status==unknown は判定対象外）
 with open(os.environ['CATALOG_FILE'], encoding='utf-8') as f:
     catalog = json.load(f)
+# 同じ名前のエントリが複数あることがある（例: 現行の「AWS Transform」と、Migration Hub が
+# 「AWS Transform」へ改名されたことを表す __code__mgh）。後勝ちにすると現行サービスを廃止扱いにするので:
+#   - active と renamed が並んだら active を採る（改名先の名前は生きている）
+#   - それ以外は lastVerifiedAt が新しい方を採る
+def _prefer(cur, new):
+    if cur is None:
+        return new
+    pair = {cur.get('status'), new.get('status')}
+    if pair == {'active', 'renamed'}:
+        return cur if cur.get('status') == 'active' else new
+    return new if (new.get('lastVerifiedAt') or '') > (cur.get('lastVerifiedAt') or '') else cur
+
 status_map = {}
 for v in catalog.get('services', {}).values():
     name = v.get('name')
     st = v.get('status')
     if not name or st in (None, 'unknown'):
         continue
-    status_map[norm(name)] = v
+    status_map[norm(name)] = _prefer(status_map.get(norm(name)), v)
 
 NON_ACTIVE = {'closed_to_new', 'deprecated', 'eol', 'renamed'}
 LABEL = {
@@ -218,7 +251,7 @@ for it in items:
     # active（またはカタログ未収録）→ 既にフラグ済みなら解除
     if not cat or cat.get('status') not in NON_ACTIVE:
         if cur_dep_at:
-            subprocess.run([AWS, 'dynamodb', 'update-item', '--table-name', 'DailyServices',
+            _run([AWS, 'dynamodb', 'update-item', '--table-name', 'DailyServices',
                 '--key', json.dumps({'serviceId': {'S': sid}}),
                 '--condition-expression', 'attribute_exists(serviceId)',
                 '--update-expression', 'REMOVE deprecatedAt, deprecationNote, deprecationStatus SET updatedAt = :u',
@@ -236,7 +269,7 @@ for it in items:
         except Exception:
             d0 = today
         if (today - d0).days >= grace:
-            subprocess.run([AWS, 'dynamodb', 'delete-item', '--table-name', 'DailyServices',
+            _run([AWS, 'dynamodb', 'delete-item', '--table-name', 'DailyServices',
                 '--key', json.dumps({'serviceId': {'S': sid}})], capture_output=True)
             deleted += 1
             print(f'  [削除] {name}: {LABEL.get(st, st)}・猶予{grace}日経過 → 削除')
@@ -249,7 +282,7 @@ for it in items:
     if note_reason:
         base += f'（{note_reason}）'
     note = base + f'。{del_on}頃にサービス図鑑から削除されます。'
-    subprocess.run([AWS, 'dynamodb', 'update-item', '--table-name', 'DailyServices',
+    _run([AWS, 'dynamodb', 'update-item', '--table-name', 'DailyServices',
         '--key', json.dumps({'serviceId': {'S': sid}}),
         '--condition-expression', 'attribute_exists(serviceId)',
         '--update-expression', 'SET deprecatedAt = :a, deprecationNote = :n, deprecationStatus = :s, updatedAt = :u',
@@ -273,6 +306,11 @@ _DUP_TMP=$(mktemp /tmp/ds_dup_XXXX.json)
 /home/yuzuki/local/bin/aws dynamodb scan --table-name DailyServices --output json 2>/dev/null > "$_DUP_TMP" || echo '{}' > "$_DUP_TMP"
 DS_TMP="$_DUP_TMP" python3 << 'PYEOF'
 import json, os, re, subprocess
+def _run(cmd, **kw):
+    # DRY_RUN=1 のときは DynamoDB を書き換えず、何をするかだけ表示する
+    if os.environ.get('DRY_RUN') == '1':
+        return None
+    return subprocess.run(cmd, **kw)
 from datetime import datetime, timezone
 AWS = '/home/yuzuki/local/bin/aws'
 now_iso = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -308,7 +346,7 @@ for url, g in groups.items():
     keep, drops = g[0], g[1:]
     print(f'  重複検出 docUrl={url}: 残す[{keep["name"]}/{keep["sid"]}] 削除{len(drops)}件')
     for d in drops:
-        subprocess.run([AWS, 'dynamodb', 'delete-item', '--table-name', 'DailyServices',
+        _run([AWS, 'dynamodb', 'delete-item', '--table-name', 'DailyServices',
             '--key', json.dumps({'serviceId': {'S': d['sid']}})], capture_output=True)
         removed += 1
         print(f'    [削除] {d["name"]}/{d["sid"]} (order={d["order"]})')
@@ -316,6 +354,12 @@ for url, g in groups.items():
 print(f'  → 重複削除: {removed}件' if removed else '  → 重複なし')
 PYEOF
 rm -f "$_DUP_TMP"
+
+if [ "$LIFECYCLE_ONLY" -eq 1 ]; then
+  echo ""
+  echo "✅ ライフサイクル照合のみ完了（--lifecycle-only・体裁チェックは実行しない）"
+  exit 0
+fi
 
 # ── 1. DynamoDBからサービスを取得 ──────────────────────────────
 DYNAMO_TMP=$(mktemp /tmp/dynamo_XXXX.json)

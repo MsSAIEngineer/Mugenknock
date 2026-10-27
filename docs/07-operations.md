@@ -64,8 +64,22 @@ conf の `require=` により仕込まれない。どちらのフックも
 | ユニット | 起動 | 実行内容 |
 |---|---|---|
 | `mugenknock-canary` | 毎日 23:50 | Playwright カナリアテスト → S3 |
-| `mugenknock-nightly-noai` | 毎日 00:05 | AI 不要の夜間処理 |
+| `mugenknock-nightly-noai` | 毎日 00:05 | 夜間処理: 削除予定チェック → 通報是正 → 試験ガイド更新 → サービスカタログ更新 → **図鑑の廃止照合**（`05-check-daily-services.sh --lifecycle-only`）→ 日次レポート |
+| `mugenknock-daily-services-weekly` | 日 00:30 | 図鑑の新設サービス記事化（`04-generate-daily-services.sh -n 3`・sonnet） |
 | `mugenknock-mode-reset` | 土 03:00 | `ct` のモードを既定へ戻す |
+
+**サービス図鑑の動向追従（2026-10-27〜）。** 図鑑のグリッドは `DailyServices` の記事そのもの。
+- 新設・廃止の検知: `refresh-service-catalog-monthly.sh`（毎晩・`-n 12`・30日以内確認済みはスキップ）が
+  AWS 公式の SSM サービス一覧を母集合に、新しいサービスを足し、各サービスの `status` を WebFetch で確認する。
+- 廃止: 毎晩 `05 --lifecycle-only`（claude 不要）が、非 active の記事に警告を付け、30日後に削除する。
+  active に戻れば警告を外す。`--dry-run` で DynamoDB を書き換えずに結果だけ見られる。
+- 新設: 週1回 `04 -n 3` が、カタログで現行・`isArticleTarget` と確認済みの未掲載サービスを記事化する
+  （トークン節約のため週1回・少数）。
+- カタログには同じ名前のエントリが複数あることがある（例: 現行の AWS Transform と、Migration Hub が
+  AWS Transform へ改名されたことを表すエントリ）。04・05 とも「active と renamed なら active、それ以外は
+  `lastVerifiedAt` が新しい方」で 1 つに決めてから判定する（後勝ちで現行サービスに警告が付いた実例あり）。
+- 結果は日次レポートの「日めくり 生成/検証」に載る（`prompts/logs/nscript_04-…`/`nscript_05-…` を読む）。
+- 夜間バッチ（下表）の 04/05 は停止中のまま。体裁チェック（05 の後段）は claude を使うので再開していない。
 
 **夜間バッチ（`local-postping-run.sh`・ピン+10分）は登録していない**（トークン節約のため停止中）。
 conf にコメントアウトした行があり、`#` を外して `ct sync` すれば再開する。基準は**直前のピン**の+10分で、
@@ -128,8 +142,8 @@ ct hooks list / add <分前> <スクリプト> [ラベル] / rm <#> / edit
 | 40 | `refresh-exam-guide-monthly.sh` | 公式試験ガイドの更新（30日以内はスキップ） | ✅ WebFetch |
 | 45 | `refresh-service-catalog-monthly.sh` | サービスカタログ更新（30日以内スキップ・`-n 12` で有界） | ✅ WebFetch |
 | 47 | `10-check-site-content.sh` | サイト掲載内容（問題以外）の現行性チェック（30日スキップ・検知のみ） | 一部 ✅ WebFetch |
-| 50 | `05-check-daily-services.sh` | 日めくり記事の廃止照合＋体裁チェック | 一部 ✅ |
-| 55 | `04-generate-daily-services.sh` | 日めくり記事の生成 | ✅ |
+| 50 | `05-check-daily-services.sh` | 日めくり記事の廃止照合＋体裁チェック（廃止照合だけは nightly-noai で毎晩実行） | 一部 ✅ |
+| 55 | `04-generate-daily-services.sh` | 日めくり記事の生成（週1回 `-n 3` は daily-services-weekly で実行） | ✅ |
 | 58 | `09-check-linebreaks.sh` | 改行整形（Haiku） | ✅ |
 | 60 | `audit-questions-nightly.sh` | 問題品質監査＋**生成/検証プロンプトの自動改良** | ✅ opus |
 | 60 | `generate-release-note.sh` | 前日のgitコミットからリリースノート生成 → `Releases` | ✅ |

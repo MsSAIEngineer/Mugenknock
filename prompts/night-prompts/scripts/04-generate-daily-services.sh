@@ -211,11 +211,29 @@ except Exception:
     catalog = {'services': {}}
 existing = set(norm(n) for n in json.loads(os.environ.get('EXISTING_NAMES_JSON') or '[]'))
 existing_urls = set(norm_url(u) for u in json.loads(os.environ.get('EXISTING_DOCURLS_JSON') or '[]') if u)
+# 同じ名前のエントリが複数ある場合は 1 つに決めてから判定する（05 のライフサイクルと同じ規則）。
+# 例: 「AWS Snowball」は古い active と新しい eol の 2 件があり、そのままだと廃止で消した記事を作り直す。
+#   - active と renamed が並んだら active を採る（改名先の名前は生きている）
+#   - それ以外は lastVerifiedAt が新しい方を採る
+def _prefer(cur, new):
+    if cur is None:
+        return new
+    pair = {cur.get('status'), new.get('status')}
+    if pair == {'active', 'renamed'}:
+        return cur if cur.get('status') == 'active' else new
+    return new if (new.get('lastVerifiedAt') or '') > (cur.get('lastVerifiedAt') or '') else cur
+resolved = {}
+for v in catalog.get('services', {}).values():
+    if v.get('name') and v.get('status') not in (None, 'unknown'):
+        k = norm(v['name'])
+        resolved[k] = _prefer(resolved.get(k), v)
 cands = []
 seen_urls = set()  # 同一実行のカタログ内で docUrl 重複があっても二重生成しない
 for v in catalog.get('services', {}).values():
     name = v.get('name')
     if not name or v.get('status') != 'active' or not v.get('isArticleTarget'):
+        continue
+    if resolved.get(norm(name)) is not v:
         continue
     # 名前一致・docUrl一致のどちらかで既存とみなしスキップ（略称⇔正式名の重複を防ぐ）
     if norm(name) in existing:
