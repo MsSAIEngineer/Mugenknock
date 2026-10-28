@@ -115,7 +115,7 @@
     "borderRadius": 6
   },
   "src/views/Home.tsx": {
-    "spacing": 136,
+    "spacing": 134,
     "hexColor": 14,
     "borderRadius": 26,
     "fontSize": 3
