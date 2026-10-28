@@ -21,4 +21,4 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm run lint:tokens
       # Node 22 ではディレクトリを渡すとテストを見つけられない（pass 0 / fail 1）。ファイルの形で渡す
-      - run: node --test 'lambda/test/*.test.js'
+      - run: node --test lambda/test/*.test.js

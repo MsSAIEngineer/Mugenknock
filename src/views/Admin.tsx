@@ -37,7 +37,6 @@ type Question = {
   createdAt?: string;
   updatedAt?: string;
   validityCheckedAt?: string;
-  formatCheckedAt?: string;
 };
 
 const fmtDate = (iso: string) => {
@@ -176,7 +175,6 @@ type FlaggedQuestion = {
   domain?: string;
   isMultiple?: boolean;
   validityCheckedAt?: string;
-  formatCheckedAt?: string;
   validityEditLog?: string;
   isHidden?: boolean;
   // 監査で指摘されたが事実誤りではないため自動修正されなかった内容（人の判断が要る）
@@ -600,7 +598,7 @@ export default function Admin() {
   const [domainFilter, setDomainFilter] = useState('');
   const [keyword, setKeyword] = useState('');
   const [keywordInput, setKeywordInput] = useState('');
-  const [sortBy, setSortBy] = useState<'id_asc' | 'updatedAt_desc' | 'updatedAt_asc' | 'validityCheckedAt_desc' | 'validityCheckedAt_asc' | 'createdAt_desc' | 'createdAt_asc' | 'formatCheckedAt_desc' | 'formatCheckedAt_asc' | 'correctRate_asc' | 'correctRate_desc' | 'attempts_desc' | 'attempts_asc'>('id_asc');
+  const [sortBy, setSortBy] = useState<'id_asc' | 'updatedAt_desc' | 'updatedAt_asc' | 'validityCheckedAt_desc' | 'validityCheckedAt_asc' | 'createdAt_desc' | 'createdAt_asc' | 'correctRate_asc' | 'correctRate_desc' | 'attempts_desc' | 'attempts_asc'>('id_asc');
   const [loadingQ, setLoadingQ] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [expandedDetail, setExpandedDetail] = useState<Record<string, Question>>({});
@@ -702,9 +700,10 @@ export default function Admin() {
       setExamCounts(data.examCounts || {});
       setDomainCountsByExam(data.domainCounts || {});
       if (data.validityCheckedCount != null) setValidityCheckedCount(data.validityCheckedCount);
-      if (data.formatCheckedCount   != null) setFormatCheckedCount(data.formatCheckedCount);
+      if (data.followUpCount        != null) setFollowUpCount(data.followUpCount);
+      setFollowUpByCount(data.followUpByCount ?? null);
       setValidityCheckedSinceCount(data.validityCheckedSinceCount ?? null);
-      setFormatCheckedSinceCount(data.formatCheckedSinceCount ?? null);
+      setFollowUpSinceCount(data.followUpSinceCount ?? null);
       setCreatedSinceCount(data.createdSinceCount ?? null);
       setExerciseCounts(data.exerciseCounts || {});
       setExerciseCorrectCounts(data.exerciseCorrectCounts || {});
@@ -1000,10 +999,11 @@ export default function Admin() {
   const [examCounts, setExamCounts] = useState<Record<string, number>>({});
   const [domainCountsByExam, setDomainCountsByExam] = useState<Record<string, Record<string, number>>>({});
   const [validityCheckedCount, setValidityCheckedCount] = useState<number | null>(null);
-  const [formatCheckedCount, setFormatCheckedCount] = useState<number | null>(null);
+  const [followUpCount, setFollowUpCount] = useState<number | null>(null);
+  const [followUpByCount, setFollowUpByCount] = useState<Record<string, number> | null>(null);
   const [sinceDate, setSinceDate] = useState('');
   const [validityCheckedSinceCount, setValidityCheckedSinceCount] = useState<number | null>(null);
-  const [formatCheckedSinceCount, setFormatCheckedSinceCount] = useState<number | null>(null);
+  const [followUpSinceCount, setFollowUpSinceCount] = useState<number | null>(null);
   const [createdSinceCount, setCreatedSinceCount] = useState<number | null>(null);
   const [exerciseCounts, setExerciseCounts] = useState<Record<string, number>>({});
   const [exerciseCorrectCounts, setExerciseCorrectCounts] = useState<Record<string, number>>({});
@@ -1693,12 +1693,12 @@ export default function Admin() {
             </button>
           </div>
           {/* カバレッジ */}
-          {totalCount > 0 && (validityCheckedCount != null || formatCheckedCount != null) && (
+          {totalCount > 0 && (validityCheckedCount != null || followUpCount != null) && (
             <div style={{ marginBottom: 14 }}>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 8 }}>
                 {[
                   { label: 'AI確認', count: validityCheckedCount, sinceCount: validityCheckedSinceCount, color: 'var(--color-primary)' },
-                  { label: '体裁確認', count: formatCheckedCount, sinceCount: formatCheckedSinceCount, color: '#009E9E' },
+                  { label: 'ASK AI 質問', count: followUpCount, sinceCount: followUpSinceCount, color: 'var(--color-accent)' },
                 ].map(({ label, count, sinceCount, color }) => count == null ? null : (
                   <div key={label} style={{ flex: '1 1 200px', minWidth: 200 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--color-text-sub)', marginBottom: 4 }}>
@@ -1711,6 +1711,12 @@ export default function Admin() {
                     <div style={{ height: 6, borderRadius: 9999, background: 'var(--color-border)', overflow: 'hidden' }}>
                       <div style={{ height: '100%', borderRadius: 9999, background: color, width: `${Math.min(100, count / totalCount * 100)}%`, transition: 'width 0.4s' }} />
                     </div>
+                    {label === 'ASK AI 質問' && followUpByCount && (
+                      <div style={{ marginTop: 4, fontSize: 11, color: 'var(--color-text-sub)', fontVariantNumeric: 'tabular-nums' }}>
+                        {[1, 2, 3].map(n => `${n}つ ${(followUpByCount[n] ?? 0).toLocaleString()}`).join('　')}
+                        （1問最大3つ）
+                      </div>
+                    )}
                     {sinceDate && sinceCount != null && createdSinceCount != null && (
                       <div style={{ marginTop: 4, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-text-sub)' }}>
                         <span>{sinceDate.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2/$3')}以降の新規問題</span>
@@ -1837,8 +1843,6 @@ export default function Admin() {
                 <option value="updatedAt_asc">最終編集 (古い順)</option>
                 <option value="validityCheckedAt_desc">AI確認 (新しい順)</option>
                 <option value="validityCheckedAt_asc">AI確認 (古い順)</option>
-                <option value="formatCheckedAt_desc">体裁確認 (新しい順)</option>
-                <option value="formatCheckedAt_asc">体裁確認 (古い順)</option>
                 <option value="correctRate_asc">正答率 (低い順)</option>
                 <option value="correctRate_desc">正答率 (高い順)</option>
                 <option value="attempts_desc">演習回数 (多い順)</option>
@@ -2035,12 +2039,6 @@ export default function Admin() {
                     AI: {fmtDate(q.validityCheckedAt)}
                   </span>
                 )}
-                {!isMobile && q.formatCheckedAt && (
-                  <span style={{ fontSize: 11, color: 'var(--color-text-light)', flexShrink: 0, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3 }}>
-                    <span style={{ color: '#009E9E', display: 'inline-flex', alignItems: 'center' }}><IconCheck size={12} /></span>
-                    体裁: {fmtDate(q.formatCheckedAt)}
-                  </span>
-                )}
                 {!isMobile && q.updatedAt && (
                   <span style={{ fontSize: 11, color: 'var(--color-text-light)', flexShrink: 0, whiteSpace: 'nowrap' }}>
                     編集: {fmtDate(q.updatedAt)}
@@ -2115,7 +2113,6 @@ export default function Admin() {
                       {q.createdAt && <span>作成: {fmtDate(q.createdAt)}</span>}
                       {q.updatedAt && <span>編集: {fmtDate(q.updatedAt)}</span>}
                       {q.validityCheckedAt && <span>AI確認: {fmtDate(q.validityCheckedAt)}</span>}
-                      {detail?.formatCheckedAt && <span>体裁確認: {fmtDate(detail.formatCheckedAt)}</span>}
                     </div>
                   </div>
                 );

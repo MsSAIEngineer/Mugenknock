@@ -74,7 +74,6 @@ items.filter(q => !q.isHidden && !!q.validityCheckedAt)
 | `fixProposalJson` | 同上 | 未適用の修正案。管理画面から apply / reject。2026-10-28〜、**正解の位置が変わる修正**は自動で反映せずここに入る |
 | `humanReviewRequestedAt` / `reviewReason` | 02・`sample-human-review.py` | **人の確認待ち**。`answer-change`（AI が正解を変えようとした。非表示）/ `ai-delete`（AI が削除を提案。非表示）/ `sample`（月1回の抜き取り検査）/ `answer-changed-past`（2026-10-27 以前に AI が正解を変えた問題） |
 | `humanReviewedAt` / `humanReviewResult` / `humanReviewReason` / `humanReviewNote` | 管理者 | 人の確認の結果。`ok` / `ng` / `fix-applied` / `fix-rejected`。抜き取りの不良率は `humanReviewReason=sample` の ok/ng から出す（日次レポート） |
-| `formatCheckedAt` | （旧 `06-fix-format.sh`・2026-10-27 削除。既存データに残るだけ） | 体裁チェック済み |
 | `linebreakCheckedAt` | `09-check-linebreaks.sh` | 改行整形済み（Haiku・非空白文字の変化は破棄） |
 | `followUpQuestions` / `followUpBasis` | `11-add-follow-up-questions.py` | 回答後に出す「もっと知りたい」質問 `[{angle, text, createdAt}]`（最大3）と、作ったときの選択肢のハッシュ（FNV-1a 32bit。`src/utils/followUp.ts` と同じ計算）。ハッシュが今の選択肢と合わない質問は出さない。specs/009 |
 | `translationCheckedAt` | （旧 `03-check-translation.sh`・2026-10-27 削除。既存データに残るだけ） | 翻訳チェック済み |

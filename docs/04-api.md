@@ -70,7 +70,7 @@
 `withAnswers` 無しの場合も `correctAnswerCount`（正解の個数）は返る（UI が「2つ選べ」を出すため）。
 
 **返さないフィールド**（`GET /questions` と `GET /questions/:id` 共通・`stripInternalFields`）:
-`validityEditLog` `formatCheckedAt` `linebreakCheckedAt` `translationCheckedAt` `sourceQuestionId`
+`validityEditLog` `linebreakCheckedAt` `translationCheckedAt` `sourceQuestionId`
 `auditNote` `auditFlaggedAt` `isResolved` `resolvedAt` `questionTextEn` `choicesEn` `explanationEn`
 `choiceExplanationsEn`。内部・運用メタデータで、出題画面は使わない。とくに `validityEditLog`
 （検証での修正前後の全文）は1問あたり1.7〜2.9KB あり、除去前は応答の約3割を占めていた。
@@ -371,7 +371,7 @@ questionId も母集団に合流してから絞る（`GET /questions?includeComp
 | POST | `/admin/questions` | **一括インポート**。`{ examType, domain, questions: [...] }` → `{ created, count, errors }` |
 | PUT | `/admin/questions/:id` | 更新。正解・選択肢が変わると `globalAttempts`/`globalCorrect` を REMOVE |
 | DELETE | `/admin/questions/:id` | 削除（`QuestionTagRelations` も掃除） |
-| GET | `/admin/questions/summary` | 資格別・ドメイン別件数、検証済み数、演習回数。`?sinceDate=` で増分も |
+| GET | `/admin/questions/summary` | 資格別・ドメイン別件数、検証済み数、ASK AI 質問の付いた問題数（`followUpCount`・内訳 `followUpByCount`）、演習回数。`?sinceDate=` で増分も |
 | GET | `/admin/questions/flagged` | 妥当性タブ。`filter=review\|flagged\|hidden\|audit\|fixed`、limit/offset ページング。`review`（人の確認待ち）だけ本文一式（選択肢・正解・解説）も返す。件数バッジ `reviewCount` |
 | POST | `/admin/questions/:id/apply-fix` | `fixProposalJson` を適用し REMOVE（`choiceExplanations` も）。確認待ちだった問題は表示に戻し、`humanReviewResult=fix-applied` と `validityEditLog` を残す |
 | POST | `/admin/questions/:id/reject-fix` | `fixProposalJson` を REMOVE。確認待ちだった問題は元のまま表示に戻す（`fix-rejected`） |

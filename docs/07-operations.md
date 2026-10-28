@@ -541,7 +541,7 @@ SSM `/quiz-app/batch-username`・`/quiz-app/batch-password`・`/quiz-app/batch-c
 
 ### CI
 
-`.github/workflows/ci.yml` が develop・master への push のたびに `tsc --noEmit`・`lint:tokens`・`node --test 'lambda/test/*.test.js'` を走らせる
+`.github/workflows/ci.yml` が develop・master への push のたびに `tsc --noEmit`・`lint:tokens`・`node --test lambda/test/*.test.js` を走らせる（引用符で囲まずシェルに展開させる。ローカルの Node 20 は --test の glob を解釈しない）
 （docs・specs・`*.md` だけの変更では走らない）。デプロイはしない。
 
 ## 7.4 デプロイ・確認スクリプト

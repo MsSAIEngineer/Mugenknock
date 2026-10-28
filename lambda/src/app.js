@@ -127,7 +127,7 @@ function normalizeQuestion(q) {
 // 管理画面は /admin/questions 系から取得するので影響しない。
 // *En は英語対応の廃止後（lang は 'ja' 固定）は UI から参照されない。
 const INTERNAL_QUESTION_FIELDS = [
-  'validityEditLog', 'formatCheckedAt', 'linebreakCheckedAt', 'translationCheckedAt',
+  'validityEditLog', 'linebreakCheckedAt', 'translationCheckedAt',
   'sourceQuestionId', 'auditNote', 'auditFlaggedAt', 'isResolved', 'resolvedAt',
   'questionTextEn', 'choicesEn', 'explanationEn', 'choiceExplanationsEn',
 ];
@@ -932,7 +932,7 @@ app.get('/admin/questions/summary', async (req, res) => {
         IndexName: 'examType-index',
         KeyConditionExpression: 'examType = :e',
         ExpressionAttributeValues: { ':e': et },
-        ProjectionExpression: 'examType, #dom, isHidden, validityCheckedAt, formatCheckedAt, createdAt, globalAttempts, globalCorrect',
+        ProjectionExpression: 'examType, #dom, isHidden, validityCheckedAt, followUpQuestions, createdAt, globalAttempts, globalCorrect',
         ExpressionAttributeNames: { '#dom': 'domain' },
       })
     ));
@@ -952,15 +952,20 @@ app.get('/admin/questions/summary', async (req, res) => {
       exerciseCorrectCounts[examType] = (exerciseCorrectCounts[examType] || 0) + (item.globalCorrect || 0);
     }
     const validityCheckedCount = visible.filter(i => i.validityCheckedAt).length;
-    const formatCheckedCount   = visible.filter(i => i.formatCheckedAt).length;
-    const result = { examCounts, domainCounts, totalCount: visible.length, validityCheckedCount, formatCheckedCount, exerciseCounts, exerciseCorrectCounts };
+    // ASK AI 質問（specs/009）: 1つ以上付いた問題の数と、付いている数ごとの内訳。
+    // 選択肢が直されて古くなった質問（followUpBasis 不一致）も数に入る（画面には出ないが、次の付与で付け直される）。
+    const fuLen = i => (Array.isArray(i.followUpQuestions) ? i.followUpQuestions.length : 0);
+    const followUpCount = visible.filter(i => fuLen(i) > 0).length;
+    const followUpByCount = { 1: 0, 2: 0, 3: 0 };
+    for (const i of visible) { const n = Math.min(fuLen(i), 3); if (n > 0) followUpByCount[n]++; }
+    const result = { examCounts, domainCounts, totalCount: visible.length, validityCheckedCount, followUpCount, followUpByCount, exerciseCounts, exerciseCorrectCounts };
     if (sinceDate && /^\d{4}-\d{2}-\d{2}$/.test(sinceDate)) {
       // JST 0:00 → UTC に変換してからしきい値比較（TZなし文字列だと JST 0:00〜8:59 が前日UTC扱いで漏れる）
       const threshold = new Date(sinceDate + 'T00:00:00+09:00').toISOString();
       const createdSince = visible.filter(i => i.createdAt && i.createdAt >= threshold);
       result.createdSinceCount         = createdSince.length;
       result.validityCheckedSinceCount = createdSince.filter(i => i.validityCheckedAt).length;
-      result.formatCheckedSinceCount   = createdSince.filter(i => i.formatCheckedAt).length;
+      result.followUpSinceCount        = createdSince.filter(i => fuLen(i) > 0).length;
     }
     res.json(result);
   } catch (err) {
@@ -1014,7 +1019,7 @@ app.get('/admin/questions/flagged', async (req, res) => {
     }
     scanParams.FilterExpression = conds.join(' AND ');
     if (Object.keys(values).length) scanParams.ExpressionAttributeValues = values;
-    scanParams.ProjectionExpression = 'questionId, examType, questionText, #dom, validityCheckedAt, formatCheckedAt, validityEditLog, isHidden, validityRating, validityNote, fixProposalJson, auditNote, auditFlaggedAt, reviewReason, humanReviewRequestedAt';
+    scanParams.ProjectionExpression = 'questionId, examType, questionText, #dom, validityCheckedAt, validityEditLog, isHidden, validityRating, validityNote, fixProposalJson, auditNote, auditFlaggedAt, reviewReason, humanReviewRequestedAt';
     scanParams.ExpressionAttributeNames = { '#dom': 'domain' };
     // 人の確認待ちは、その場で正誤を判断できるよう本文一式も返す（件数が少ないので 6MB 上限にはかからない）
     if (filter === 'review') scanParams.ProjectionExpression += ', choices, correctAnswers, explanation, choiceExplanations';
@@ -1303,7 +1308,7 @@ app.get('/admin/questions', async (req, res) => {
       // explanation・validityEditLog を除外して 6MB 上限を回避（編集時は GET /admin/questions/:id で取得）
       items = await scanAll(docClient, {
         TableName: 'Questions',
-        ProjectionExpression: 'questionId, examType, questionText, choices, correctAnswers, correctAnswerIndices, #dom, isMultiple, isHidden, createdAt, updatedAt, validityCheckedAt, formatCheckedAt, globalAttempts, globalCorrect, reactionUp, reactionDown',
+        ProjectionExpression: 'questionId, examType, questionText, choices, correctAnswers, correctAnswerIndices, #dom, isMultiple, isHidden, createdAt, updatedAt, validityCheckedAt, globalAttempts, globalCorrect, reactionUp, reactionDown',
         ExpressionAttributeNames: { '#dom': 'domain' },
       });
     }
@@ -1333,9 +1338,6 @@ app.get('/admin/questions', async (req, res) => {
         return sortDir === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
       } else if (sortField === 'createdAt') {
         const da = a.createdAt || '0', db = b.createdAt || '0';
-        return sortDir === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
-      } else if (sortField === 'formatCheckedAt') {
-        const da = a.formatCheckedAt || '0', db = b.formatCheckedAt || '0';
         return sortDir === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
       } else if (sortField === 'correctRate') {
         const ra = (a.globalAttempts || 0) > 0 ? (a.globalCorrect || 0) / a.globalAttempts : -1;
