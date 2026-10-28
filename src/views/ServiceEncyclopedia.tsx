@@ -496,11 +496,6 @@ export default function ServiceEncyclopedia() {
                 <div style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: 'var(--color-text-main)' }}>
                   {selected.name}
                 </div>
-                {selected.category && (
-                  <span style={{ fontSize: 'var(--font-size-2xs)', fontWeight: 700, padding: '1px 7px', borderRadius: 'var(--border-radius-sm)', background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>
-                    {selected.category}
-                  </span>
-                )}
               </div>
             </div>
 
@@ -531,8 +526,8 @@ export default function ServiceEncyclopedia() {
             )}
 
             {selected.trivia && (
-              <div style={{ background: 'var(--color-bg-main)', borderRadius: 'var(--border-radius-md)', padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 10 }}>
-                <span style={{ color: 'var(--color-text-sub)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ background: 'var(--color-bg-main)', borderRadius: 'var(--border-radius-md)', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
+                <span style={{ color: 'var(--color-text-sub)', display: 'flex', alignItems: 'center' }}>
                   <IconBean size={14} />
                 </span>
                 <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', lineHeight: 1.6, overflowWrap: 'break-word', wordBreak: 'break-word' }}>

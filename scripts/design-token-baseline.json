@@ -152,7 +152,7 @@
   },
   "src/views/ServiceEncyclopedia.tsx": {
     "borderRadius": 4,
-    "spacing": 24,
+    "spacing": 23,
     "hexColor": 2
   },
   "src/views/Stats.tsx": {
