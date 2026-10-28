@@ -550,7 +550,7 @@ export default function ExamSession() {
       {showConfirm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-md)' }}>
-          <Card title={t('examSession.confirmTitle')} style={{ maxWidth: 420, width: '100%', boxShadow: 'var(--box-shadow-md)' }} padding="var(--spacing-xl)">
+          <Card title={t('examSession.confirmTitle')} style={{ maxWidth: 'var(--modal-width-sm)', width: '100%', boxShadow: 'var(--box-shadow-md)' }} padding="var(--spacing-xl)">
             <div style={{ fontSize: 'var(--font-size-base)', color: 'var(--color-text-sub)', marginBottom: 'var(--spacing-xl)', lineHeight: 1.6, textAlign: 'center' }}>
               {t('examSession.answered')}: <strong>{answeredCount}</strong> / {questions.length} {lang === 'ja' ? '問' : 'Q'}<br />
               {t('examSession.unanswered')}: <strong style={{ color: unansweredCount > 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>{unansweredCount}</strong> {lang === 'ja' ? '問' : 'Q'}<br />
@@ -574,7 +574,7 @@ export default function ExamSession() {
       {showAbortConfirm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-md)' }}>
-          <Card style={{ maxWidth: 420, width: '100%', boxShadow: 'var(--box-shadow-md)' }} padding="var(--spacing-xl)">
+          <Card style={{ maxWidth: 'var(--modal-width-sm)', width: '100%', boxShadow: 'var(--box-shadow-md)' }} padding="var(--spacing-xl)">
             <div style={{ fontWeight: 700, fontSize: 'var(--font-size-md)', marginBottom: 12, color: 'var(--color-text-main)' }}>
               {lang === 'ja' ? '中断して採点' : 'Interrupt & Grade'}
             </div>

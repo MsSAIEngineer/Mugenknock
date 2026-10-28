@@ -573,7 +573,7 @@ export default function MyPage() {
                   data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
                   onClick={() => setShowWeeklyDetail(false)}
                 >
-                  <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: 20, width: '100%', maxWidth: 440, boxShadow: 'var(--box-shadow-md)' }} onClick={e => e.stopPropagation()}>
+                  <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: 20, width: '100%', maxWidth: 'var(--modal-width-md)', boxShadow: 'var(--box-shadow-md)' }} onClick={e => e.stopPropagation()}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ color: 'var(--color-text-sub)', display: 'flex', alignItems: 'center' }}><IconTrendingUp size={15} /></span>
@@ -637,7 +637,7 @@ export default function MyPage() {
                 onTouchStart={e => e.stopPropagation()}
                 onTouchMove={e => e.stopPropagation()}
               >
-                <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: '24px 20px', width: '100%', maxWidth: 360, boxShadow: 'var(--box-shadow-md)' }} onClick={e => e.stopPropagation()}>
+                <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: '24px 20px', width: '100%', maxWidth: 'var(--modal-width-sm)', boxShadow: 'var(--box-shadow-md)' }} onClick={e => e.stopPropagation()}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                     <span style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)' }}>{ja ? '目標設定' : 'Edit Settings'}</span>
                     <button onClick={() => setShowSettingsEdit(false)} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 'var(--font-size-h3)', color: 'var(--color-text-sub)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
@@ -733,8 +733,6 @@ export default function MyPage() {
                 isMobile={isMobile}
                 onSelect={(exam) => { setTargetExam(exam); if (user) syncTargetExamToServer(user.userId, uid, exam); }}
                 onClose={() => setShowExamSelect(false)}
-                desktopMaxWidth={672}
-                desktopHeight="86vh"
               />
             )}
           </>
@@ -798,7 +796,7 @@ export default function MyPage() {
                       `}</style>
                       {certConfetti && <Confetti count={70} durationMs={2200} zIndex={9900} onDone={() => setCertConfetti(false)} />}
                       {certBurst && <ConfirmBurst x={certBurst.x} y={certBurst.y} color={certBurst.color} onDone={() => setCertBurst(null)} />}
-                      <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', width: '100%', maxWidth: 420, boxShadow: 'var(--box-shadow-lg)', display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: '80vh' }} onClick={e => e.stopPropagation()}>
+                      <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', width: '100%', maxWidth: 'var(--modal-width-md)', boxShadow: 'var(--box-shadow-lg)', display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: '80vh' }} onClick={e => e.stopPropagation()}>
                         {/* ヘッダー */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', flexShrink: 0, borderBottom: '1px solid var(--color-border)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

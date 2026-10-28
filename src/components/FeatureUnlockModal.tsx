@@ -90,7 +90,7 @@ export default function FeatureUnlockModal({
           role="dialog" aria-modal="true"
           style={{
             pointerEvents: 'auto',
-            width: '100%', maxWidth: 360,
+            width: '100%', maxWidth: 'var(--modal-width-sm)',
             background: 'var(--color-bg-white)',
             borderRadius: 'var(--border-radius-lg)',
             boxShadow: 'var(--box-shadow-lg)',

@@ -1283,7 +1283,7 @@ export default function ExerciseSession() {
     return createPortal(
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000,
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-        <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: '28px 24px', width: '100%', maxWidth: 400, boxShadow: 'var(--box-shadow-lg)' }}>
+        <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: '28px 24px', width: '100%', maxWidth: 'var(--modal-width-sm)', boxShadow: 'var(--box-shadow-lg)' }}>
           <div style={{ fontWeight: 700, fontSize: 'var(--font-size-md)', marginBottom: 12, color: 'var(--color-text-main)' }}>
             {lang === 'ja' ? '中断して採点' : 'Interrupt & Grade'}
           </div>

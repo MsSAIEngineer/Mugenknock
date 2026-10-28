@@ -371,7 +371,7 @@ function QuestionPreviewModal({ onClose, initId = '' }: { onClose: () => void; i
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 2000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background: 'var(--color-bg-white)', borderRadius: 12, width: '100%', maxWidth: 680, boxShadow: 'var(--box-shadow-lg)', position: 'relative' }}>
+      <div style={{ background: 'var(--color-bg-white)', borderRadius: 12, width: '100%', maxWidth: 'var(--modal-width-lg)', boxShadow: 'var(--box-shadow-lg)', position: 'relative' }}>
         {/* ヘッダー */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--color-border)' }}>
           <span style={{ fontWeight: 700, fontSize: 15 }}>問題プレビュー（演習時の表示を再現）</span>
@@ -1455,7 +1455,7 @@ export default function Admin() {
       {editingQuestion && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflowY: 'auto', padding: 'var(--spacing-xl) var(--spacing-md)' }}
           onClick={e => { if (e.target === e.currentTarget) setEditingQuestion(null); }}>
-          <Card style={{ width: '100%', maxWidth: 780, flexShrink: 0, boxShadow: 'var(--box-shadow-md)' }} padding="var(--spacing-xl)">
+          <Card style={{ width: '100%', maxWidth: 'var(--modal-width-lg)', flexShrink: 0, boxShadow: 'var(--box-shadow-md)' }} padding="var(--spacing-xl)">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
               <h3 style={{ margin: 0, fontSize: 'var(--font-size-h3)', fontWeight: 700, color: 'var(--color-text-main)' }}>問題を編集</h3>
               <button onClick={() => setEditingQuestion(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 0, display: 'inline-flex', alignItems: 'center' }}><IconClose /></button>

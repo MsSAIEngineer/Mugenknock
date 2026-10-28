@@ -584,7 +584,7 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
       onTouchStart={e => e.stopPropagation()}
       onTouchMove={e => e.stopPropagation()}
     >
-      <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: isMobile ? '16px 16px 0' : '20px 28px', width: '100%', maxWidth: 540, maxHeight: isMobile ? '75vh' : '60vh', overflowY: 'auto', boxShadow: 'var(--box-shadow-lg)' }}>
+      <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: isMobile ? '16px 16px 0' : '20px 28px', width: '100%', maxWidth: 'var(--modal-width-md)', maxHeight: isMobile ? '75vh' : '60vh', overflowY: 'auto', boxShadow: 'var(--box-shadow-lg)' }}>
         {body}
       </div>
     </div>
@@ -2876,7 +2876,7 @@ export default function Home() {
           onTouchStart={e => e.stopPropagation()}
           onTouchMove={e => e.stopPropagation()}
         >
-          <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', width: '100%', maxWidth: 420, boxShadow: 'var(--box-shadow-md)', maxHeight: isMobile ? '75vh' : '78vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', width: '100%', maxWidth: 'var(--modal-width-sm)', boxShadow: 'var(--box-shadow-md)', maxHeight: isMobile ? '75vh' : '78vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* ヘッダー固定 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '20px 24px 0', flexShrink: 0 }}>
               <div>
@@ -3176,7 +3176,7 @@ export default function Home() {
           onTouchStart={e => e.stopPropagation()}
           onTouchMove={e => e.stopPropagation()}
         >
-          <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', width: '100%', maxWidth: 420, boxShadow: 'var(--box-shadow-md)', maxHeight: isMobile ? '75vh' : '78vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', width: '100%', maxWidth: 'var(--modal-width-sm)', boxShadow: 'var(--box-shadow-md)', maxHeight: isMobile ? '75vh' : '78vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* ヘッダー固定 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '20px 24px 0', flexShrink: 0 }}>
               <div>

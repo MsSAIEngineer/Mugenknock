@@ -73,6 +73,11 @@
   --section-gap: var(--spacing-lg);  /* セクション（ブロック）間の縦間隔（デスクトップ） */
   --section-gap-mobile: var(--spacing-md); /* セクション間の縦間隔（モバイル） */
   --page-max-width: 900px;           /* ページ内コンテンツの最大幅 */
+  /* オーバーレイ（モーダル）の最大幅。Cloudscape Modal の small/medium/large（320/600/820px）が下敷き。
+     small は日本語の確認文とボタン2つが窮屈なので 400px に広げた。モバイルは背景側の padding 16px が左右の余白になる */
+  --modal-width-sm: 400px;           /* 確認・お祝い・選択肢を縦に並べる設定など、短い文と操作だけ */
+  --modal-width-md: 600px;           /* 記事・入力フォーム・グラフなど、読む／書くもの（迷ったらこれ） */
+  --modal-width-lg: 820px;           /* 一覧・編集など横に並べるもの */
 
   /* Typography */
   --font-size-3xs: 9px;

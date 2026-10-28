@@ -159,9 +159,9 @@ interface ExamSelectOverlayProps {
   onSelect: (exam: string) => void;
   /** 閉じるボタン用コールバック。未指定の場合は閉じられない（初回オンボーディング用） */
   onClose?: () => void;
-  /** デスクトップ時の最大幅（px）。省略時は 760 */
-  desktopMaxWidth?: number;
-  /** デスクトップ時の高さ（vh 文字列）。省略時は '72vh' */
+  /** デスクトップ時の最大幅。省略時は --modal-width-lg */
+  desktopMaxWidth?: number | string;
+  /** デスクトップ時の最大の高さ（vh 文字列）。省略時は '80vh' */
   desktopHeight?: string;
   /** true のとき確定ボタンをパルスアニメーションで強調（初回オンボーディング時） */
   onboarding?: boolean;
@@ -172,7 +172,9 @@ export default function ExamSelectOverlay({
   // 既定値がモバイル幅(420)と同じだったため、デスクトップでもスマホと同じ縦長パネルになり、
   // さらに6レベルのタブが収まらず末尾(Specialty/オリジナル)がクリップされて選べなくなっていた。
   // デスクトップは横に使える前提の寸法にする。
-  desktopMaxWidth = 760, desktopHeight = '72vh', onboarding = false,
+  // 高さは中身に合わせる（固定の高さだと、問題数の少ないレベルで下半分が空白になっていた）。
+  // 代わりに上端の位置を固定し、レベルを切り替えて高さが変わっても見出しとタブが動かないようにする。
+  desktopMaxWidth = 'var(--modal-width-lg)', desktopHeight = '80vh', onboarding = false,
 }: ExamSelectOverlayProps) {
   const ja = lang === 'ja';
   const initLevel = targetExam
@@ -237,7 +239,8 @@ export default function ExamSelectOverlay({
     <div
       style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9800,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 16,
+        paddingTop: `calc((100vh - ${isMobile ? '75vh' : desktopHeight}) / 2)`,
       }}
       onClick={dismissible ? onClose : undefined}
       onTouchStart={e => e.stopPropagation()}
@@ -251,7 +254,6 @@ export default function ExamSelectOverlay({
           width: '100%',
           maxWidth: isMobile ? 420 : desktopMaxWidth,
           boxShadow: 'var(--box-shadow-md)',
-          height: isMobile ? '75vh' : desktopHeight,
           maxHeight: isMobile ? '75vh' : desktopHeight,
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}
@@ -382,7 +384,7 @@ export default function ExamSelectOverlay({
         </div>
 
         {/* 詳細パネル（スクロール） */}
-        <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid var(--color-border)' }}>
+        <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', borderTop: '1px solid var(--color-border)' }}>
           {previewExam && (() => {
             const exam = previewExam;
             const cfg = EXAM_CONFIGS[exam];
