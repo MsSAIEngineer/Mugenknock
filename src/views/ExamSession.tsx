@@ -65,6 +65,18 @@ export default function ExamSession() {
   const totalSec = timeLimitMin * 60;
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // 進捗バーの上端。上部バー＋サブバー（パンくず）の下＝スクロール領域の上端に合わせる
+  const [barTop, setBarTop] = useState(56);
+  useEffect(() => {
+    const main = document.getElementById('main-scroll');
+    if (!main) return;
+    const measure = () => setBarTop(Math.round(main.getBoundingClientRect().top));
+    measure();
+    window.addEventListener('resize', measure);
+    const ro = new ResizeObserver(measure);
+    ro.observe(main);
+    return () => { window.removeEventListener('resize', measure); ro.disconnect(); };
+  }, []);
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handler);
@@ -597,7 +609,7 @@ export default function ExamSession() {
           ? Array.from({ length: WINDOW }, (_, k) => windowStart + k)
           : Array.from({ length: total }, (_, k) => k);
         return (
-          <div style={{ position: 'fixed', top: 56, left: 0, right: 0, zIndex: 190, background: 'var(--color-bg-white)', borderBottom: '1px solid var(--color-border)', padding: '15px 16px 8px', display: 'flex', alignItems: 'center', gap: 0 }}>
+          <div style={{ position: 'fixed', top: barTop, left: 0, right: 0, zIndex: 190, background: 'var(--color-bg-white)', borderBottom: '1px solid var(--color-border)', padding: '15px 16px 8px', display: 'flex', alignItems: 'center', gap: 0 }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
               {visibleIndices.map((i, visIdx) => {
                 const isAnswered = !!answers[questions[i]?.questionId];

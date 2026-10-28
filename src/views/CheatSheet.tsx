@@ -1062,6 +1062,8 @@ export default function CheatSheet() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [headerHeight, setHeaderHeight] = useState(0);
+  // 固定ヘッダーの上端。上部バー＋サブバー（パンくず）の下＝スクロール領域の上端に合わせる
+  const [headerTop, setHeaderTop] = useState(96);
   const headerRef = useRef<HTMLDivElement>(null);
   const lastScrollRef = useRef(0);
   const navigatingRef = useRef(false);
@@ -1104,6 +1106,20 @@ export default function CheatSheet() {
     setPendingScrollTo(id);
     setTimeout(() => { navigatingRef.current = false; }, 1000);
   }
+
+  useEffect(() => {
+    const measure = () => {
+      const main = document.getElementById('main-scroll');
+      if (main) setHeaderTop(Math.round(main.getBoundingClientRect().top));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    // サブバーは認証の読み込み後に出ることがあるので、領域の大きさが変わったら測り直す
+    const main = document.getElementById('main-scroll');
+    const ro = main ? new ResizeObserver(measure) : null;
+    if (main && ro) ro.observe(main);
+    return () => { window.removeEventListener('resize', measure); ro?.disconnect(); };
+  }, []);
 
   useEffect(() => {
     const el = headerRef.current;
@@ -1280,7 +1296,7 @@ export default function CheatSheet() {
       ref={headerRef}
       style={{
         position: 'fixed',
-        top: 56,
+        top: headerTop,
         left: 'var(--content-left, 0px)',
         right: 0,
         zIndex: 80,

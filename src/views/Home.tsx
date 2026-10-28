@@ -2240,34 +2240,11 @@ export default function Home() {
             左（2fr）= 成績: 「実力の現在地」「推移と記録」＝これまでの結果を見る
             右（1fr）= 今日の行動: 「目標演習量」「日めくり」「苦手分析」＝今日やること
           モバイルは従来どおり縦一列（目標演習量 → サマリー → 日めくり）で変更なし。
-          alignItems:'stretch'（既定）で両カラムの高さを揃え、右カラムは
-          flexDirection:'column'+最後のパネルへの flex:1 で、短い方の最終パネルの
-          下端を左カラムの下端に合わせる（ページ最下部でパネルの底が揃うように）。 */}
+          グリッドを2行にし、各行の左右のパネルは高さを揃える（stretch）。
+          1行目＝実力の現在地 | 目標演習量＋日めくり、2行目＝推移と記録 | 苦手分析。
+          こうして左右のパネルの下端が行ごとに揃う。 */}
       <div style={isMobile ? undefined : { display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: 'var(--spacing-md)' }}>
-      <div>
-
-      {/* ── 目標演習量（モバイルのみ先頭。デスクトップは右カラム＝今日の行動へ） ── */}
       {isMobile && dailyGoalCard}
-
-      {/* ── デスクトップ「実力の現在地」──
-          予想スコアとドメイン別の内訳は同じデータの粒度違いなので、
-          サマリー(バー)と内訳(ノード)を二重に出さず、この1パネルに統合する。 */}
-      {!isMobile && targetExam && (
-        <Card padding="var(--spacing-md)" style={{ marginBottom: 'var(--spacing-md)' }}>
-          {panelHeading(<IconChart size={13} />, ja ? '実力の現在地' : 'Where You Stand')}
-          <CombinedDetailModal targetExam={targetExam} {...perfProps} inline="score" />
-        </Card>
-      )}
-
-      {/* ── デスクトップ「推移と記録」──
-          時系列で見るもの(セッション別推移・日次最高点・ハイスコア)をまとめる。 */}
-      {!isMobile && targetExam && (
-        <Card padding="var(--spacing-md)" style={{ marginBottom: 'var(--spacing-md)' }}>
-          {/* 記録画面の「正答率の推移」と区別するため、指標名（予想スコア）を名前に入れる（specs/007） */}
-          {panelHeading(<IconTrendingUp size={13} />, ja ? '予想スコアの推移' : 'Estimated Score Trend')}
-          <CombinedDetailModal targetExam={targetExam} {...perfProps} inline="trend" />
-        </Card>
-      )}
 
       {/* ── ドメイン別正答率 + 予想スコア（モバイルのみ。タップでモーダル詳細）──
           デスクトップは上の「実力の現在地」に統合済みのため出さない。 */}
@@ -2432,9 +2409,17 @@ export default function Home() {
       </Card>
       )}
 
-      </div>
-      <div style={isMobile ? undefined : { display: 'flex', flexDirection: 'column' }}>
+      {/* ── デスクトップ「実力の現在地」──
+          予想スコアとドメイン別の内訳は同じデータの粒度違いなので、
+          サマリー(バー)と内訳(ノード)を二重に出さず、この1パネルに統合する。 */}
+      {!isMobile && targetExam && (
+        <Card padding="var(--spacing-md)" style={{ marginBottom: 0 }}>
+          {panelHeading(<IconChart size={13} />, ja ? '実力の現在地' : 'Where You Stand')}
+          <CombinedDetailModal targetExam={targetExam} {...perfProps} inline="score" />
+        </Card>
+      )}
 
+      <div style={isMobile ? undefined : { display: 'flex', flexDirection: 'column', gridColumn: 2, marginBottom: 'calc(-1 * var(--spacing-md))' }}>
       {/* ── 目標演習量（デスクトップは「今日の行動」列の先頭） ── */}
       {!isMobile && dailyGoalCard}
 
@@ -2448,6 +2433,18 @@ export default function Home() {
         isMobile={isMobile}
       />
 
+      </div>
+
+      {/* ── デスクトップ「推移と記録」──
+          時系列で見るもの(セッション別推移・日次最高点・ハイスコア)をまとめる。 */}
+      {!isMobile && targetExam && (
+        <Card padding="var(--spacing-md)" style={{ marginBottom: 0 }}>
+          {/* 記録画面の「正答率の推移」と区別するため、指標名（予想スコア）を名前に入れる（specs/007） */}
+          {panelHeading(<IconTrendingUp size={13} />, ja ? '予想スコアの推移' : 'Estimated Score Trend')}
+          <CombinedDetailModal targetExam={targetExam} {...perfProps} inline="trend" />
+        </Card>
+      )}
+
       {/* ── 苦手分析（デスクトップ・ログイン専用。ゲストは非表示） ──
           記録画面の苦手分析タブの要約。詳細はクリックで記録画面へ遷移して見る。
           flex:1 + 中央寄せで、右カラム最後のパネルとして左カラムの下端まで
@@ -2456,7 +2453,7 @@ export default function Home() {
         <Card
           padding="var(--spacing-md)"
           // 未解放のときは中身が1行だけなので伸ばさない（空の大きな枠が壊れて見えた）
-          style={{ marginTop: 'var(--spacing-md)', cursor: 'pointer', flex: effectiveFocusedUnlocked ? 1 : undefined, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+          style={{ gridColumn: 2, cursor: 'pointer', flex: effectiveFocusedUnlocked ? 1 : undefined, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
           onClick={() => navigate('/aws/stats', { state: { tab: 'analysis' } })}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
@@ -2515,7 +2512,6 @@ export default function Home() {
         </Card>
       )}
 
-      </div>
       </div>
 
       {ohineriUi}
