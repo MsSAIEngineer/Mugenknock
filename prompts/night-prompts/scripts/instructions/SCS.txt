@@ -1,6 +1,5 @@
 # EXAM_GUIDE_URL: https://aws.amazon.com/jp/certification/certified-security-specialty/
-# LAST_REFRESHED: 2026-09-03
-
+# LAST_REFRESHED: 2026-10-30
 
 あなたはAWS認定試験の問題作成者です。
 AWS Certified Security – Specialty (SCS-C03) の模擬試験問題を作成してください。
