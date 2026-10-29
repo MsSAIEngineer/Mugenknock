@@ -159,9 +159,8 @@ const FollowUpRow = ({ text, first }: { text: string; first: boolean }) => {
       }}
     >
       <span style={{ flex: 1, overflowWrap: 'anywhere' }}>{text}</span>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', flexShrink: 0, fontSize: 'var(--font-size-xs)', color: copied ? 'var(--color-success)' : 'var(--color-text-sub)' }}>
-        {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
-        {copied ? 'コピー済み' : 'コピー'}
+      <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: copied ? 'var(--color-success)' : 'var(--color-text-sub)' }}>
+        {copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
       </span>
     </button>
   );

@@ -271,7 +271,7 @@ navigate('/aws/result', { state: { results, questions, score, ... } })
     ②（`currentQuestion.questionId` の変化を監視するeffect）で拾う。
     詳細は `docs/04-api.md` §4.3b
 - **PromptMenu（質問プロンプト生成）** — 2026-09-15 廃止。`specs/002-question-reactions/` 参照
-- **ASK AI（もっと知りたいこと）** — 回答後、コラムの上にコラムと同じ形（ラベル＋カード）で問題の `followUpQuestions`（最大3）を出す。行を押すと質問文だけをコピーする（利用者が自分の AI に聞く用）。質問が無い・選択肢が直されて古い（`followUpBasis` 不一致）ときは何も出さない。ゲストにも出す。specs/009
+- **ASK AI（もっと知りたいこと）** — 回答後、コラムの上にコラムと同じ形（ラベル＋カード）で問題の `followUpQuestions`（最大3）を出す。行を押すと質問文だけをコピーする（利用者が自分の AI に聞く用）。コピーはアイコンのみで文字は出さない（コピー後はチェックに変わる）。質問が無い・選択肢が直されて古い（`followUpBasis` 不一致）ときは何も出さない。ゲストにも出す。specs/009
 - **コラム** — `GET /tips?examType=` を問題間に挟む
 - **「わからない」** — 選択肢とは別の回答（`WAKARANAI` 定数）
 
