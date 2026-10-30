@@ -244,13 +244,12 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
                     <div style={{
                       fontSize: isMobile ? 'var(--font-size-xl)' : 'var(--font-size-h2)',
                       fontWeight: 900, color: 'var(--color-text-main)', letterSpacing: '-1px', lineHeight: 1.1,
-                      // 暗いオレンジの文字はやめ、黒文字＋明るいオレンジの下線でアクセントを付ける
-                      textDecoration: 'underline', textDecorationColor: 'var(--color-accent)',
-                      textDecorationThickness: 3, textUnderlineOffset: 6,
                     }}>
                       {stat.num}
                     </div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-light)', marginTop: 3, fontWeight: 500 }}>
+                    {/* 暗いオレンジの文字はやめ、数字とラベルの間に短い明るいオレンジのバーを置いてアクセントにする */}
+                    <div aria-hidden="true" style={{ width: 20, height: 3, borderRadius: 'var(--border-radius-full)', background: 'var(--color-accent)', margin: 'var(--spacing-sm) auto' }} />
+                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-light)', fontWeight: 500 }}>
                       {ja ? stat.ja : stat.en}
                     </div>
                   </div>

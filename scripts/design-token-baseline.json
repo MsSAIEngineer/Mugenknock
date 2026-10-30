@@ -133,7 +133,7 @@
     "spacing": 8
   },
   "src/views/Portal.tsx": {
-    "spacing": 11,
+    "spacing": 10,
     "borderRadius": 1
   },
   "src/views/Practice.tsx": {
