@@ -16,7 +16,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import ReportModal from '../components/ReportModal';
 import { ConfirmBurst } from '../components/ExamSelectOverlay';
-import { IconBookOpen, IconBean, IconCopy, IconCheck, IconCircleCheck, IconCircleX, IconHeart, IconThumbsUp, IconThumbsDown, IconMoreVertical, IconInfinity } from '../components/Icons';
+import { IconBookOpen, IconBean, IconCopy, IconCircleHelp, IconCheck, IconCircleCheck, IconCircleX, IconHeart, IconThumbsUp, IconThumbsDown, IconMoreVertical, IconInfinity } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 import { isKbMode } from '../utils/keyboardMode';
 import { validFollowUps, type FollowUpQuestion } from '../utils/followUp';
@@ -125,7 +125,7 @@ const CopyButton = ({ getText }: { getText: () => string }) => {
   );
 };
 
-// 解説の後のブロック（ASK AI・COLUMN）の見出し。色付きのラベル＋右へ伸びる線。
+// 解説の後のブロック（COLUMN）の見出し。色付きのラベル＋右へ伸びる線。
 const SectionLabel = ({ bg, color, children }: { bg: string; color: string; children: React.ReactNode }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)' }}>
     <span style={{
@@ -137,8 +137,9 @@ const SectionLabel = ({ bg, color, children }: { bg: string; color: string; chil
   </div>
 );
 
-// ASK AI（もっと知りたいこと）の1行。行全体を押すと質問文だけをコピーする（specs/009）。
-const FollowUpRow = ({ text, first }: { text: string; first: boolean }) => {
+// ASK AI（もっと知りたいこと）の1行。解説カードの末尾に置く。行全体を押すと質問文だけをコピーする（specs/009）。
+// 押せることが分かるよう、行ごとに薄い面で囲み、左に ? アイコン・右にコピーアイコンを置く。
+const FollowUpRow = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(text).then(() => {
@@ -153,13 +154,15 @@ const FollowUpRow = ({ text, first }: { text: string; first: boolean }) => {
       aria-label={`${text}（質問をコピー）`}
       style={{
         display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', width: '100%', minHeight: 44,
-        padding: 'var(--spacing-sm) 0', textAlign: 'left', cursor: 'pointer',
-        background: 'none', border: 'none', borderTop: first ? 'none' : '1px solid var(--color-border)',
+        padding: 'var(--spacing-sm) var(--spacing-md)', textAlign: 'left', cursor: 'pointer',
+        background: 'var(--color-bg-main)', borderRadius: 'var(--border-radius-md)',
+        border: `1px solid ${copied ? 'var(--color-success)' : 'transparent'}`, transition: 'border-color 0.2s',
         color: 'var(--color-text-main)', fontSize: 'var(--font-size-sm2)', lineHeight: 1.6, fontFamily: 'inherit',
       }}
     >
+      <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: 'var(--color-accent)' }}><IconCircleHelp size={18} /></span>
       <span style={{ flex: 1, overflowWrap: 'anywhere' }}>{text}</span>
-      <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: copied ? 'var(--color-success)' : 'var(--color-text-sub)' }}>
+      <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: copied ? 'var(--color-success)' : 'var(--color-text-sub)', transition: 'color 0.2s' }}>
         {copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
       </span>
     </button>
@@ -1713,6 +1716,27 @@ export default function ExerciseSession() {
             )}
           </div>
         </div>
+
+        {/* ASK AI（もっと知りたいこと）。解説カードの末尾、問題情報の下に続けて置く。
+            質問文をコピーして利用者の AI に聞いてもらう（specs/009） */}
+        {answered && (() => {
+          const displayQ = (currentQuestion.correctAnswers ? currentQuestion : detail) ?? currentQuestion;
+          const fus = validFollowUps({ ...displayQ, choices: displayQ.choices ?? currentQuestion.choices });
+          if (fus.length === 0) return null;
+          return (
+            <div style={{ marginTop: 'var(--spacing-md)', paddingTop: 'var(--spacing-md)', borderTop: '1px dashed var(--color-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
+                <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, letterSpacing: '1px', color: 'var(--color-text-main)' }}>ASK AI</span>
+                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)' }}>
+                  {lang === 'ja' ? 'タップでコピーして、いつも使っている AI に聞いてみよう' : 'Tap to copy, then ask your AI'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+                {fus.map((f, i) => <FollowUpRow key={`${currentQuestion.questionId}-${i}`} text={f.text} />)}
+              </div>
+            </div>
+          );
+        })()}
       </Card>
 
       {heartBurst && (
@@ -1778,21 +1802,6 @@ export default function ExerciseSession() {
           </div>
         ),
         document.body
-        );
-      })()}
-
-      {/* ASK AI（もっと知りたいこと。回答後・コラムの上。質問文をコピーして利用者の AI に聞いてもらう。specs/009） */}
-      {answered && currentQuestion && (() => {
-        const displayQ = (currentQuestion.correctAnswers ? currentQuestion : detail) ?? currentQuestion;
-        const fus = validFollowUps({ ...displayQ, choices: displayQ.choices ?? currentQuestion.choices });
-        if (fus.length === 0) return null;
-        return (
-          <div style={{ marginTop: 'var(--spacing-xl)' }}>
-            <SectionLabel bg="var(--color-accent)" color="var(--color-btn-primary-text)">ASK AI</SectionLabel>
-            <Card padding="var(--spacing-xs) var(--spacing-lg)">
-              {fus.map((f, i) => <FollowUpRow key={`${currentQuestion.questionId}-${i}`} text={f.text} first={i === 0} />)}
-            </Card>
-          </div>
         );
       })()}
 
