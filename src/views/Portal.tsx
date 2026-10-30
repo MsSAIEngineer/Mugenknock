@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from '@/compat/react-router-dom';
 import { useAuth, hadPriorSession } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { IconUser, IconBot, IconTarget, IconTrendingUp, IconNetwork } from '../components/Icons';
+import { IconUser, IconBot, IconTarget, IconTrendingUp, IconNetwork, IconCheck } from '../components/Icons';
 import Reveal from '../components/Reveal';
 import { SiteArchitecture } from '../components/SiteArchitecture';
 import { EXAM_TYPES } from '../constants';
@@ -281,7 +281,8 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
                 }}>
                   <Reveal variant="pop" {...rv} delay={i * 80 + 60} style={{ flexShrink: 0 }}>
                     {/* 順番のない並びなので番号は付けない（以前は 1・2・3） */}
-                    <span style={{ display: 'flex', color: 'var(--color-text-main)', lineHeight: 1.75, fontWeight: 800 }}>✓</span>
+                    {/* チェックは記号なので明るいオレンジでよい（文字ではないのでコントラスト基準の対象外） */}
+                    <span style={{ display: 'flex', alignItems: 'center', height: '1.75em', color: 'var(--color-accent)' }}><IconCheck size={18} /></span>
                   </Reveal>
                   <p style={{ margin: 0, fontSize: isMobile ? 'var(--font-size-sm2)' : 'var(--font-size-base)', color: 'var(--color-text-sub)', lineHeight: 1.75 }}>{ja ? b.ja : b.en}</p>
                 </Reveal>
@@ -361,7 +362,7 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', margin: '0 0 var(--spacing-md)' }}>
                 {COMPARE_ROWS.map((row, i) => (
                   <Reveal key={i} {...rv} delay={i * 70} offset={12} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-sm)' }}>
-                    <span style={{ color: 'var(--color-text-main)', fontWeight: 800, flexShrink: 0, lineHeight: 1.6 }}>✓</span>
+                    <span style={{ display: 'flex', alignItems: 'center', height: '1.6em', color: 'var(--color-accent)', flexShrink: 0 }}><IconCheck size={18} /></span>
                     <span style={{ fontSize: isMobile ? 'var(--font-size-sm2)' : 'var(--font-size-base)', color: 'var(--color-text-main)', fontWeight: 700 }}>{ja ? row.s[0] : row.s[1]}</span>
                   </Reveal>
                 ))}
