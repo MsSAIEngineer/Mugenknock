@@ -95,7 +95,6 @@
     "hexColor": 3
   },
   "src/views/ExamDashboard.tsx": {
-    "hexColor": 15,
     "borderRadius": 4,
     "spacing": 27
   },

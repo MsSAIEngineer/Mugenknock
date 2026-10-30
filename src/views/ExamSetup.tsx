@@ -483,11 +483,11 @@ export default function ExamSetup() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
                 <span style={{ fontSize: 'var(--font-size-h3)' }}>⏸</span>
                 <div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-text-warning)' }}>{t('examSetup.resumeNotice')}</div>
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-warning-sub)' }}>{t('examSetup.resumeNoticeDesc')}</div>
+                  <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-text-main)' }}>{t('examSetup.resumeNotice')}</div>
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)' }}>{t('examSetup.resumeNoticeDesc')}</div>
                 </div>
               </div>
-              <Button size="sm" variant="outline" onClick={resumeExam} style={{ borderColor: 'var(--color-border-warning)', color: 'var(--color-text-warning)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <Button size="sm" variant="outline" onClick={resumeExam} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
                 {t('examSetup.resume')} →
               </Button>
             </div>

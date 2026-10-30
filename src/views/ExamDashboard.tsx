@@ -10,19 +10,17 @@ import MarkdownText from '../components/ui/MarkdownText';
 import {
   EXAM_TYPES, EXAM_CONFIGS, EXAM_LEVEL, EXAM_DOMAINS, PASS_RATE,
   EXAM_DESC_JA, EXAM_DESC_EN, DOMAIN_WEIGHTS, API_ENDPOINT, EXAM_OFFICIAL_URLS,
-  isNonAwsExam, levelLabel,
+  isNonAwsExam, levelLabel, EXAM_LEVEL_COLORS, levelText, tint,
 } from '../constants';
 import { syncTargetExamToServer, resetExercisePrefsOnExamChange } from '../utils/preferences';
 
 const LEVEL_ORDER = ['Foundational', 'Associate', 'Professional', 'Specialty', 'Additional'] as const;
 
-const LEVEL_COLOR: Record<string, { bg: string; text: string; border: string }> = {
-  Foundational: { bg: '#f0f8ff', text: '#2563eb', border: '#bfdbfe' },
-  Associate:    { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0' },
-  Professional: { bg: '#fdf4ff', text: '#9333ea', border: '#e9d5ff' },
-  Specialty:    { bg: '#fff7ed', text: '#ea580c', border: '#fed7aa' },
-  Additional:   { bg: '#f0fdfa', text: '#0d9488', border: '#99f6e4' },
-};
+// レベル色は EXAM_LEVEL_COLORS だけを使う（以前は独自の色表で、Specialty が暗いオレンジの文字になっていた）。
+const levelStyle = (c: string) => ({ bg: tint(c, 10), text: levelText(c), border: tint(c, 40) });
+const LEVEL_COLOR: Record<string, { bg: string; text: string; border: string }> = Object.fromEntries(
+  Object.entries(EXAM_LEVEL_COLORS).map(([k, c]) => [k, levelStyle(c)]),
+);
 
 export default function ExamDashboard() {
   const { user } = useAuth();
