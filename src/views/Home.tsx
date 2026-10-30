@@ -25,7 +25,7 @@ import { getPoints, deductPoints } from '../utils/points';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import PageLayout from '../components/ui/PageLayout';
-import { IconLightbulb, IconBean, IconSettings, IconChevronUp, IconLock, IconFileText, IconTrendingUp, IconBookOpen, IconCheck, IconCircleCheck, IconSparkles, IconPointer, IconMousePointerClick, IconCalendarNotebook, IconRefreshCw, IconTarget, IconChart, ServiceIconImg, isServiceIconKey, IconUser, IconSave, IconSaveCheck, IconExternalLink, IconX } from '../components/Icons';
+import { IconLightbulb, IconBean, IconSettings, IconChevronUp, IconLock, IconFileText, IconTrendingUp, IconBookOpen, IconCheck, IconCircleCheck, IconSparkles, IconPointer, IconMousePointerClick, IconCalendarNotebook, IconRefreshCw, IconTarget, IconChart, ServiceIconImg, isServiceIconKey, IconUser, IconSave, IconSaveCheck, IconExternalLink, IconX, IconMedal, IconPuzzle } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 import { CATALOG } from '../data/awsServiceCatalog';
 import { autoScoreAndClearDrafts } from '../utils/sessionUtils';
@@ -517,7 +517,6 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
                 </p>
               );
             }
-            const medalEmoji = ['🥇', '🥈', '🥉'];
             return (
               <>
                 <style>{`
@@ -542,8 +541,8 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
                         ? {}
                         : { animation: `hiscore-slide-up 0.35s ease both`, animationDelay: `${delay}s` }),
                     }}>
-                      <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 900, color: medalColor, minWidth: 24, textAlign: 'center' }}>
-                        {rank < 3 ? medalEmoji[rank] : `${rank + 1}`}
+                      <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 900, color: medalColor, minWidth: 24, display: 'flex', justifyContent: 'center' }}>
+                        {rank < 3 ? <IconMedal size={20} /> : `${rank + 1}`}
                       </span>
                       <span style={{ fontSize: 'var(--font-size-h2)', fontWeight: 800, color: isPass ? 'var(--color-success)' : 'var(--color-primary)', fontVariantNumeric: 'tabular-nums', minWidth: 52 }}>
                         {entry.score}
@@ -659,7 +658,7 @@ function OnboardingModal({ lang, uid, onComplete }: {
           {grouped.map(({ lv, exams }) => (
             <div key={lv} style={{ marginBottom: 18 }}>
               <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: levelText(OB_LEVEL_COLOR[lv]), marginBottom: 8 }}>
-                {lv === 'Additional' ? (ja ? '🧩 基礎知識（AWS認定外）' : '🧩 Original (not AWS certifications)') : lv}
+                {lv === 'Additional' ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}><IconPuzzle size={13} />{ja ? '基礎知識（AWS認定外）' : 'Original (not AWS certifications)'}</span> : lv}
               </div>
               {lv === 'Additional' && (
                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)', marginTop: -4, marginBottom: 8, lineHeight: 1.5 }}>

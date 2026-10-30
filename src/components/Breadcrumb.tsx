@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { useNavigate } from '@/compat/react-router-dom';
+import { IconChevronRight } from './Icons';
 
 type BreadcrumbItem = {
   label: string;
@@ -19,7 +20,7 @@ export default function Breadcrumb({ items, style }: Props) {
     <nav aria-label="パンくずリスト" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--font-size-base)', color: 'var(--color-text-sub)', marginBottom: 20, flexWrap: 'wrap', fontWeight: 400, ...style }}>
       {items.map((item, index) => (
         <React.Fragment key={index}>
-          {index > 0 && <span style={{ color: 'var(--color-text-light)', fontSize: 'var(--font-size-sm)' }}>❯</span>}
+          {index > 0 && <span style={{ color: 'var(--color-text-light)', display: 'flex' }}><IconChevronRight size={14} /></span>}
           {item.path ? (
             <button
               onClick={() => navigate(item.path!)}

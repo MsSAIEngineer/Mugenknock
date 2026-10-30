@@ -9,7 +9,7 @@ import Card from '../components/ui/Card';
 import PageLayout from '../components/ui/PageLayout';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { IconChevronDown, IconChevronRight, IconSparkles, IconCopy, IconCheck, IconX } from '../components/Icons';
+import { IconChevronDown, IconChevronRight, IconSparkles, IconCopy, IconCheck, IconX, IconTarget } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 
 const CopyButton = ({ getText }: { getText: () => string }) => {
@@ -206,7 +206,7 @@ export default function Result() {
         <div data-kbscope="1" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           {bonusConfetti && <Confetti onDone={() => setBonusConfetti(false)} />}
           <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: 'var(--spacing-xl)', textAlign: 'center', boxShadow: 'var(--box-shadow-md)', maxWidth: 'var(--modal-width-sm)', width: '100%', position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🎯</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8, color: 'var(--color-accent)' }}><IconTarget size={44} /></div>
             <div style={{ fontWeight: 800, fontSize: 'var(--font-size-h3)', color: 'var(--color-text-main)', marginBottom: 6 }}>
               {ja ? '日次目標達成！' : 'Daily Goal Achieved!'}
             </div>
