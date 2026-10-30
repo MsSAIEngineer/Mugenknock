@@ -11,7 +11,8 @@ const CATEGORIES: { value: Category; label: string; labelEn: string }[] = [
   { value: 'choice_error',     label: '選択肢・正解の誤り', labelEn: 'Error in choices or answer' },
   { value: 'explanation_error',label: '解説の誤り',         labelEn: 'Error in explanation' },
   // ASK AI の質問が出ている問題だけ選べる（hasFollowUps）
-  { value: 'followup_error',   label: 'ASK AI の質問の誤り', labelEn: 'Error in ASK AI question' },
+  // 画面に「ASK AI」の見出しは無いので、場所で伝える
+  { value: 'followup_error',   label: '解説の下の質問の誤り', labelEn: 'Error in the questions below the explanation' },
   { value: 'other',            label: 'その他',             labelEn: 'Other' },
 ];
 
