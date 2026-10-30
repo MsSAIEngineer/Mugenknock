@@ -677,15 +677,14 @@
     "AWS DMS": {
       "category": "移行",
       "docUrl": "https://aws.amazon.com/jp/dms/",
-      "examRelevance": "high",
-      "icon": "DMS",
+      "examRelevance": "unknown",
       "isArticleTarget": true,
-      "lastVerifiedAt": "2026-10-30",
-      "name": "AWS Database Migration Service",
+      "lastVerifiedAt": null,
+      "name": "AWS DMS",
       "serviceCode": "",
       "shortName": "DMS",
       "source": "daily-services-seed",
-      "status": "active",
+      "status": "unknown",
       "statusNote": ""
     },
     "AWS Data Exchange": {
@@ -1153,15 +1152,14 @@
     "AWS IAM": {
       "category": "セキュリティ",
       "docUrl": "https://aws.amazon.com/jp/iam/",
-      "examRelevance": "high",
-      "icon": "IAM",
+      "examRelevance": "unknown",
       "isArticleTarget": true,
-      "lastVerifiedAt": "2026-10-30",
-      "name": "AWS Identity and Access Management",
+      "lastVerifiedAt": null,
+      "name": "AWS IAM",
       "serviceCode": "",
       "shortName": "IAM",
       "source": "daily-services-seed",
-      "status": "active",
+      "status": "unknown",
       "statusNote": ""
     },
     "AWS IAM Access Analyzer": {
@@ -1500,15 +1498,14 @@
     "AWS KMS": {
       "category": "セキュリティ",
       "docUrl": "https://aws.amazon.com/jp/kms/",
-      "examRelevance": "high",
-      "icon": "KMS",
+      "examRelevance": "unknown",
       "isArticleTarget": true,
-      "lastVerifiedAt": "2026-10-30",
-      "name": "AWS Key Management Service",
+      "lastVerifiedAt": null,
+      "name": "AWS KMS",
       "serviceCode": "",
       "shortName": "KMS",
       "source": "daily-services-seed",
-      "status": "active",
+      "status": "unknown",
       "statusNote": ""
     },
     "AWS Key Management Service": {
@@ -3803,15 +3800,14 @@
     "Amazon ECS": {
       "category": "コンテナ",
       "docUrl": "https://aws.amazon.com/jp/ecs/",
-      "examRelevance": "high",
-      "icon": "ElasticContainerService",
+      "examRelevance": "unknown",
       "isArticleTarget": true,
-      "lastVerifiedAt": "2026-10-30",
-      "name": "Amazon Elastic Container Service",
+      "lastVerifiedAt": null,
+      "name": "Amazon ECS",
       "serviceCode": "",
       "shortName": "ECS",
       "source": "daily-services-seed",
-      "status": "active",
+      "status": "unknown",
       "statusNote": ""
     },
     "Amazon EFS": {
@@ -4347,15 +4343,14 @@
     "Amazon Keyspaces": {
       "category": "データベース",
       "docUrl": "https://aws.amazon.com/jp/keyspaces/",
-      "examRelevance": "low",
-      "icon": "Keyspaces",
+      "examRelevance": "unknown",
       "isArticleTarget": true,
-      "lastVerifiedAt": "2026-10-30",
-      "name": "Amazon Keyspaces (for Apache Cassandra)",
+      "lastVerifiedAt": null,
+      "name": "Amazon Keyspaces",
       "serviceCode": "",
       "shortName": "Keyspaces",
       "source": "daily-services-seed",
-      "status": "active",
+      "status": "unknown",
       "statusNote": ""
     },
     "Amazon Keyspaces (for Apache Cassandra)": {
@@ -4515,15 +4510,14 @@
     "Amazon MSK": {
       "category": "メッセージング",
       "docUrl": "https://aws.amazon.com/jp/msk/",
-      "examRelevance": "medium",
-      "icon": "MSK",
+      "examRelevance": "unknown",
       "isArticleTarget": true,
-      "lastVerifiedAt": "2026-10-30",
-      "name": "Amazon Managed Streaming for Apache Kafka",
+      "lastVerifiedAt": null,
+      "name": "Amazon MSK",
       "serviceCode": "",
       "shortName": "MSK",
       "source": "daily-services-seed",
-      "status": "active",
+      "status": "unknown",
       "statusNote": ""
     },
     "Amazon MSK Connect": {
@@ -4948,15 +4942,14 @@
     "Amazon RDS": {
       "category": "データベース",
       "docUrl": "https://aws.amazon.com/jp/rds/",
-      "examRelevance": "high",
-      "icon": "RDS",
+      "examRelevance": "unknown",
       "isArticleTarget": true,
-      "lastVerifiedAt": "2026-10-30",
-      "name": "Amazon Relational Database Service",
+      "lastVerifiedAt": null,
+      "name": "Amazon RDS",
       "serviceCode": "",
       "shortName": "RDS",
       "source": "daily-services-seed",
-      "status": "active",
+      "status": "unknown",
       "statusNote": ""
     },
     "Amazon RDS Data API": {
@@ -5172,15 +5165,14 @@
     "Amazon S3": {
       "category": "ストレージ",
       "docUrl": "https://aws.amazon.com/jp/s3/",
-      "examRelevance": "high",
-      "icon": "S3",
+      "examRelevance": "unknown",
       "isArticleTarget": true,
-      "lastVerifiedAt": "2026-10-30",
-      "name": "Amazon Simple Storage Service",
+      "lastVerifiedAt": null,
+      "name": "Amazon S3",
       "serviceCode": "",
       "shortName": "S3",
       "source": "daily-services-seed",
-      "status": "active",
+      "status": "unknown",
       "statusNote": ""
     },
     "Amazon S3 Control": {
@@ -5240,31 +5232,29 @@
       "statusNote": ""
     },
     "Amazon SES": {
-      "category": "アプリケーション統合",
+      "category": "メッセージング",
       "docUrl": "https://aws.amazon.com/jp/ses/",
-      "examRelevance": "medium",
-      "icon": "SES",
+      "examRelevance": "unknown",
       "isArticleTarget": true,
-      "lastVerifiedAt": "2026-10-30",
-      "name": "Amazon Simple Email Service",
+      "lastVerifiedAt": null,
+      "name": "Amazon SES",
       "serviceCode": "",
       "shortName": "SES",
       "source": "daily-services-seed",
-      "status": "active",
+      "status": "unknown",
       "statusNote": ""
     },
     "Amazon SNS": {
       "category": "メッセージング",
       "docUrl": "https://aws.amazon.com/jp/sns/",
-      "examRelevance": "high",
-      "icon": "SNS",
+      "examRelevance": "unknown",
       "isArticleTarget": true,
-      "lastVerifiedAt": "2026-10-30",
-      "name": "Amazon Simple Notification Service",
+      "lastVerifiedAt": null,
+      "name": "Amazon SNS",
       "serviceCode": "",
       "shortName": "SNS",
       "source": "daily-services-seed",
-      "status": "active",
+      "status": "unknown",
       "statusNote": ""
     },
     "Amazon SQS": {
@@ -7563,5 +7553,5 @@
       "statusNote": ""
     }
   },
-  "updated_at": "2026-10-30T04:43:56.583303"
+  "updated_at": "2026-10-31T00:31:57.605975"
 }
