@@ -243,7 +243,10 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
                   >
                     <div style={{
                       fontSize: isMobile ? 'var(--font-size-xl)' : 'var(--font-size-h2)',
-                      fontWeight: 900, color: 'var(--color-accent-dark)', letterSpacing: '-1px', lineHeight: 1.1,
+                      fontWeight: 900, color: 'var(--color-text-main)', letterSpacing: '-1px', lineHeight: 1.1,
+                      // 暗いオレンジの文字はやめ、黒文字＋明るいオレンジの下線でアクセントを付ける
+                      textDecoration: 'underline', textDecorationColor: 'var(--color-accent)',
+                      textDecorationThickness: 3, textUnderlineOffset: 6,
                     }}>
                       {stat.num}
                     </div>
@@ -279,7 +282,7 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
                 }}>
                   <Reveal variant="pop" {...rv} delay={i * 80 + 60} style={{ flexShrink: 0 }}>
                     {/* 順番のない並びなので番号は付けない（以前は 1・2・3） */}
-                    <span style={{ display: 'flex', color: 'var(--color-accent-dark)', lineHeight: 1.75, fontWeight: 800 }}>✓</span>
+                    <span style={{ display: 'flex', color: 'var(--color-text-main)', lineHeight: 1.75, fontWeight: 800 }}>✓</span>
                   </Reveal>
                   <p style={{ margin: 0, fontSize: isMobile ? 'var(--font-size-sm2)' : 'var(--font-size-base)', color: 'var(--color-text-sub)', lineHeight: 1.75 }}>{ja ? b.ja : b.en}</p>
                 </Reveal>
@@ -359,7 +362,7 @@ export default function Portal({ questionCount = QUESTION_COUNT_FALLBACK }: { qu
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', margin: '0 0 var(--spacing-md)' }}>
                 {COMPARE_ROWS.map((row, i) => (
                   <Reveal key={i} {...rv} delay={i * 70} offset={12} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-sm)' }}>
-                    <span style={{ color: 'var(--color-accent-dark)', fontWeight: 800, flexShrink: 0, lineHeight: 1.6 }}>✓</span>
+                    <span style={{ color: 'var(--color-text-main)', fontWeight: 800, flexShrink: 0, lineHeight: 1.6 }}>✓</span>
                     <span style={{ fontSize: isMobile ? 'var(--font-size-sm2)' : 'var(--font-size-base)', color: 'var(--color-text-main)', fontWeight: 700 }}>{ja ? row.s[0] : row.s[1]}</span>
                   </Reveal>
                 ))}
