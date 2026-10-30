@@ -101,7 +101,7 @@
 
 - `Authorization` があれば検証して `sub` を通報者に、無効/無しなら `'anonymous'`
 - **クライアントが送った `userId` は使わない**
-- `category` は `question_error` / `choice_error` / `explanation_error` / `other` のみ許可（他は `other`）
+- `category` は `question_error` / `choice_error` / `explanation_error` / `followup_error`（ASK AI の質問の誤り）/ `other` のみ許可（他は `other`）
 - `message` は1000文字で切り詰め
 - ログインユーザーの同一問題への重複通報は排除 → `{ success: true, deduped: true }`
 

@@ -4,12 +4,14 @@ import { API_ENDPOINT } from '../constants';
 import Button from './ui/Button';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 
-type Category = 'question_error' | 'choice_error' | 'explanation_error' | 'other';
+type Category = 'question_error' | 'choice_error' | 'explanation_error' | 'followup_error' | 'other';
 
 const CATEGORIES: { value: Category; label: string; labelEn: string }[] = [
   { value: 'question_error',   label: '問題文の誤り',      labelEn: 'Error in question text' },
   { value: 'choice_error',     label: '選択肢・正解の誤り', labelEn: 'Error in choices or answer' },
   { value: 'explanation_error',label: '解説の誤り',         labelEn: 'Error in explanation' },
+  // ASK AI の質問が出ている問題だけ選べる（hasFollowUps）
+  { value: 'followup_error',   label: 'ASK AI の質問の誤り', labelEn: 'Error in ASK AI question' },
   { value: 'other',            label: 'その他',             labelEn: 'Other' },
 ];
 
@@ -17,10 +19,12 @@ type Props = {
   questionId: string;
   userId?: string;
   lang: string;
+  hasFollowUps?: boolean;
   onClose: () => void;
 };
 
-export default function ReportModal({ questionId, userId, lang, onClose }: Props) {
+export default function ReportModal({ questionId, userId, lang, hasFollowUps, onClose }: Props) {
+  const categories = CATEGORIES.filter(c => c.value !== 'followup_error' || hasFollowUps);
   const [category, setCategory] = useState<Category>('question_error');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -88,7 +92,7 @@ export default function ReportModal({ questionId, userId, lang, onClose }: Props
                   {lang === 'ja' ? '通報の種類' : 'Category'} <span style={{ color: 'var(--color-danger)' }}>*</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                  {CATEGORIES.map(cat => (
+                  {categories.map(cat => (
                     <label key={cat.value} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', cursor: 'pointer', fontSize: 'var(--font-size-base)', padding: '8px 12px', borderRadius: 'var(--border-radius-md)', border: `1px solid ${category === cat.value ? 'var(--color-primary)' : 'var(--color-border)'}`, background: category === cat.value ? 'var(--color-primary-light)' : 'var(--color-bg-white)', transition: 'all 0.15s' }}>
                       <input
                         type="radio"

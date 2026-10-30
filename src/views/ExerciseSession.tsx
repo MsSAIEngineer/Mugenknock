@@ -1741,6 +1741,7 @@ export default function ExerciseSession() {
           questionId={currentQuestion.questionId}
           userId={userId}
           lang={lang}
+          hasFollowUps={answered && validFollowUps({ ...((currentQuestion.correctAnswers ? currentQuestion : detail) ?? currentQuestion), choices: ((currentQuestion.correctAnswers ? currentQuestion : detail) ?? currentQuestion).choices ?? currentQuestion.choices }).length > 0}
           onClose={() => setReportOpen(false)}
         />
       )}

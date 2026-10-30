@@ -702,7 +702,7 @@ app.get('/questions/:id', async (req, res) => {
 //  - client 指定の userId は信用しない。トークンがあれば検証して sub、無ければ 'anonymous'
 //  - カテゴリは既知値のみ許可、message は長さ制限
 //  - ログインユーザーの同一問題への重複通報は排除（連打スパム防止）
-const REPORT_CATEGORIES = ['question_error', 'choice_error', 'explanation_error', 'other'];
+const REPORT_CATEGORIES = ['question_error', 'choice_error', 'explanation_error', 'followup_error', 'other'];
 app.post('/questions/:id/report', async (req, res) => {
   try {
     const docClient = getClient();

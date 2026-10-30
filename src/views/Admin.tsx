@@ -57,6 +57,7 @@ const REPORT_CATEGORY_LABEL: Record<string, string> = {
   question_error:    '問題文の誤り',
   choice_error:      '選択肢・正解の誤り',
   explanation_error: '解説の誤り',
+  followup_error:    'ASK AI の質問の誤り',
   other:             'その他',
 };
 
