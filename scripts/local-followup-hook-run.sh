@@ -19,6 +19,9 @@ if ! hook_deadline 25; then
 fi
 log "質問の付与 (最大1000問 / deadline=$HOOK_DEADLINE / 締切まで${HOOK_REMAIN_MIN}分)..."
 cd "$REPO"
+# 先に既存の whatif 質問が単体で通じるかを点検する（2026-10-31〜。点検済みには rev=2 が付き、残りが無くなればすぐ終わる）。
+# 1回300問までにして、付与の時間を残す。
+python3 prompts/night-prompts/scripts/11-add-follow-up-questions.py --recheck -n 300 -c 10 -D "$HOOK_DEADLINE"
 python3 prompts/night-prompts/scripts/11-add-follow-up-questions.py -n 1000 -c 10 -D "$HOOK_DEADLINE"
 EC=$?
 log "完了 (exit $EC)"
