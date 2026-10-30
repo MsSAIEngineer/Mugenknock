@@ -3,6 +3,7 @@
 // ユーザープールの MFA は「任意・TOTP のみ」なので、一般ユーザーには影響しない。ここで設定した人だけ、
 // 次回からのログインで認証アプリの6桁コードを求められる（Amplify の Authenticator がその画面を出す）。
 import React, { useEffect, useState } from 'react';
+import { IconCheck } from '../Icons';
 import { fetchMFAPreference, setUpTOTP, verifyTOTPSetup, updateMFAPreference } from 'aws-amplify/auth';
 import Button from '../ui/Button';
 
@@ -49,7 +50,7 @@ export default function MfaSetupCard({ email }: { email: string }) {
     <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius-md)', padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
       <div style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, marginBottom: 'var(--spacing-xs)' }}>2段階認証（認証アプリ）</div>
       {enabled === null && <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)' }}>確認中…</div>}
-      {enabled === true && <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)' }}>✓ 有効です（{email}）</div>}
+      {enabled === true && <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-main)' }}><span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)', color: 'var(--color-success)' }}><IconCheck size={13} /></span>有効です（{email}）</div>}
       {enabled === false && !secret && (
         <>
           <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', lineHeight: 1.6, margin: '0 0 var(--spacing-sm)' }}>

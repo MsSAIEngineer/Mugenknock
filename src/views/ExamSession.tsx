@@ -15,7 +15,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import ReportModal from '../components/ReportModal';
-import { IconFlag, IconStar, IconCircleCheck, IconCirclePause, IconCheck, IconAlertTriangle } from '../components/Icons';
+import { IconFlag, IconStar, IconCircleCheck, IconCirclePause, IconCheck, IconAlertTriangle, IconTriangleAlert } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 import { isKbMode } from '../utils/keyboardMode';
 
@@ -538,7 +538,7 @@ export default function ExamSession() {
       {paused && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,28,36,0.8)', zIndex: 1000,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-xl)', padding: 'var(--spacing-lg)' }}>
-          <div style={{ fontSize: 'var(--font-size-xxl)', color: 'white', fontWeight: 700 }}>{t('examSession.pausedTitle')}</div>
+          <div style={{ fontSize: 'var(--font-size-xxl)', color: 'white', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}><IconCirclePause size={28} />{t('examSession.pausedTitle')}</div>
           <div style={{ fontSize: 'var(--font-size-base)', color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>{t('examSession.pausedNote')}</div>
           <Button variant="primary" size="lg" onClick={() => setPaused(false)}>
             {t('examSession.resume')}
@@ -735,7 +735,7 @@ export default function ExamSession() {
           </div>
           {currentQ.scheduledDeletionDate && (
             <div style={{ background: '#FFF4E5', border: '1px solid #F5A623', borderRadius: 'var(--border-radius-md)', padding: '8px 12px', marginBottom: 'var(--spacing-sm)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-              <span style={{ flexShrink: 0, fontSize: 'var(--font-size-base)', lineHeight: 1.6 }}>⚠️</span>
+              <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', height: '1.6em', fontSize: 'var(--font-size-xs)', color: 'var(--color-caution)' }}><IconTriangleAlert size={16} /></span>
               <span style={{ fontSize: 'var(--font-size-xs)', color: '#8A5A00', lineHeight: 1.6, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                 この問題は{currentQ.scheduledDeletionDate}に削除されます（理由: {currentQ.scheduledDeletionReason}）。
               </span>
@@ -779,7 +779,7 @@ export default function ExamSession() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       pointerEvents: 'none',
                     }}>
-                      {isSelected && <span style={{ color: 'white', fontSize: 'var(--font-size-2xs)', lineHeight: 1, fontWeight: 700 }}>✓</span>}
+                      {isSelected && <span style={{ color: 'white', display: 'flex' }}><IconCheck size={11} /></span>}
                     </div>
                   ) : (
                     <div style={{
@@ -851,7 +851,7 @@ export default function ExamSession() {
           <span>
             {lang === 'ja' ? 'AI確認' : 'AI review'}:{' '}
             {currentQ.validityCheckedAt
-              ? <strong style={{ color: 'var(--color-success)' }}>✓ {new Date(currentQ.validityCheckedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}</strong>
+              ? <strong style={{ color: 'var(--color-success)' }}><span style={{ display: 'inline-flex', verticalAlign: '-2px' }}><IconCheck size={13} /></span> {new Date(currentQ.validityCheckedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}</strong>
               : <strong>{lang === 'ja' ? '未確認' : 'not reviewed'}</strong>
             }
           </span>

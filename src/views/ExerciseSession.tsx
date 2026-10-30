@@ -16,7 +16,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import ReportModal from '../components/ReportModal';
 import { ConfirmBurst } from '../components/ExamSelectOverlay';
-import { IconBookOpen, IconBean, IconCopy, IconCheck, IconCircleCheck, IconCircleX, IconHeart, IconThumbsUp, IconThumbsDown, IconMoreVertical, IconInfinity } from '../components/Icons';
+import { IconBookOpen, IconBean, IconCopy, IconCheck, IconCircleCheck, IconCircleX, IconHeart, IconThumbsUp, IconThumbsDown, IconMoreVertical, IconInfinity, IconTriangleAlert } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 import { isKbMode } from '../utils/keyboardMode';
 import { validFollowUps, type FollowUpQuestion } from '../utils/followUp';
@@ -1449,7 +1449,7 @@ export default function ExerciseSession() {
 
         {currentQuestion.scheduledDeletionDate && (
           <div style={{ background: '#FFF4E5', border: '1px solid #F5A623', borderRadius: 'var(--border-radius-md)', padding: '8px 12px', marginBottom: 'var(--spacing-md)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <span style={{ flexShrink: 0, fontSize: 'var(--font-size-base)', lineHeight: 1.6 }}>⚠️</span>
+            <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', height: '1.6em', fontSize: 'var(--font-size-xs)', color: 'var(--color-caution)' }}><IconTriangleAlert size={16} /></span>
             <span style={{ fontSize: 'var(--font-size-xs)', color: '#8A5A00', lineHeight: 1.6, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
               この問題は{currentQuestion.scheduledDeletionDate}に削除されます（理由: {currentQuestion.scheduledDeletionReason}）。
             </span>
@@ -1501,7 +1501,7 @@ export default function ExerciseSession() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       pointerEvents: 'none',
                     }}>
-                      {isSelected && <span style={{ color: 'white', fontSize: 'var(--font-size-2xs)', lineHeight: 1, fontWeight: 700 }}>✓</span>}
+                      {isSelected && <span style={{ color: 'white', display: 'flex' }}><IconCheck size={11} /></span>}
                     </div>
                   ) : (
                     <div style={{
@@ -1705,7 +1705,7 @@ export default function ExerciseSession() {
             <span>
               {lang === 'ja' ? 'AI確認' : 'AI review'}:{' '}
               {currentQuestion.validityCheckedAt
-                ? <strong style={{ color: 'var(--color-success)' }}>✓ {new Date(currentQuestion.validityCheckedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}</strong>
+                ? <strong style={{ color: 'var(--color-success)' }}><span style={{ display: 'inline-flex', verticalAlign: '-2px' }}><IconCheck size={13} /></span> {new Date(currentQuestion.validityCheckedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}</strong>
                 : <strong>{lang === 'ja' ? '未確認' : 'not reviewed'}</strong>
               }
             </span>

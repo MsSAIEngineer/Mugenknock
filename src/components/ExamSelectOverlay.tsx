@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { resetExercisePrefsOnExamChange } from '../utils/preferences';
 import { API_ENDPOINT, EXAM_CONFIGS, EXAM_DOMAINS, DOMAIN_WEIGHTS, PASS_SCORES, isNonAwsExam, levelLabel, COMPANION_EXAM, companionLabel, officialExamsForCompanion, EXAM_LEVEL_COLORS, tint, levelText, levelOn } from '@/constants';
-import { EXAM_ICON_COMPONENTS, IconCircleCheck, IconExternalLink, IconFileText } from '@/components/Icons';
+import { EXAM_ICON_COMPONENTS, IconCircleCheck, IconExternalLink, IconFileText, IconX, IconChevronDown } from '@/components/Icons';
 import Button from '@/components/ui/Button';
 import { useHorizontalScrollHint } from '@/hooks/useHorizontalScrollHint';
 
@@ -282,7 +282,7 @@ export default function ExamSelectOverlay({
                   data-kbclose="1"
                   onClick={onClose}
                   style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1, flexShrink: 0 }}
-                >✕</button>
+                ><IconX size={20} /></button>
               )}
             </>
           ) : (
@@ -306,7 +306,7 @@ export default function ExamSelectOverlay({
                   data-kbclose="1"
                   onClick={onClose}
                   style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1 }}
-                >✕</button>
+                ><IconX size={20} /></button>
               )}
             </>
           )}
@@ -465,7 +465,7 @@ export default function ExamSelectOverlay({
                           }}
                         >
                           <span>{ja ? 'ドメイン別出題割合' : 'Domain Weights'}</span>
-                          <span style={{ fontSize: 'var(--font-size-3xs)', display: 'inline-block', transform: domainOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+                          <span style={{ display: 'inline-flex', transform: domainOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}><IconChevronDown size={12} /></span>
                         </button>
                         {domainOpen && (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 8 }}>

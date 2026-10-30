@@ -11,7 +11,7 @@ import { autoScoreAndClearDrafts } from '../utils/sessionUtils';
 import { hydrateDraftsFromServer } from '../utils/sessionResume';
 import { animateLoadPct, randomPlateau } from '../utils/loadProgress';
 import { getPrefetchA, getPrefetchC, prefetchTypeA } from '../utils/questionPrefetch';
-import { IconChevronUp, IconChevronDown, IconChevronRight } from '../components/Icons';
+import { IconChevronUp, IconChevronDown, IconChevronRight, IconTriangleAlert } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 import { useOhineriGate } from '../utils/useOhineriGate';
 
@@ -660,7 +660,7 @@ export default function Practice() {
           {availableCount !== null && availableCount > 0 && availableCount < limit
             && (
             <div style={{ marginBottom: 'var(--spacing-md)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-warning)', background: 'var(--color-bg-warning)', border: '1px solid var(--color-border-warning)', borderRadius: 'var(--border-radius-md)', padding: '8px 12px' }}>
-              ⚠️ {user && (bookmarkOnly || unansweredOnly || incorrectOnly)
+              <span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)' }}><IconTriangleAlert size={14} /></span>{user && (bookmarkOnly || unansweredOnly || incorrectOnly)
                 ? (ja
                     ? `条件に合う問題は${availableCount}問です。不足分は条件外の問題で補い、${limit}問で開始します。`
                     : `Only ${availableCount} questions match the filter. The rest will be filled from outside the filter to start with ${limit}.`)

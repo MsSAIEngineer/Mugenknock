@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import Button from '../components/ui/Button';
-import { IconLock, IconBean, ServiceIcon, isServiceIconKey, ServiceIconImg, IconExternalLink, IconSearch } from '../components/Icons';
+import { IconLock, IconBean, ServiceIcon, isServiceIconKey, ServiceIconImg, IconExternalLink, IconSearch, IconCheck, IconTriangleAlert, IconX } from '../components/Icons';
 import { CATALOG, getDailyService, ServiceEntry } from '../data/awsServiceCatalog';
 import { API_ENDPOINT } from '../constants';
 import PageLayout from '../components/ui/PageLayout';
@@ -486,7 +486,7 @@ export default function ServiceEncyclopedia() {
               data-kbclose="1"
               onClick={() => setSelected(null)}
               style={{ position: 'absolute', top: 12, right: 12, border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1 }}
-            >✕</button>
+            ><IconX size={20} /></button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
               <div style={{ width: 44, height: 44, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -501,7 +501,7 @@ export default function ServiceEncyclopedia() {
 
             {selected.deprecationNote && (
               <div style={{ background: '#FFF4E5', border: '1px solid #F5A623', borderRadius: 'var(--border-radius-md)', padding: '8px 12px', marginBottom: 10, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                <span style={{ flexShrink: 0, fontSize: 'var(--font-size-base)', lineHeight: 1.6 }}>⚠️</span>
+                <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', height: '1.6em', fontSize: 'var(--font-size-xs)', color: 'var(--color-caution)' }}><IconTriangleAlert size={16} /></span>
                 <span style={{ fontSize: 'var(--font-size-xs)', color: '#8A5A00', lineHeight: 1.6, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                   {ja
                     ? selected.deprecationNote
@@ -550,7 +550,7 @@ export default function ServiceEncyclopedia() {
             <div style={{ marginTop: 12, fontSize: 'var(--font-size-xs)', color: 'var(--color-text-light)' }}>
               {ja ? 'AI確認' : 'AI review'}:{' '}
               {selected.contentCheckedAt
-                ? <strong style={{ color: 'var(--color-success)' }}>✓ {new Date(selected.contentCheckedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}</strong>
+                ? <strong style={{ color: 'var(--color-success)' }}><span style={{ display: 'inline-flex', verticalAlign: '-2px' }}><IconCheck size={13} /></span> {new Date(selected.contentCheckedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}</strong>
                 : <strong>{ja ? '未確認' : 'not reviewed'}</strong>
               }
             </div>

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { IconChevronDown, IconChevronUp } from './Icons';
 import { createPortal } from 'react-dom';
 
 // 初回オンボーディング用スポットライト。
@@ -59,8 +60,8 @@ export default function StartTutorialSpotlight({ targetSelector, message, skipLa
     </div>
   );
   const arrow = (
-    <div style={{ animation: 'mkTutArrow 0.9s ease-in-out infinite', color: 'var(--color-accent)', fontSize: 26, lineHeight: 1 }}>
-      {above ? '▼' : '▲'}
+    <div style={{ animation: 'mkTutArrow 0.9s ease-in-out infinite', color: 'var(--color-accent)', display: 'flex' }}>
+      {above ? <IconChevronDown size={28} /> : <IconChevronUp size={28} />}
     </div>
   );
 

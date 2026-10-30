@@ -8,7 +8,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import MfaSetupCard from '../components/admin/MfaSetupCard';
-import { ServiceIcon, isServiceIconKey, IconChevronDown, IconChevronRight, IconCopy, IconCheck, IconClose, IconCircleX, IconAlertTriangle, IconThumbsUp, IconThumbsDown, IconLightbulb, IconEye, IconPenLine, IconArrowRight, IconArrowLeft, IconPencil, IconTrash, IconRefreshCw } from '../components/Icons';
+import { ServiceIcon, isServiceIconKey, IconChevronDown, IconChevronRight, IconCopy, IconCheck, IconClose, IconCircleX, IconAlertTriangle, IconThumbsUp, IconThumbsDown, IconLightbulb, IconEye, IconPenLine, IconArrowRight, IconArrowLeft, IconPencil, IconTrash, IconRefreshCw, IconX } from '../components/Icons';
 import { useTheme, CustomColors } from '../contexts/ThemeContext';
 import { useHorizontalScrollHint } from '../hooks/useHorizontalScrollHint';
 
@@ -1875,7 +1875,7 @@ export default function Admin() {
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 8px 2px 10px', background: 'var(--color-primary-light)', color: 'var(--color-primary)', borderRadius: 4, fontSize: 12, fontWeight: 600 }}>
                       {keyword}
                       <button onClick={() => setKeyword('')}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: 15, lineHeight: 1, padding: '0 0 0 2px', display: 'flex', alignItems: 'center' }}>×</button>
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: 15, lineHeight: 1, padding: '0 0 0 2px', display: 'flex', alignItems: 'center' }}><IconX size={20} /></button>
                     </span>
                   </div>
                 )}
@@ -1902,7 +1902,7 @@ export default function Admin() {
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 8px 2px 10px', background: 'var(--color-primary-light)', color: 'var(--color-primary)', borderRadius: 4, fontSize: 12, fontWeight: 600 }}>
                       {tagFilter}
                       <button onClick={() => setTagFilter('')}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: 15, lineHeight: 1, padding: '0 0 0 2px', display: 'flex', alignItems: 'center' }}>×</button>
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: 15, lineHeight: 1, padding: '0 0 0 2px', display: 'flex', alignItems: 'center' }}><IconX size={20} /></button>
                     </span>
                   </div>
                 )}
@@ -3432,7 +3432,7 @@ ${tipPromptExamType !== 'ALL' ? `・examType には "${tipPromptExamType}" を�
                           <ol type="A" style={{ fontSize: 'var(--font-size-sm)', margin: 'var(--spacing-sm) 0 0', paddingLeft: 'var(--spacing-lg)', lineHeight: 1.6 }}>
                             {q.choices.map((c, i) => (
                               <li key={i} style={{ fontWeight: q.correctAnswers?.includes(c) ? 700 : 400 }}>
-                                {q.correctAnswers?.includes(c) ? '✓ ' : ''}{c}
+                                {q.correctAnswers?.includes(c) && <><span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)' }}><IconCheck size={12} /></span></>}{c}
                               </li>
                             ))}
                           </ol>
@@ -3446,7 +3446,7 @@ ${tipPromptExamType !== 'ALL' ? `・examType には "${tipPromptExamType}" を�
                               <ol type="A" style={{ fontSize: 'var(--font-size-sm)', margin: 'var(--spacing-xs) 0 0', paddingLeft: 'var(--spacing-lg)', lineHeight: 1.6 }}>
                                 {(proposal.choices || q.choices || []).map((c, i) => {
                                   const correct = (proposal.correctAnswers || q.correctAnswers || []).includes(c);
-                                  return <li key={i} style={{ fontWeight: correct ? 700 : 400 }}>{correct ? '✓ ' : ''}{c}</li>;
+                                  return <li key={i} style={{ fontWeight: correct ? 700 : 400 }}>{correct && <><span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)' }}><IconCheck size={12} /></span></>}{c}</li>;
                                 })}
                               </ol>
                             )}

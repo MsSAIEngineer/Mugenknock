@@ -25,7 +25,7 @@ import { getPoints, deductPoints } from '../utils/points';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import PageLayout from '../components/ui/PageLayout';
-import { IconLightbulb, IconBean, IconSettings, IconChevronUp, IconLock, IconFileText, IconTrendingUp, IconBookOpen, IconCheck, IconCircleCheck, IconSparkles, IconPointer, IconMousePointerClick, IconCalendarNotebook, IconRefreshCw, IconTarget, IconChart, ServiceIconImg, isServiceIconKey, IconUser, IconSave, IconSaveCheck, IconExternalLink } from '../components/Icons';
+import { IconLightbulb, IconBean, IconSettings, IconChevronUp, IconLock, IconFileText, IconTrendingUp, IconBookOpen, IconCheck, IconCircleCheck, IconSparkles, IconPointer, IconMousePointerClick, IconCalendarNotebook, IconRefreshCw, IconTarget, IconChart, ServiceIconImg, isServiceIconKey, IconUser, IconSave, IconSaveCheck, IconExternalLink, IconX } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 import { CATALOG } from '../data/awsServiceCatalog';
 import { autoScoreAndClearDrafts } from '../utils/sessionUtils';
@@ -303,7 +303,7 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
                 >?</button>
               )}
             </div>
-            <button data-kbclose="1" onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-h3)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '0 4px', lineHeight: 1 }}>✕</button>
+            <button data-kbclose="1" onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-h3)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '0 4px', lineHeight: 1 }}><IconX size={20} /></button>
           </div>
         ) : null}
 
@@ -2887,7 +2887,7 @@ export default function Home() {
                   {ja ? '全ドメインを幅広く均等に出題' : 'Broad, even coverage across domains'}
                 </div>
               </div>
-              <button onClick={() => setShowQuickModal(false)} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1 }}>✕</button>
+              <button onClick={() => setShowQuickModal(false)} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1 }}><IconX size={20} /></button>
             </div>
             {/* スクロール可能なコンテンツ */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
@@ -3117,7 +3117,7 @@ export default function Home() {
                 <div style={{ flexShrink: 0, borderTop: '1px solid var(--color-border)', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, minHeight: 64 }}>
                   {quickSaveMsg && (
                     <span style={{ fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: quickSaveMsg === 'saved' ? 'var(--color-success)' : 'var(--color-text-sub)', animation: 'sherpa-save-msg 2s ease-in-out both' }}>
-                      {quickSaveMsg === 'saved' ? `✓ ${ja ? '保存しました' : 'Saved'}` : (ja ? '保存済です' : 'Already saved')}
+                      {quickSaveMsg === 'saved' ? <><span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)' }}><IconCheck size={13} /></span>{ja ? '保存しました' : 'Saved'}</> : (ja ? '保存済です' : 'Already saved')}
                     </span>
                   )}
                   <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -3187,7 +3187,7 @@ export default function Home() {
                   {ja ? '苦手・弱点を集中的に出題' : 'Concentrates on your weak spots'}
                 </div>
               </div>
-              <button onClick={() => setShowFocusedModal(false)} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1 }}>✕</button>
+              <button onClick={() => setShowFocusedModal(false)} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1 }}><IconX size={20} /></button>
             </div>
             {/* スクロール可能なコンテンツ */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
@@ -3447,7 +3447,7 @@ export default function Home() {
                 <div style={{ flexShrink: 0, borderTop: '1px solid var(--color-border)', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, minHeight: 64 }}>
                   {focusedSaveMsg && (
                     <span style={{ fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: focusedSaveMsg === 'saved' ? 'var(--color-success)' : 'var(--color-text-sub)', animation: 'sherpa-save-msg 2s ease-in-out both' }}>
-                      {focusedSaveMsg === 'saved' ? `✓ ${ja ? '保存しました' : 'Saved'}` : (ja ? '保存済です' : 'Already saved')}
+                      {focusedSaveMsg === 'saved' ? <><span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)' }}><IconCheck size={13} /></span>{ja ? '保存しました' : 'Saved'}</> : (ja ? '保存済です' : 'Already saved')}
                     </span>
                   )}
                   <div style={{ position: 'relative', flexShrink: 0 }}>

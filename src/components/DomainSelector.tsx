@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { DOMAIN_NAME_EN, DOMAIN_RATE_WARNING, DOMAIN_RATE_CAUTION } from '../constants';
-import { IconChevronDown } from './Icons';
+import { IconChevronDown, IconX } from './Icons';
 
 type Props = {
   domains: string[];
@@ -185,7 +185,7 @@ export default function DomainSelector({ domains, selected, onChange, lang, labe
                 <button
                   onClick={(e) => { e.stopPropagation(); onChange([domains[0]]); }}
                   style={chipXStyle}
-                >×</button>
+                ><IconX size={20} /></button>
               </span>
             ) : (
               selected.map(d => (
@@ -195,7 +195,7 @@ export default function DomainSelector({ domains, selected, onChange, lang, labe
                     <button
                       onClick={(e) => removeChip(d, e)}
                       style={chipXStyle}
-                    >×</button>
+                    ><IconX size={20} /></button>
                   )}
                 </span>
               ))

@@ -18,8 +18,7 @@ import {
   IconDumbbell, IconFire, IconMegaphone, IconBell, IconMenu, IconMail, IconInfo,
   IconSparkles, IconBot, IconUserCircle, IconBookOpen, IconBook, IconLayoutGrid, IconSwatchBook,
   IconSun, IconMoon, IconMore, IconChevronDown,
-  EXAM_ICON_COMPONENTS,
-} from './Icons';
+  EXAM_ICON_COMPONENTS, IconCircleCheck, IconX } from './Icons';
 
 type BreadcrumbItem = { label: string; path?: string };
 
@@ -709,11 +708,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: isMobile ? '20px 18px' : '28px 32px', width: '100%', maxWidth: 'var(--modal-width-md)', boxShadow: 'var(--box-shadow-md)', maxHeight: isMobile ? '66vh' : '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
               <h3 style={{ margin: 0, fontSize: 'var(--font-size-h3)', fontWeight: 700, color: 'var(--color-text-main)' }}>{t('contact.title')}</h3>
-              <button onClick={() => setShowContact(false)} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px' }}>✕</button>
+              <button onClick={() => setShowContact(false)} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px' }}><IconX size={20} /></button>
             </div>
             {contactDone ? (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                <div style={{ fontSize: 40, marginBottom: 'var(--spacing-md)' }}>✓</div>
+                <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--color-success)', marginBottom: 'var(--spacing-md)' }}><IconCircleCheck size={40} /></div>
                 <p style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 'var(--font-size-md)', margin: '0 0 var(--spacing-sm)' }}>{t('contact.sent')}</p>
                 <p style={{ color: 'var(--color-text-sub)', fontSize: 'var(--font-size-sm)', margin: '0 0 var(--spacing-lg)' }}>{t('contact.thankYou')}</p>
                 <Button onClick={() => setShowContact(false)} size="md">
@@ -791,7 +790,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   {lang === 'ja' ? 'SPとは？' : 'What is SP?'}
                 </span>
               </div>
-              <button onClick={() => setShowPointsInfo(false)} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-h3)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1 }}>✕</button>
+              <button onClick={() => setShowPointsInfo(false)} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-h3)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1 }}><IconX size={20} /></button>
             </div>
 
             {/* 獲得方法 */}

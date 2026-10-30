@@ -9,7 +9,7 @@ import Card from '../components/ui/Card';
 import PageLayout from '../components/ui/PageLayout';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { IconChevronDown, IconChevronRight, IconSparkles, IconCopy, IconCheck } from '../components/Icons';
+import { IconChevronDown, IconChevronRight, IconSparkles, IconCopy, IconCheck, IconX } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 
 const CopyButton = ({ getText }: { getText: () => string }) => {
@@ -323,7 +323,7 @@ export default function Result() {
                   {q.questionText}
                 </span>
                 <Badge variant={isCorrect ? 'success' : 'danger'}>
-                  {isCorrect ? t('result.correct') : t('result.incorrect')}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>{isCorrect ? <IconCheck size={12} /> : <IconX size={12} />}{isCorrect ? t('result.correct') : t('result.incorrect')}</span>
                 </Badge>
               </div>
 
@@ -359,7 +359,7 @@ export default function Result() {
                           display: 'flex', alignItems: 'flex-start', gap: 8,
                         }}>
                           <span style={{ fontWeight: 700, flexShrink: 0 }}>{label}.</span>
-                          <span style={{ whiteSpace: 'pre-wrap' }}>{correct ? '✓ ' : ''}{c}</span>
+                          <span style={{ whiteSpace: 'pre-wrap' }}>{correct && <><span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)' }}><IconCheck size={13} /></span></>}{c}</span>
                         </div>
                       );
                     })}

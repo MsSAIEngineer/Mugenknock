@@ -9,7 +9,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import PageLayout from '../components/ui/PageLayout';
 import { getCached, setCached } from '../utils/cache';
-import { IconStar, IconTarget, IconLightbulb } from '../components/Icons';
+import { IconStar, IconTarget, IconLightbulb, IconX, IconCheck } from '../components/Icons';
 
 const TARGET_EXAM_KEY_BASE = 'targetExam';
 const STATS_GOOD_RATE = 70;
@@ -374,7 +374,7 @@ export default function Stats() {
           <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: 'var(--color-text-sub)' }}><IconLightbulb size={16} /></span>
           <span style={{ flex: 1, lineHeight: 1.5 }}>{t('stats.hint')}</span>
           <button onClick={() => { localStorage.setItem(`sherpaStatsHint_${uid}`, '1'); setShowHint(false); }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-light)', fontSize: 'var(--font-size-h3)', lineHeight: 1, padding: '0 4px', flexShrink: 0 }}>✕</button>
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-light)', fontSize: 'var(--font-size-h3)', lineHeight: 1, padding: '0 4px', flexShrink: 0 }}><IconX size={20} /></button>
         </div>
       )}
 
@@ -658,7 +658,7 @@ export default function Stats() {
                                       style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '8px 10px', cursor: 'pointer', background: qExpanded ? 'var(--color-bg-main)' : 'transparent' }}
                                     >
                                       <span style={{ flexShrink: 0, width: 16, height: 16, borderRadius: '50%', background: a.isCorrect ? 'var(--color-success)' : 'var(--color-danger)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 'var(--font-size-3xs)', fontWeight: 700, marginTop: 1 }}>
-                                        {a.isCorrect ? '○' : '×'}
+                                        {a.isCorrect ? <IconCheck size={10} /> : <IconX size={10} />}
                                       </span>
                                       <span style={{ color: 'var(--color-text-sub)', lineHeight: 1.5, flex: 1, fontSize: 'var(--font-size-xs)' }}>
                                         {a.questionText || a.questionId}

@@ -6,7 +6,7 @@ import { useNavigate } from '@/compat/react-router-dom';
 import { API_ENDPOINT, EXAM_DOMAINS, EXAM_DOMAIN_SERVICES, DOMAIN_RATE_WARNING, DOMAIN_RATE_CAUTION, tagIdMatches, toDomainIndex } from '@/constants';
 import { lockBodyScroll } from '@/utils/bodyScrollLock';
 import Card from '@/components/ui/Card';
-import { IconChevronDown, IconLock, IconCopy, IconCheck } from '@/components/Icons';
+import { IconChevronDown, IconLock, IconCopy, IconCheck, IconX, IconTriangleAlert, IconCircleX } from '@/components/Icons';
 
 export const FOCUSED_UNLOCK_THRESHOLD = 20;
 
@@ -275,7 +275,7 @@ export default function WeakAnalysis({ userId, targetExam, ja, isMobile }: {
                     )}
                   </span>
                   <span style={{ gridColumn: 2, fontSize: 'var(--font-size-sm2)', color: isWeak ? 'var(--color-danger)' : 'var(--color-text-main)', fontWeight: isWeak ? 700 : 600, lineHeight: 1.45 }}>
-                    {isWeak && '⚠ '}{domain}
+                    {isWeak && <><span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)' }}><IconTriangleAlert size={13} /></span></>}{domain}
                   </span>
                   {services.length > 0 && (
                     <div style={{ gridColumn: 2, fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)', lineHeight: 1.65 }}>
@@ -299,7 +299,7 @@ export default function WeakAnalysis({ userId, targetExam, ja, isMobile }: {
       {/* 頻出ミス問題 */}
       <Card>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)' }}>
-          <span style={{ fontSize: 'var(--font-size-base)' }}>✗</span>
+          <span style={{ display: 'flex', color: 'var(--color-danger)' }}><IconCircleX size={16} /></span>
           <span style={{ fontWeight: 700, fontSize: 'var(--font-size-base)' }}>{ja ? '間違えやすい問題（2回以上）' : 'Frequent Mistakes (2+ times)'}</span>
         </div>
         {!focusedUnlocked ? (
@@ -360,7 +360,7 @@ export default function WeakAnalysis({ userId, targetExam, ja, isMobile }: {
               <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-text-sub)' }}>
                 {ja ? '問題詳細' : 'Question Detail'}
               </span>
-              <button onClick={() => setQuestionModal(null)} aria-label={ja ? '閉じる' : 'Close'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-sub)', fontSize: 'var(--font-size-xl)', lineHeight: 1, padding: '0 var(--spacing-xs)' }}>✕</button>
+              <button onClick={() => setQuestionModal(null)} aria-label={ja ? '閉じる' : 'Close'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-sub)', fontSize: 'var(--font-size-xl)', lineHeight: 1, padding: '0 var(--spacing-xs)' }}><IconX size={20} /></button>
             </div>
 
             {questionModal.loading ? (
@@ -385,7 +385,7 @@ export default function WeakAnalysis({ userId, targetExam, ja, isMobile }: {
                     return (
                       <div key={i} style={{ fontSize: 'var(--font-size-sm)', padding: 'var(--spacing-sm) var(--spacing-md)', borderRadius: 'var(--border-radius-md)', border: `1.5px solid ${isCorrect ? 'var(--color-success)' : 'var(--color-border)'}`, background: isCorrect ? 'var(--color-feedback-correct-bg)' : 'var(--color-bg-main)', color: isCorrect ? 'var(--color-success)' : 'var(--color-text-sub)', lineHeight: 1.6 }}>
                         <span style={{ fontWeight: 700, marginRight: 'var(--spacing-xs)' }}>{String.fromCharCode(65 + i)}.</span>
-                        {isCorrect ? '✓ ' : ''}{c.replace(/^[A-E]\.\s*/, '')}
+                        {isCorrect && <><span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)' }}><IconCheck size={13} /></span></>}{c.replace(/^[A-E]\.\s*/, '')}
                       </div>
                     );
                   })}

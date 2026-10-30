@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useIsMobile } from '../hooks/useWindowWidth';
-import { IconChevronLeft, IconChevronDown, IconExternalLink } from '../components/Icons';
+import { IconChevronLeft, IconChevronDown, IconExternalLink, IconX } from '../components/Icons';
 import MarkdownText from '../components/ui/MarkdownText';
 import {
   EXAM_TYPES, EXAM_CONFIGS, EXAM_LEVEL, EXAM_DOMAINS, PASS_RATE,
@@ -172,7 +172,7 @@ export default function ExamDashboard() {
                     }}
                   />
                   {searchQuery && (
-                    <button onClick={() => setSearchQuery('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-light)', fontSize: 'var(--font-size-base)', padding: '0 2px', lineHeight: 1 }}>✕</button>
+                    <button onClick={() => setSearchQuery('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-light)', fontSize: 'var(--font-size-base)', padding: '0 2px', lineHeight: 1 }}><IconX size={20} /></button>
                   )}
                 </div>
 

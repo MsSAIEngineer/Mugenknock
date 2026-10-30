@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { createPortal } from 'react-dom';
-import { ServiceIconImg, IconSparkles, IconPointer, IconMousePointerClick, IconBean } from './Icons';
+import { ServiceIconImg, IconSparkles, IconPointer, IconMousePointerClick, IconBean, IconCheck } from './Icons';
 import Button from './ui/Button';
 
 type DailyService = {
@@ -348,7 +348,7 @@ export default function DailyServiceRevealModal({
               <div style={{ fontSize: 'var(--font-size-xs)', color: 'rgba(255,255,255,.4)', marginBottom: 16, textAlign: 'left' }}>
                 {ja ? 'AI確認' : 'AI review'}:{' '}
                 {service.contentCheckedAt
-                  ? <span style={{ color: 'rgba(100,230,140,.75)', fontWeight: 700 }}>✓ {new Date(service.contentCheckedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+                  ? <span style={{ color: 'rgba(100,230,140,.75)', fontWeight: 700 }}><span style={{ display: 'inline-flex', verticalAlign: '-2px' }}><IconCheck size={13} /></span> {new Date(service.contentCheckedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
                   : <span>{ja ? '未確認' : 'not reviewed'}</span>
                 }
               </div>

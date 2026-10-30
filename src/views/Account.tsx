@@ -10,7 +10,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
-import { IconChevronLeft, IconChevronRight, IconSun, IconMoon, IconTrash } from '../components/Icons';
+import { IconChevronLeft, IconChevronRight, IconSun, IconMoon, IconTrash, IconCircleCheck, IconX } from '../components/Icons';
 
 type SessionSummary = { examType: string; count: number; lastDate: string | null };
 
@@ -87,7 +87,7 @@ function Modal({ onClose, title, children }: { onClose: () => void; title: strin
       <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: '24px 24px 20px', width: '100%', maxWidth: 'var(--modal-width-md)', boxShadow: 'var(--box-shadow-md)', maxHeight: window.innerWidth < 768 ? '66vh' : '90vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h3 style={{ margin: 0, fontSize: 'var(--font-size-h3)', fontWeight: 700, color: 'var(--color-text-main)' }}>{title}</h3>
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1 }}>✕</button>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px', lineHeight: 1 }}><IconX size={20} /></button>
         </div>
         {children}
       </div>
@@ -545,7 +545,7 @@ export default function Account() {
         <Modal onClose={() => setShowEmailModal(false)} title={ja ? 'メールアドレス変更' : 'Change Email'}>
           {emailSuccess ? (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <div style={{ fontSize: 40, marginBottom: 12, color: 'var(--color-success)' }}>✓</div>
+              <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--color-success)', marginBottom: 12 }}><IconCircleCheck size={40} /></div>
               <p style={{ color: 'var(--color-success)', fontWeight: 700, margin: 0 }}>
                 {ja ? 'メールアドレスを変更しました' : 'Email changed successfully'}
               </p>
@@ -579,7 +579,7 @@ export default function Account() {
         <Modal onClose={() => !passwordChanging && setShowPasswordModal(false)} title={ja ? 'パスワード変更' : 'Change Password'}>
           {passwordSuccess ? (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <div style={{ fontSize: 40, marginBottom: 12, color: 'var(--color-success)' }}>✓</div>
+              <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--color-success)', marginBottom: 12 }}><IconCircleCheck size={40} /></div>
               <p style={{ color: 'var(--color-success)', fontWeight: 700, margin: 0 }}>
                 {ja ? 'パスワードを変更しました' : 'Password changed successfully'}
               </p>
@@ -644,7 +644,7 @@ export default function Account() {
         <Modal onClose={() => !resetExecuting && setShowResetModal(false)} title={ja ? 'アカウントを初期化' : 'Reset Account Data'}>
           {resetDone ? (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <div style={{ fontSize: 40, marginBottom: 12, color: 'var(--color-success)' }}>✓</div>
+              <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--color-success)', marginBottom: 12 }}><IconCircleCheck size={40} /></div>
               <p style={{ color: 'var(--color-success)', fontWeight: 700, margin: '0 0 20px' }}>
                 {ja ? '初期化が完了しました' : 'Reset complete'}
               </p>

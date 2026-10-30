@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { IconTriangleAlert } from './Icons';
 
 interface Props {
   children: React.ReactNode;
@@ -28,7 +29,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
           textAlign: 'center',
           color: 'var(--color-text-main)',
         }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>⚠</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--color-caution)' }}><IconTriangleAlert size={32} /></div>
           <div style={{ fontWeight: 700, marginBottom: 8 }}>画面の表示中にエラーが発生しました</div>
           <div style={{ fontSize: 'var(--font-size-sm2)', color: 'var(--color-text-sub)', marginBottom: 20 }}>
             {this.state.error.message}

@@ -14,8 +14,7 @@ import {
   IconCalendarNotebook, IconTarget, IconAnnoyed, IconList,
   IconSparkles, IconChevronRight, IconChevronDown, IconLock, IconFlag, IconStar, IconTrendingUp, IconPenLine,
   IconSprout, IconBox, IconBot, IconCode2, IconCloud, IconDatabase, IconBrain, IconVectorSquare, IconFileCodeCorner, IconAtom, IconShieldIcon, IconWaypoints,
-  EXAM_ICON_COMPONENTS, IconSave, IconSaveCheck, IconCopy, IconCheck, IconTrophy, IconCircleCheck, IconCircleX, IconExternalLink, IconFileText, IconTrash,
-} from '../components/Icons';
+  EXAM_ICON_COMPONENTS, IconSave, IconSaveCheck, IconCopy, IconCheck, IconTrophy, IconCircleCheck, IconCircleX, IconExternalLink, IconFileText, IconTrash, IconX } from '../components/Icons';
 import ExamSelectOverlay, { EXAM_DESC, EXAM_URLS, EXAM_GUIDE_PDF_URLS, ConfirmBurst } from '../components/ExamSelectOverlay';
 import Confetti from '../components/Confetti';
 import KeyHint from '../components/KeyHint';
@@ -394,7 +393,7 @@ export default function MyPage() {
                                   <span style={{ fontSize: 'var(--font-size-sm2)', color: 'var(--color-text-sub)' }}>{ja ? '問 / 日' : 'Q / day'}</span>
                                 </span>
                                 {ja && <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)' }}>※達成で<span style={{ color: 'var(--color-points)', fontWeight: 700 }}>+10p</span>！</span>}
-                                {todayCount >= dailyGoal && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-success)' }}>✓</span>}
+                                {todayCount >= dailyGoal && <span style={{ display: 'inline-flex', color: 'var(--color-success)' }}><IconCheck size={14} /></span>}
                               </div>
                             </>
                           )}
@@ -497,7 +496,7 @@ export default function MyPage() {
                           <span style={{ fontSize: 'var(--font-size-sm2)', color: 'var(--color-text-sub)' }}>{ja ? '問 / 日' : 'Q / day'}</span>
                         </span>
                         {ja && <span style={{ fontSize: 'var(--font-size-2xs)', color: 'var(--color-text-light)' }}>※達成で<span style={{ color: 'var(--color-points)', fontWeight: 700 }}>+10p</span>！</span>}
-                        {todayCount >= dailyGoal && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-success)' }}>✓</span>}
+                        {todayCount >= dailyGoal && <span style={{ display: 'inline-flex', color: 'var(--color-success)' }}><IconCheck size={14} /></span>}
                       </div>
                     </>
                   )}
@@ -543,7 +542,7 @@ export default function MyPage() {
                                   opacity: circleAnimated ? 1 : 0,
                                   transform: circleAnimated ? 'scale(1)' : 'scale(0.4)',
                                   transition: `opacity 0.2s ease ${0.5 + i * 0.1}s, transform 0.25s ease ${0.5 + i * 0.1}s`,
-                                }}>✓</div>
+                                }}><IconCheck size={16} /></div>
                               )}
                             </div>
                             <span style={{ fontSize: 'var(--font-size-3xs)', color: isToday ? levelText(examColor) : 'var(--color-text-light)', fontWeight: isToday ? 700 : 400 }}>{dayLabel}</span>
@@ -579,7 +578,7 @@ export default function MyPage() {
                         <span style={{ color: 'var(--color-text-sub)', display: 'flex', alignItems: 'center' }}><IconTrendingUp size={15} /></span>
                         <span style={{ fontWeight: 700, fontSize: 'var(--font-size-base)', color: 'var(--color-text-main)' }}>{ja ? '週間達成状況' : 'Weekly Progress'}</span>
                       </div>
-                      <button onClick={() => setShowWeeklyDetail(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-light)', fontSize: 'var(--font-size-xl)', lineHeight: 1, padding: '0 4px' }}>✕</button>
+                      <button onClick={() => setShowWeeklyDetail(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-light)', fontSize: 'var(--font-size-xl)', lineHeight: 1, padding: '0 4px' }}><IconX size={20} /></button>
                     </div>
                     <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-sub)', marginBottom: 24 }}>
                       {ja ? `直近7日間の演習量（${targetExam}）` : `Last 7 days · ${targetExam}`}
@@ -640,7 +639,7 @@ export default function MyPage() {
                 <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: '24px 20px', width: '100%', maxWidth: 'var(--modal-width-sm)', boxShadow: 'var(--box-shadow-md)' }} onClick={e => e.stopPropagation()}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                     <span style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)' }}>{ja ? '目標設定' : 'Edit Settings'}</span>
-                    <button onClick={() => setShowSettingsEdit(false)} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 'var(--font-size-h3)', color: 'var(--color-text-sub)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                    <button onClick={() => setShowSettingsEdit(false)} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 'var(--font-size-h3)', color: 'var(--color-text-sub)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconX size={20} /></button>
                   </div>
                   {/* 受験日 */}
                   <div style={{ marginBottom: 20 }}>
@@ -674,7 +673,7 @@ export default function MyPage() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
                     {settingsSaveMsg && (
                       <span style={{ fontSize: 'var(--font-size-sm2)', fontWeight: 700, color: settingsSaveMsg === 'saved' ? 'var(--color-success)' : 'var(--color-text-sub)', animation: 'sherpa-save-msg 2s ease-in-out both' }}>
-                        {settingsSaveMsg === 'saved' ? `✓ ${ja ? '保存しました' : 'Saved'}` : (ja ? '保存済です' : 'Already saved')}
+                        {settingsSaveMsg === 'saved' ? <><span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)' }}><IconCheck size={13} /></span>{ja ? '保存しました' : 'Saved'}</> : (ja ? '保存済です' : 'Already saved')}
                       </span>
                     )}
                     <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -803,7 +802,7 @@ export default function MyPage() {
                             <IconTrophy size={16} />
                             <span style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)' }}>{ja ? '取得済資格を設定' : 'Set Certifications'}</span>
                           </div>
-                          <button onClick={() => setShowCertOverlay(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-text-light)', fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
+                          <button onClick={() => setShowCertOverlay(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-text-light)', fontSize: 20, lineHeight: 1, padding: 4 }}><IconX size={20} /></button>
                         </div>
                         {/* レベルタブ */}
                         <div style={{ display: 'flex', gap: 'var(--spacing-xs)', padding: '0 var(--spacing-md)', borderBottom: '1px solid var(--color-border)', flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none' }}>

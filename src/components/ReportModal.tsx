@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { IconCircleCheck, IconX } from './Icons';
 import { API_ENDPOINT } from '../constants';
 import Button from './ui/Button';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
@@ -66,12 +67,12 @@ export default function ReportModal({ questionId, userId, lang, hasFollowUps, on
           <h3 style={{ margin: 0, fontSize: 'var(--font-size-h3)', fontWeight: 700, color: 'var(--color-text-main)' }}>
             {lang === 'ja' ? '問題を通報' : 'Report an issue'}
           </h3>
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px' }}>✕</button>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px' }}><IconX size={20} /></button>
         </div>
 
         {done ? (
           <div style={{ textAlign: 'center', padding: '24px 28px', flex: 1 }}>
-            <div style={{ fontSize: 40, marginBottom: 'var(--spacing-md)' }}>✓</div>
+            <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--color-success)', marginBottom: 'var(--spacing-md)' }}><IconCircleCheck size={40} /></div>
             <p style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 'var(--font-size-md)', margin: '0 0 var(--spacing-sm)' }}>
               {lang === 'ja' ? '通報を受け付けました' : 'Report submitted'}
             </p>

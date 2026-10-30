@@ -4,7 +4,7 @@ import { useNavigate } from '@/compat/react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { API_ENDPOINT } from '../constants';
-import { IconFire, IconMail, IconMegaphone, IconInfo, IconLayoutGrid, IconSwatchBook, IconNetwork } from '../components/Icons';
+import { IconFire, IconMail, IconMegaphone, IconInfo, IconLayoutGrid, IconSwatchBook, IconNetwork, IconCircleCheck, IconX } from '../components/Icons';
 import Button from '../components/ui/Button';
 import PageLayout from '../components/ui/PageLayout';
 import { fetchLimits } from '../utils/dailyLimit';
@@ -231,11 +231,11 @@ export default function Others() {
           <div style={{ background: 'var(--color-bg-white)', borderRadius: 'var(--border-radius-lg)', padding: '24px 24px 20px', width: '100%', maxWidth: 'var(--modal-width-md)', boxShadow: 'var(--box-shadow-md)', maxHeight: window.innerWidth < 768 ? '66vh' : '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
               <h3 style={{ margin: 0, fontSize: 'var(--font-size-h3)', fontWeight: 700, color: 'var(--color-text-main)' }}>{t('contact.title')}</h3>
-              <button onClick={() => setShowContact(false)} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px' }}>✕</button>
+              <button onClick={() => setShowContact(false)} style={{ border: 'none', background: 'none', fontSize: 'var(--font-size-xl)', cursor: 'pointer', color: 'var(--color-text-sub)', padding: '4px 8px' }}><IconX size={20} /></button>
             </div>
             {contactDone ? (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                <div style={{ fontSize: 40, marginBottom: 'var(--spacing-md)' }}>✓</div>
+                <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--color-success)', marginBottom: 'var(--spacing-md)' }}><IconCircleCheck size={40} /></div>
                 <p style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 'var(--font-size-md)', margin: '0 0 var(--spacing-sm)' }}>{t('contact.sent')}</p>
                 <p style={{ color: 'var(--color-text-sub)', fontSize: 'var(--font-size-sm)', margin: '0 0 var(--spacing-lg)' }}>{t('contact.thankYou')}</p>
                 <Button onClick={() => setShowContact(false)} size="md">{t('contact.close')}</Button>

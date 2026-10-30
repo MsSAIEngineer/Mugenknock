@@ -11,7 +11,7 @@ import DomainSelector from '../components/DomainSelector';
 import { getCached, setCached, SHORT_TTL } from '../utils/cache';
 import { domainBalancedOrder } from '../utils/domainBalance';
 import { syncTargetExamToServer, resetExercisePrefsOnExamChange } from '../utils/preferences';
-import { IconLightbulb } from '../components/Icons';
+import { IconLightbulb, IconX, IconCirclePause, IconTriangleAlert, IconArrowRight } from '../components/Icons';
 import KeyHint from '../components/KeyHint';
 
 const StepBadge = ({ n, optional = false }: { n: number; optional?: boolean }) => (
@@ -338,7 +338,7 @@ export default function ExamSetup() {
           <button
             onClick={() => { localStorage.setItem(`sherpaExamHint_${uid}`, '1'); setShowHint(false); }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-light)', fontSize: 'var(--font-size-h3)', lineHeight: 1, padding: '0 4px', flexShrink: 0 }}
-          >✕</button>
+          ><IconX size={20} /></button>
         </div>
       )}
 
@@ -353,7 +353,7 @@ export default function ExamSetup() {
               onClick={() => navigate('/aws/stats', { state: { tab: 'trend' } })}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--font-size-sm)', color: 'var(--color-primary)', padding: 0, fontWeight: 600 }}
             >
-              {lang === 'ja' ? '正答率の推移 →' : 'Accuracy →'}
+              {lang === 'ja' ? '正答率の推移' : 'Accuracy'}<span style={{ display: 'inline-flex', verticalAlign: '-2px', marginLeft: 'var(--spacing-xs)' }}><IconArrowRight size={13} /></span>
             </button>
           </div>
           {sessionsLoading ? (
@@ -481,14 +481,14 @@ export default function ExamSetup() {
               background: 'var(--color-bg-warning)', border: '1px solid var(--color-border-warning)', borderRadius: 'var(--border-radius-md)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                <span style={{ fontSize: 'var(--font-size-h3)' }}>⏸</span>
+                <span style={{ display: 'flex', color: 'var(--color-text-sub)' }}><IconCirclePause size={20} /></span>
                 <div>
                   <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-text-main)' }}>{t('examSetup.resumeNotice')}</div>
                   <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-sub)' }}>{t('examSetup.resumeNoticeDesc')}</div>
                 </div>
               </div>
               <Button size="sm" variant="outline" onClick={resumeExam} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
-                {t('examSetup.resume')} →
+                {t('examSetup.resume')}<span style={{ display: 'inline-flex', verticalAlign: '-2px', marginLeft: 'var(--spacing-xs)' }}><IconArrowRight size={13} /></span>
               </Button>
             </div>
           )}
@@ -496,7 +496,7 @@ export default function ExamSetup() {
           {/* 問題数不足警告 */}
           {availableCount !== null && availableCount > 0 && availableCount < config.totalQuestions && (
             <div style={{ marginBottom: 'var(--spacing-sm)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-warning)', background: 'var(--color-bg-warning)', border: '1px solid var(--color-border-warning)', borderRadius: 'var(--border-radius-md)', padding: '8px 12px' }}>
-              ⚠️ {lang === 'ja'
+              <span style={{ display: 'inline-flex', verticalAlign: '-2px', marginRight: 'var(--spacing-xs)' }}><IconTriangleAlert size={14} /></span>{lang === 'ja'
                 ? `条件に合う問題が${availableCount}問しかありません。${availableCount}問で開始します。`
                 : `Only ${availableCount} questions match the criteria. The exam will start with ${availableCount} questions.`}
             </div>
