@@ -1253,6 +1253,7 @@ export default function Home() {
   const [lastMode, setLastMode] = useState<'quick' | 'focused'>(() => (localStorage.getItem(`lastQuickMode_${uid}`) as 'quick' | 'focused') ?? 'quick');
   const [answeredCount, setAnsweredCount] = useState(0);
   const [answeredCountReady, setAnsweredCountReady] = useState(false);
+  const [answeredCountFailed, setAnsweredCountFailed] = useState(false); // 取得失敗時は開始ボタンの待機を解く
   const [qRefreshTick, setQRefreshTick] = useState(0); // セッション完了で +1 → useEffect 再実行
   const [quickSaveMsg, setQuickSaveMsg] = useState<'saved' | 'already' | null>(null);
   const [focusedSaveMsg, setFocusedSaveMsg] = useState<'saved' | 'already' | null>(null);
@@ -1546,12 +1547,19 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!user || !targetExam) { setAnsweredCount(0); setAnsweredCountReady(true); return; }
+    if (!user) { setAnsweredCount(0); setAnsweredCountReady(true); return; }
+    // 目標資格の読み込み前・回答数の取り直し中は「未判定」にする。未判定の間はしっかり対策の解放判定に
+    // キャッシュ（focusedUnlockedCache_）を使い、前回がしっかり対策なら開始ボタンを押せなくする（modePending）。
+    // 以前は目標資格が無い瞬間に「回答数0＝未解放」で判定済みにしていたため、読み込みが遅いと
+    // 前回しっかり対策だった人にもサクッと演習のボタンが数秒出て、うっかり始めてしまうことがあった。
+    setAnsweredCountFailed(false);
+    if (!targetExam) { setAnsweredCountReady(false); return; }
+    setAnsweredCountReady(false);
     fetch(`${API_ENDPOINT}/users/me/question-stats?userId=${user.userId}&examType=${targetExam}`)
       .then(r => r.json())
-      .then(d => setAnsweredCount(d.answeredCount ?? 0))
-      .catch(() => {})
-      .finally(() => setAnsweredCountReady(true));
+      .then(d => { setAnsweredCount(d.answeredCount ?? 0); setAnsweredCountReady(true); })
+      // 取得に失敗したら判定済みにしない（「未解放」を書き込んでキャッシュを壊さない）。解放判定はキャッシュのまま
+      .catch(() => setAnsweredCountFailed(true));
   }, [user, targetExam, qRefreshTick]);
 
   // ── 予想スコア計算（サーバー統計優先、オフライン/ゲスト時はローカル履歴）──
@@ -1589,6 +1597,14 @@ export default function Home() {
   const focusedUnlockedCached = localStorage.getItem(`focusedUnlockedCache_${uid}`) === '1';
   const effectiveFocusedUnlocked = !user ? false : answeredCountReady ? focusedUnlocked : focusedUnlockedCached;
   const primaryMode: 'quick' | 'focused' = lastMode === 'focused' && effectiveFocusedUnlocked ? 'focused' : 'quick';
+  // どちらのボタンを出すかが決まるまでは開始ボタンを押せなくする。
+  // 認証の確認中は未ログイン扱いで既定のサクッと演習が出てしまい、前回しっかり対策だった人が
+  // 切り替わる前に押して、うっかりサクッと演習を始めてしまうため。
+  // 前回がしっかり対策で、解放済みかどうかがまだ分からない（初めての端末など）ときも待つ。
+  const savedLastMode = user ? localStorage.getItem(`lastQuickMode_${uid}`) : null;
+  const modePending = authLoading
+    || (!!user && (savedLastMode === 'quick' || savedLastMode === 'focused') && savedLastMode !== lastMode)
+    || (!!user && lastMode === 'focused' && !answeredCountReady && !answeredCountFailed && !focusedUnlockedCached);
 
   // 解放到達を検知して一度だけ祝福ポップアップを出す。
   // ※このeffectは下の focusedUnlockedCache 書き込みより前に宣言し、上書き前の
@@ -2134,6 +2150,16 @@ export default function Home() {
   const primarySpinnerTop = primaryMode === 'focused' ? 'var(--color-on-points)' : 'var(--color-btn-primary-text)';
   const discardPrimaryDraft = primaryMode === 'focused' ? discardFocusedDraft : discardQuickDraft;
   const startPrimary = primaryMode === 'focused' ? startFocusedExercise : startQuickExercise;
+  const pendingStartButton = (
+    <button
+      disabled
+      aria-busy="true"
+      style={{ flex: 1, height: 44, border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius-full)', background: 'var(--color-bg-main)', color: 'var(--color-text-light)', fontWeight: 600, fontSize: 'var(--font-size-base)', cursor: 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-sm)' }}
+    >
+      <span style={{ width: 14, height: 14, border: '2px solid var(--color-border)', borderTopColor: 'var(--color-text-light)', borderRadius: '50%', animation: 'sherpa-spin 0.7s linear infinite', flexShrink: 0 }} />
+      {ja ? '読み込み中…' : 'Loading…'}
+    </button>
+  );
 
   // Shift+Enter で表示中のプライマリ開始ボタンを発火（Web版のみ）
   const startKeyRef = useRef<(e: KeyboardEvent) => void>(() => {});
@@ -2144,6 +2170,7 @@ export default function Home() {
     if (tag === 'INPUT' || tag === 'TEXTAREA' || el?.isContentEditable) return;
     if (showQuickModal || showFocusedModal || showCombinedDetail || showWebQuickMenu || showFocusedMenu || revealService) return;
     e.preventDefault();
+    if (modePending) return;
     if (hasPrimaryDraft) resumePrimary();
     else if (targetExam && !primaryLoading) startPrimary();
   };
@@ -2540,7 +2567,7 @@ export default function Home() {
       {!isMobile && createPortal(
         <div style={{ position: 'fixed', bottom: 16, left: 'var(--content-left, 0px)', right: 0, zIndex: 150 }}>
           <div style={{ maxWidth: HOME_MAX_WIDTH, margin: '0 auto', padding: '0 var(--spacing-lg)', display: 'flex', gap: 6 }}>
-            {hasPrimaryDraft ? (
+            {modePending ? pendingStartButton : hasPrimaryDraft ? (
               <div style={{ flex: 1, position: 'relative' }}>
                 {showWebQuickMenu && (
                   <>
@@ -2788,7 +2815,7 @@ export default function Home() {
             </>
           )}
           {createPortal(<div style={{ position: 'fixed', bottom: 56, left: 0, right: 0, zIndex: 150, background: 'var(--color-bg-white)', borderTop: '1px solid var(--color-border)', padding: '8px 12px', display: 'flex', gap: 6, boxShadow: 'var(--box-shadow-up)' }}>
-            {hasPrimaryDraft ? (
+            {modePending ? pendingStartButton : hasPrimaryDraft ? (
               /* スプリットピル：続きから再開 + ↑ */
               <div style={{ flex: 1, display: 'flex', height: 44, borderRadius: 22, overflow: 'hidden', opacity: !targetExam ? 0.5 : 1 }}>
                 <button
