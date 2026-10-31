@@ -1516,18 +1516,15 @@ export default function Home() {
             body: JSON.stringify({ userId: user.userId, examType: targetExam, scoreHistory: uploadSH, sessionScoreHistory: uploadSSH, sessionScoreLog: uploadSSL }),
           }).catch(() => {});
         }
-        // サーバーデータが localStorage より多い場合は localStorage に書き込む。
-        // 別デバイスや localStorage クリア後にセッション完了 effect が空ログをベースに
-        // PUT してサーバーの全履歴を上書きしてしまうバグを防ぐ。
-        if (uploadSH.length > localSH.length) {
-          try { localStorage.setItem(`score_history_${targetExam}_${user.userId}`, JSON.stringify(uploadSH)); } catch {}
-        }
-        if (uploadSSL.length > localSSL.length) {
-          try { localStorage.setItem(`score_session_log_${targetExam}_${user.userId}`, JSON.stringify(uploadSSL)); } catch {}
-        }
-        if (uploadSSH.length > localSSH.length) {
-          try { localStorage.setItem(`score_session_history_${targetExam}_${user.userId}`, JSON.stringify(uploadSSH)); } catch {}
-        }
+        // localStorage は常にサーバーの値にそろえる（サーバーが正。2026-10-31〜）。
+        // セッション完了 effect は localStorage を基に追記して PUT するため、端末内に古い・別の記録が
+        // 残っていると、それをサーバーへ書き戻して他の端末の記録を上書きしてしまう
+        // （以前は「サーバーの方が多いときだけ」書き込んでいて、端末内の方が多いと食い違いが残った）。
+        try {
+          localStorage.setItem(`score_history_${targetExam}_${user.userId}`, JSON.stringify(uploadSH));
+          localStorage.setItem(`score_session_log_${targetExam}_${user.userId}`, JSON.stringify(uploadSSL));
+          localStorage.setItem(`score_session_history_${targetExam}_${user.userId}`, JSON.stringify(uploadSSH));
+        } catch {}
         setServerScoreHistory(uploadSH);
         // セッション完了フラグがある場合、sessionScoreHistory は後続のuseEffectで追記されるため上書きしない
         if (!hasPendingSession) {
