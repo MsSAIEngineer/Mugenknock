@@ -3440,10 +3440,12 @@ app.get('/users/me/preferences', async (req, res) => {
     }));
     res.json({
       targetExam:    result.Item?.targetExam    ?? null,
-      examDates:     result.Item?.examDates     ?? {},
+      // examDates / obtainedCerts は「一度も保存していない」なら null（空にしたときの {} / [] と区別する。
+      // 端末側は null のときだけ端末の値をサーバーへ上げる。utils/preferences.ts の applyServerPrefs）
+      examDates:     result.Item?.examDates     ?? null,
       dailyGoal:     result.Item?.dailyGoal     ?? null,
       kv:            result.Item?.kv            ?? {},
-      obtainedCerts: result.Item?.obtainedCerts ?? [],
+      obtainedCerts: result.Item?.obtainedCerts ?? null,
     });
   } catch (err) {
     console.error(err);

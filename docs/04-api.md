@@ -300,6 +300,11 @@ questionId も母集団に合流してから絞る（`GET /questions?includeComp
 - 戻り先 URL はオリジン許可リスト（`lambda/src/ohineri.js` の `safeOrigin`）で絞る
 - 環境変数（Lambda ごと）: `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`。dev はテストキー。本番キーへの差し替えは人間の確認が必要
 
+### `GET /users/me/preferences`
+
+`{ targetExam, examDates, dailyGoal, kv, obtainedCerts }` を返す。`examDates` / `obtainedCerts` は一度も保存していなければ `null`
+（空にしたときの `{}` / `[]` と区別するため。2026-10-31〜）。
+
 ### `PUT /users/me/preferences`
 
 ```jsonc

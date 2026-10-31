@@ -3,7 +3,7 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from '@/compat/react-router-dom';
 import { API_ENDPOINT, EXAM_DOMAINS, EXAM_DOMAIN_SERVICES, EXAM_TYPES, EXAM_CONFIGS, DOMAIN_RATE_WARNING, DOMAIN_RATE_CAUTION, PASS_SCORES, EXAM_LEVEL, EXAM_LEVEL_COLORS, tint, levelText, levelOn, tagIdMatches, toDomainIndex, isNonAwsExam } from '../constants';
-import { syncPreferencesToServer, syncTargetExamToServer, collectExamDatesFromLocal } from '../utils/preferences';
+import { syncPreferencesToServer, syncTargetExamToServer, collectExamDatesFromLocal, applyServerPrefs } from '../utils/preferences';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -140,33 +140,11 @@ export default function MyPage() {
     fetch(`${API_ENDPOINT}/users/me/preferences?userId=${encodeURIComponent(user.userId)}`)
       .then(r => r.json())
       .then(data => {
-        // 受験日
-        const examDates: Record<string, string> = data.examDates ?? {};
-        for (const [et, date] of Object.entries(examDates)) {
-          if (!date) continue;
-          const key = `examDate_${et}_${uid}`;
-          if (localStorage.getItem(key) !== date) {
-            localStorage.setItem(key, date);
-            window.dispatchEvent(new CustomEvent('examDateChanged', { detail: { examType: et, date } }));
-          }
-        }
-        if (targetExam && examDates[targetExam]) {
-          setExamDate(examDates[targetExam]);
-        }
-        // 目標演習量
-        if (data.dailyGoal != null) {
-          const serverGoal = Number(data.dailyGoal);
-          localStorage.setItem(`dailyGoal_${uid}`, String(serverGoal));
-          setDailyGoal(serverGoal);
-        }
-        // 取得済資格（サーバー優先・ローカルとマージして和集合）
-        if (Array.isArray(data.obtainedCerts) && data.obtainedCerts.length > 0) {
-          setObtainedCerts(prev => {
-            const merged = [...new Set([...prev, ...data.obtainedCerts])];
-            localStorage.setItem(`obtainedCerts_${uid}`, JSON.stringify(merged));
-            return merged;
-          });
-        }
+        // 受験日・目標演習量・取得済資格はサーバーが正（applyServerPrefs）。反映後の端末の値を読み直す。
+        applyServerPrefs(user.userId, uid, data);
+        if (targetExam) setExamDate(localStorage.getItem(`examDate_${targetExam}_${uid}`) ?? '');
+        setDailyGoal(Math.max(10, parseInt(localStorage.getItem(`dailyGoal_${uid}`) ?? '10', 10)));
+        try { setObtainedCerts(JSON.parse(localStorage.getItem(`obtainedCerts_${uid}`) ?? '[]')); } catch {}
       })
       .catch(() => {});
   }, [user?.userId]); // eslint-disable-line react-hooks/exhaustive-deps

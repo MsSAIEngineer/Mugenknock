@@ -1658,9 +1658,15 @@ export default function Home() {
   const jstDate = useMemo(() => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10), []);
 
   // 目標演習量パネル用
-  const dailyGoal = useMemo(() =>
-    Math.max(1, parseInt(localStorage.getItem(`dailyGoal_${uid}`) ?? '10', 10))
-  , [uid]);
+  const readDailyGoal = () => Math.max(1, parseInt(localStorage.getItem(`dailyGoal_${uid}`) ?? '10', 10));
+  const [dailyGoal, setDailyGoal] = useState(readDailyGoal);
+  // サーバーの値が反映されたら読み直す（Layout の loadTargetExamFromServer が後から localStorage を更新するため）
+  useEffect(() => {
+    setDailyGoal(readDailyGoal());
+    const h = () => setDailyGoal(readDailyGoal());
+    window.addEventListener('dailyGoalChanged', h);
+    return () => window.removeEventListener('dailyGoalChanged', h);
+  }, [uid]); // eslint-disable-line react-hooks/exhaustive-deps
   // 目標資格のみの当日演習量（マイページと同じく目標資格基準で表示）
   const [dailyCount, setDailyCount] = useState(() =>
     targetExam ? parseInt(localStorage.getItem(`dailyQCount_${targetExam}_${uid}_${jstDate}`) ?? '0', 10) : 0

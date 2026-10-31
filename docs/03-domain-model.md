@@ -184,6 +184,11 @@ SK が `` `${sessionId}#${questionId}#${ISO8601}` `` という**複合文字列*
 | `readAnnouncementIds` | 既読お知らせID |
 | `kv` | **汎用KV同期マップ**（後述） |
 
+> 受験日・目標演習量・取得済資格は、端末へ反映するときに**サーバーが正**（`utils/preferences.ts` の `applyServerPrefs`。2026-10-31〜）。
+> サーバーに無い受験日は端末からも消し、取得済資格はサーバーの配列で置き換える。`GET` は項目を一度も保存していないとき
+> `examDates` / `obtainedCerts` を `null` で返し、そのときだけ端末の値をサーバーへ上げる（以前は和集合や「ある日付だけ上書き」で、
+> 消した受験日・外した資格が別端末で残り、そこで保存すると復活していた）。
+
 ### `scoreHistData_<userId>_<examType>`
 
 | 属性 | 説明 | 上書きガード |
