@@ -174,7 +174,7 @@ S3 のバケットに残るのは、ログ（`night-logs/`・`run-logs/`）、�
 | 15 | `03-check-reports.sh` | ユーザー通報の精査（ok/fix/delete + 関連問題） | ✅ |
 | ~~15~~ | ~~`02-check-validity.sh`~~ | **一時停止中**（2026-06-29〜・トークン枯渇のため） | ✅ |
 | ~~20~~ | ~~`01-generate-questions-hard.sh`~~ | **一時停止中**（同上） | ✅ |
-| 40 | `refresh-exam-guide-monthly.sh` | 公式試験ガイドの更新（30日以内はスキップ） | ✅ WebFetch |
+| 40 | `refresh-exam-guide-monthly.sh` | 公式試験ガイドの更新（30日以内はスキップ）。アプリが旧版のままの資格は書き換えない（下記「試験の版の照合」） | ✅ WebFetch |
 | 45 | `refresh-service-catalog-monthly.sh` | サービスカタログ更新（30日以内スキップ・`-n 12` で有界） | ✅ WebFetch |
 | 47 | `10-check-site-content.sh` | サイト掲載内容（問題以外）の現行性チェック（30日スキップ・検知のみ） | 一部 ✅ WebFetch |
 | 50 | `05-check-daily-services.sh` | 日めくり記事の廃止照合＋体裁チェック（廃止照合だけは nightly-noai で毎晩実行） | 一部 ✅ |
@@ -741,3 +741,18 @@ S3 `mugenknock-error-logs/canary-logs/` にアップロードする。
 - 書き込む前に、書き込み先の本人の記録を `prompts/night-prompts/scripts/state/user-sync-backup/` に JSON で残す（本番は PITR でも戻せる）。
 - `--init` は本番→検証の置き換え（2026-10-28 に1回実行済み）。`--dry-run` で件数だけ見られる。
 - 本番で解いた分の問題別の正誤・ポイントは、翌晩に検証の値で上書きされる（解答履歴は残る）。
+
+## 試験の版の照合（2026-11-01〜・specs/010）
+
+`prompts/night-prompts/scripts/check-exam-versions.py` が、公式の試験ガイド一覧
+（docs.aws.amazon.com/aws-certification/latest/examguides/）の試験コードと、`src/constants.ts` の `examCode` を比べる。
+claude は使わない（取得と正規表現だけ）。
+
+- **旧版のまま**（アプリのコードが一覧に無い）: `⚠`。`refresh-exam-guide.sh` はその資格の指示書を自動で書き換えない。
+  版の切り替えは配点・ドメイン名・画面に波及するので、spec を切って人が行う（MLA-C02 は specs/010）。
+- **改訂の予告**（一覧に新旧両方が載っている）: `ℹ`。知らせるだけ。
+- 日次レポート（99）の資格変更の欄の先頭に、毎晩この結果を載せる。
+
+導入のきっかけ: MLA は 2026-09-29 から MLA-C02 になっていたが、`refresh-exam-guide.sh` が読んでいた日本語の資格紹介ページは
+版の変化を反映しておらず、10/28 の更新でも C01 の内容のままだった。MLA の取得元は試験ガイド本体（docs）に変えた。
+

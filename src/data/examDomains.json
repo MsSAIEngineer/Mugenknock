@@ -46,11 +46,12 @@
     { "ja": "AIソリューションのセキュリティ、コンプライアンス、ガバナンス", "en": "Security, Compliance, and Governance for AI", "weight": 14, "services": ["IAM", "KMS", "Macie", "PrivateLink", "Bedrock Guardrails", "データプライバシー"] }
   ],
   "MLA": [
-    { "ja": "機械学習のためのデータ準備", "en": "Data Preparation for ML", "weight": 28, "services": ["SageMaker Data Wrangler", "SageMaker Feature Store", "Glue", "Athena", "S3", "EMR", "Ground Truth"] },
-    { "ja": "MLモデルの開発", "en": "ML Model Development", "weight": 26, "services": ["SageMaker Training", "組み込みアルゴリズム", "Autopilot/AutoML", "ハイパーパラメータ調整", "評価指標"] },
-    { "ja": "MLワークフローのデプロイとオーケストレーション", "en": "Deployment and Orchestration of ML Workflows", "weight": 22, "services": ["SageMaker Endpoints", "SageMaker Pipelines", "Step Functions", "MLOps/CI-CD", "ECR(コンテナ)"] },
-    { "ja": "MLソリューションの監視、メンテナンス、セキュリティ", "en": "ML Solution Monitoring, Maintenance, and Security", "weight": 24, "services": ["SageMaker Model Monitor", "SageMaker Clarify", "CloudWatch", "IAM", "KMS", "データドリフト検知"] }
+    { "ja": "ML と AI のためのデータの準備", "en": "Data Preparation for ML and AI", "weight": 28, "services": ["SageMaker Data Wrangler", "SageMaker Feature Store", "Glue", "S3", "EMR", "Ground Truth", "OpenSearch(ベクトル)", "埋め込み・RAG用文書準備"] },
+    { "ja": "ML モデルと基盤モデル (FM) の開発", "en": "ML Model and Foundation Model (FM) Development", "weight": 24, "services": ["SageMaker Training", "組み込みアルゴリズム", "自動モデル調整", "Bedrock(モデル選定・ファインチューニング)", "RAG", "評価指標(BLEU/ROUGE/LLM-as-a-judge)"] },
+    { "ja": "ML と AI のワークフローのデプロイとオーケストレーション", "en": "Deployment and Orchestration of ML and AI Workflows", "weight": 24, "services": ["SageMaker Endpoints", "SageMaker Pipelines", "Bedrock ナレッジベース", "Bedrock AgentCore(エージェント)", "Prompt Management", "CodePipeline(CI/CD)"] },
+    { "ja": "ML と AI のソリューションの運用、モニタリング、保護", "en": "Operating, Monitoring, and Securing ML and AI Solutions", "weight": 24, "services": ["SageMaker Model Monitor", "SageMaker Clarify", "CloudWatch", "Bedrock Guardrails", "IAM", "KMS", "推論コスト(トークン)"] }
   ],
+
   "AIP": [
     { "ja": "基盤モデルの統合、データ管理、コンプライアンス", "en": "Foundation Model Integration, Data Management, and Compliance", "weight": 31, "services": ["Amazon Bedrock", "Knowledge Bases", "RAG", "OpenSearch/ベクトルDB", "S3", "KMS", "データガバナンス"] },
     { "ja": "実装と統合", "en": "Implementation and Integration", "weight": 26, "services": ["Bedrock Agents", "Lambda", "API Gateway", "Step Functions", "PrivateLink", "SDK"] },

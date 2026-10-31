@@ -6,7 +6,7 @@ import { I18n } from 'aws-amplify/utils';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import Button from '../components/ui/Button';
-import { EXAM_LEVEL_COLORS, levelText } from '../constants';
+import { EXAM_LEVEL_COLORS, levelText, EXAM_CONFIGS } from '../constants';
 
 I18n.putVocabularies(translations);
 I18n.setLanguage('ja');
@@ -39,15 +39,16 @@ const amplifyTheme: Theme = {
   },
 };
 
-const CERT_BADGES = [
-  { code: 'CLF-C02', label: 'Cloud Practitioner',       level: 'Foundational' },
-  { code: 'SAA-C03', label: 'Solutions Architect',       level: 'Associate'    },
-  { code: 'SAP-C02', label: 'Solutions Architect',       level: 'Professional' },
-  { code: 'DOP-C02', label: 'DevOps Engineer',           level: 'Professional' },
-  { code: 'AIF-C01', label: 'AI Practitioner',           level: 'Foundational' },
-  { code: 'MLA-C01', label: 'Machine Learning Engineer', level: 'Associate'    },
-  { code: 'AIP-C01', label: 'Generative AI Developer',   level: 'Professional' },
-];
+// 試験コードは EXAM_CONFIGS から引く（直書きすると試験の改訂で古いコードが残る。MLA-C01 が残っていた）
+const CERT_BADGES = ([
+  { exam: 'CLF', label: 'Cloud Practitioner',       level: 'Foundational' },
+  { exam: 'SAA', label: 'Solutions Architect',       level: 'Associate'    },
+  { exam: 'SAP', label: 'Solutions Architect',       level: 'Professional' },
+  { exam: 'DOP', label: 'DevOps Engineer',           level: 'Professional' },
+  { exam: 'AIF', label: 'AI Practitioner',           level: 'Foundational' },
+  { exam: 'MLA', label: 'Machine Learning Engineer', level: 'Associate'    },
+  { exam: 'AIP', label: 'Generative AI Developer',   level: 'Professional' },
+] as const).map(b => ({ ...b, code: EXAM_CONFIGS[b.exam].examCode }));
 
 // 7 fixed positions (top%, left%) spread around the page, away from center
 const POSITIONS: [number, number, number][] = [

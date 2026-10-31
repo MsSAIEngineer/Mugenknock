@@ -83,7 +83,7 @@ export const EXAM_DESC: Record<string, string> = {
   DEA: 'データ収集・変換・保管・パイプライン設計などデータエンジニアリング全般を問う。Glue・Kinesis・Redshiftが頻出。',
   AIF: 'AIと機械学習の基礎・AWSのAI/MLサービスの活用知識を問う入門レベルの試験。Bedrock・SageMaker・Rekognitionが中心。',
   AIB: 'AIをビジネス成果へ変える戦略・投資判断・ガバナンス・組織変革を問うビジネス職向けの新資格。コーディング不要でROI・KPI・責任あるAI・CAFが中心。',
-  MLA: 'モデル開発・デプロイ・スケーリング・MLパイプライン構築の実践スキルを問う。SageMakerの深い理解が必要。',
+  MLA: '従来の ML と生成 AI（基盤モデル・RAG・エージェント）の開発・デプロイ・運用の実践スキルを問う。SageMaker AI と Bedrock の理解が必要。',
   AIP: '生成AIアプリの設計・実装・最適化に特化した新資格。Amazon Bedrockを中心に、プロンプトエンジニアリングやRAGが頻出。',
   // ANS は AWS 公式が廃止を告知済み（英語版 認定ページ / 認定一覧ともに 2026-12-31）。
   // 受験を検討する人が期限を見落とさないよう説明の先頭に単独行で置く。
@@ -144,7 +144,7 @@ export const EXAM_GUIDE_PDF_URLS: Record<string, string> = {
   DEA: 'https://docs.aws.amazon.com/ja_jp/aws-certification/latest/data-engineer-associate-01/data-engineer-associate-01.pdf',
   AIF: 'https://docs.aws.amazon.com/ja_jp/aws-certification/latest/ai-practitioner-01/ai-practitioner-01.pdf',
   AIB: 'https://docs.aws.amazon.com/ja_jp/aws-certification/latest/ai-business-strategist-01/ai-business-strategist-01.pdf',
-  MLA: 'https://docs.aws.amazon.com/ja_jp/aws-certification/latest/machine-learning-engineer-associate-01/machine-learning-engineer-associate-01.pdf',
+  MLA: 'https://docs.aws.amazon.com/ja_jp/aws-certification/latest/machine-learning-engineer-associate-02/machine-learning-engineer-associate-02.pdf',
   AIP: 'https://docs.aws.amazon.com/ja_jp/aws-certification/latest/ai-professional-01/ai-professional-01.pdf',
   ANS: 'https://docs.aws.amazon.com/ja_jp/aws-certification/latest/advanced-networking-specialty-01/advanced-networking-specialty-01.pdf',
   SCS: 'https://docs.aws.amazon.com/ja_jp/aws-certification/latest/security-specialty-03/security-specialty-03.pdf',

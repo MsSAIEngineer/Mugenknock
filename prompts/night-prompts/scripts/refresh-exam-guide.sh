@@ -36,7 +36,8 @@ EXAM_URLS[SAA]="https://aws.amazon.com/jp/certification/certified-solutions-arch
 EXAM_URLS[DVA]="https://aws.amazon.com/jp/certification/certified-developer-associate/"
 EXAM_URLS[SOA]="https://aws.amazon.com/jp/certification/certified-sysops-admin-associate/"
 EXAM_URLS[DEA]="https://aws.amazon.com/jp/certification/certified-data-engineer-associate/"
-EXAM_URLS[MLA]="https://aws.amazon.com/jp/certification/certified-machine-learning-engineer-associate/"
+# MLA は資格紹介ページが版の変化（C01→C02）を反映していなかったため、公式の試験ガイド本体を読む（specs/010）
+EXAM_URLS[MLA]="https://docs.aws.amazon.com/aws-certification/latest/machine-learning-engineer-associate-02/machine-learning-engineer-associate-02.html"
 EXAM_URLS[SAP]="https://aws.amazon.com/jp/certification/certified-solutions-architect-professional/"
 EXAM_URLS[DOP]="https://aws.amazon.com/jp/certification/certified-devops-engineer-professional/"
 EXAM_URLS[AIP]="https://aws.amazon.com/jp/certification/certified-generative-ai-developer-professional/"
@@ -113,7 +114,17 @@ echo "試験ガイド更新: $(date)"
 echo "対象: ${TARGET_EXAMS[*]}"
 echo "=========================================="
 
+# 版の変化を先に確かめる（specs/010）。アプリが旧版のままの資格は、指示書を自動で書き換えない
+# （配点・ドメイン名・画面に波及するので、spec を切って人が切り替える）。改訂の予告は知らせるだけ。
+VERSION_REPORT=$(python3 "$SCRIPT_DIR/check-exam-versions.py" --quiet 2>&1)
+[ -n "$VERSION_REPORT" ] && echo "$VERSION_REPORT"
+OLD_EXAMS=" $(printf '%s\n' "$VERSION_REPORT" | sed -nE 's/^⚠ ([A-Z]{3}):.*/\1/p' | tr '\n' ' ') "
+
 for exam in "${TARGET_EXAMS[@]}"; do
+  if [[ "$OLD_EXAMS" == *" $exam "* ]]; then
+    echo "⏭  $exam: アプリが旧版のまま（上の警告）→ 自動更新しない"
+    continue
+  fi
   url="${EXAM_URLS[$exam]:-}"
   if [ -z "$url" ]; then
     echo "⚠️  $exam: URL定義なし（スキップ）"

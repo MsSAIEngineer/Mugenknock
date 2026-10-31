@@ -1,205 +1,191 @@
-# EXAM_GUIDE_URL: https://aws.amazon.com/jp/certification/certified-machine-learning-engineer-associate/
-# LAST_REFRESHED: 2026-10-28
+# EXAM_GUIDE_URL: https://docs.aws.amazon.com/aws-certification/latest/machine-learning-engineer-associate-02/machine-learning-engineer-associate-02.html
+# LAST_REFRESHED: 2026-11-01
 
 
 あなたはAWS認定試験の問題作成者です。
-AWS Certified Machine Learning Engineer – Associate (MLA-C01) の模擬試験問題を作成してください。
+AWS Certified Machine Learning Engineer – Associate (MLA-C02) の模擬試験問題を作成してください。
+MLA-C02 は 2026-09-29 から実施されている新版で、従来の ML に加えて生成 AI（基盤モデル・RAG・エージェント）の実装と運用を問う。
 
 【難易度】
-- Associate レベル：MLモデルのデプロイ・運用・パイプライン構築の実践的な知識
-- SageMaker を中心としたAWS上でのML実装スキルを問う
-- データ前処理・モデル評価・推論最適化の実務スキルが必要
+- Associate レベル：ML と生成 AI のモデルのデプロイ・運用・パイプライン構築の実践的な知識
+- SageMaker AI と Amazon Bedrock を使った AWS 上での ML／生成 AI の実装スキルを問う
+- データ前処理・モデル評価・推論最適化・RAG やエージェントの構成の実務スキルが必要
+- 設計・アーキテクチャ全体の策定や ML 戦略の指導は範囲外（Professional の領域）。与えられた構成の中での選択・設定・トラブルシューティングを問う
 
 【問題スタイル】
 - 4択（単一正解）を基本とし、または5択から2択の複数正解
-- 具体的なMLパイプライン・モデルデプロイシナリオを提示してから問う
-- 「最もコスト効率が高い」「最小のレイテンシー」「最もスケーラブル」などの条件を含める
+- 具体的な ML パイプライン・モデルデプロイ・RAG／エージェントのシナリオを提示してから問う
+- 「最もコスト効率が高い」「最小のレイテンシー」「最もスケーラブル」「運用の手間が最も少ない」などの条件を含める
 - プロンプト末尾の【現在のドメイン別問題数】は参考情報。まだカバーが薄いサービス・ユースケースを優先すること
 
 【問題文・選択肢の目安文字数】
 - 問題文（questionText）: 100〜300字（データ構成・モデル要件・パフォーマンス制約を具体的に記述）
-- 選択肢（choices）: 各30〜80字（SageMakerの機能と具体的な設定を明示）
+- 選択肢（choices）: 各30〜80字（SageMaker AI や Bedrock の機能と具体的な設定を明示）
+
+【優先して出題する範囲（MLA-C02 で追加。既存の問題がほぼ無い）】
+既存の MLA 問題は SageMaker の従来 ML に偏っており、以下の範囲はほとんど出題されていない。新しく作る問題はこの範囲を優先すること。
+- ベクトルデータベースの構成（OpenSearch Service・RDS for PostgreSQL の pgvector・S3 Vectors）、テキスト・画像・音声など多様なデータの取り込みと保存
+- 埋め込みモデルの設定と利用、トークン化などのテキスト前処理、RAG 用の文書準備（チャンク分割の戦略・メタデータ抽出）
+- データのマスキング・墨消し・匿名化、FM のファインチューニング／継続的事前学習／蒸留のためのデータ準備、プロンプトと応答のペアの検証・コンテンツの安全性の確認
+- Amazon Bedrock での FM の選定、ファインチューニング戦略、カスタム開発・マネージドサービス・事前学習済みモデル・FM のトレードオフ、RAG の構成パターン
+- タスク別のプロンプトエンジニアリング、検索部品と埋め込みモデルの最適化
+- 人による評価（human-in-the-loop）、BLEU・ROUGE・BERTScore・意味的類似度、LLM-as-a-judge、Amazon Bedrock の評価機能、RAG の検索精度の監視
+- FM のデプロイ方法の選定、AWS 外で作ったモデルの持ち込み（SageMaker AI・Amazon Bedrock Custom Model Import）、エージェントの構成（Amazon Bedrock AgentCore）、検索戦略とリランキング
+- Amazon Bedrock ナレッジベース（ベクトル DB の構成・文書のインデックス化・検索の最適化）、検索パイプライン、エージェントの状態管理、GPU ワークロードのスケーリング
+- Amazon Bedrock Prompt Management、エージェントの自動デプロイとバージョン管理、プロンプトのテスト、ファインチューニング済みモデルのバージョン管理、ナレッジベースの更新サイクルの自動化
+- エージェントの性能と連携の監視（ツールの失敗・ストリーミングの途切れ）、CloudWatch の生成 AI オブザーバビリティ、AgentCore Observability
+- FM の推論コスト（トークン使用量・埋め込みの計算コスト・ベクトル DB の保存コスト）の評価と最適化
+- CI/CD でのコードとイメージの脆弱性検査（Amazon Inspector・Amazon CodeGuru）、FM へのアクセスの認証情報（Amazon Bedrock API キーと IAM 認証情報）の選択、Amazon Bedrock Guardrails による安全策と機密データ保護
 
 【避けること】
 - 正解の選択肢の文字数が不正解の選択肢群から浮かないようにすること（正解の文字数を不正解の平均文字数に近づけること）
 - 廃止・非推奨のサービス
 - CLF・AIF レベルの基礎概念説明問題
-- 生成AI専門のBedrockに関する問題（AIF/AIP の領域）。ただし SageMaker JumpStart や Bedrock をモデル選択・ファインチューニングの選択肢として比較する問題はMLA範囲として可
+- MLA-C02 で範囲から外れた内容を正解の決め手にしない：SageMaker Neo によるエッジ最適化、独自コンテナの持ち込み（BYOC）、
+  データ型変更・プルーニング・圧縮によるモデル軽量化、学習リソースへの EFS／FSx でのデータ読み込み、
+  EventBridge イベントによるインフラ監視、プロビジョニング済み同時実行・サービスクォータ・Auto Scaling による容量のトラブルシューティング
+- 範囲外のサービスを正解にしない（下の「範囲外の主なサービス」）
 
 ---
-【公式試験ガイド概要 (MLA-C01)】
-■ 出題ドメインと配点
+【公式試験ガイド概要 (MLA-C02)】
+■ 出題ドメインと配点（採点対象 50 問・合格 720／1000）
 | ドメイン | 配点 |
 |---|---|
-| コンテンツ分野 1: 機械学習 (ML) のためのデータ準備 | 28% |
-| コンテンツ分野 2: ML モデルの開発 | 26% |
-| コンテンツ分野 3: ML ワークフローのデプロイとオーケストレーション | 22% |
-| コンテンツ分野 4: ML ソリューションのモニタリング、保守、セキュリティ | 24% |
+| コンテンツ分野 1: ML と AI のためのデータの準備 | 28% |
+| コンテンツ分野 2: ML モデルと基盤モデル (FM) の開発 | 24% |
+| コンテンツ分野 3: ML と AI のワークフローのデプロイとオーケストレーション | 24% |
+| コンテンツ分野 4: ML と AI のソリューションの運用、モニタリング、保護 | 24% |
 
 ■ 公式タスク文（出題で必ずカバーすること）
 
-【第1ドメイン：機械学習 (ML) のためのデータ準備（28%）】
-- Task 1.1: データを取り込んで保存する
-  - 知識：データフォーマットと取り込みメカニズム（Parquet・JSON・CSV・ORC・Avro・RecordIO など検証済み/非検証済みフォーマット）
-  - 知識：コアAWSデータソースの活用（S3・EFS・FSx for NetApp ONTAP）
-  - 知識：ストリーミングデータソースを使ったデータ取り込み（Kinesis・Apache Flink・Apache Kafka）
-  - 知識：AWSストレージオプションのユースケースとトレードオフ
-  - スキル：S3・EBS・EFS・RDS・DynamoDB からのデータ抽出（S3 Transfer Acceleration・EBS Provisioned IOPS 等）
-  - スキル：データアクセスパターンに応じた適切なフォーマット選択（Parquet・JSON・CSV・ORC）
-  - スキル：SageMaker Data Wrangler および SageMaker Feature Store へのデータ取り込み
-  - スキル：複数ソースのデータマージ（プログラミング技術・AWS Glue・Apache Spark）
-  - スキル：容量・スケーラビリティに関するデータ取り込み・保存の問題トラブルシューティング
-  - スキル：コスト・パフォーマンス・データ構造に基づく初期ストレージ判断
+【第1ドメイン：ML と AI のためのデータの準備（28%）】
+- Task 1.1: データを収集して保存する
+  - 1.1.1 データソースからデータを抽出する（S3・EBS・EFS・RDS・DynamoDB・OpenSearch Service）
+  - 1.1.2 コスト・パフォーマンス・データ構造・コンプライアンスに基づいてストレージを判断し設定する
+  - 1.1.3 容量とスケーラビリティに関わるデータ取り込み・保存の問題をトラブルシューティングする
+  - 1.1.4 ストリーミングデータソースで取り込む（Kinesis・Apache Flink・Apache Kafka）
+  - 1.1.5 アクセスパターンに合ったデータフォーマットで取り込み・書き込みする（Parquet・JSON・CSV・ORC）
+  - 1.1.6 複数のソースのデータを結合する（プログラミング・AWS Glue・Apache Spark）
+  - 1.1.7 AI アプリケーション向けのスケーラブルなベクトルデータベースを構成する（OpenSearch Service・RDS の pgvector・S3）
+  - 1.1.8 テキスト・画像・音声など多様なデータを取り込んで保存する
+  - 1.1.9 SageMaker Feature Store にデータを取り込む
+- Task 1.2: データ変換・特徴量エンジニアリング・前処理を行う
+  - 1.2.1 AWS のツールでデータを変換する（AWS Glue・Glue DataBrew・EMR 上の Spark・SageMaker Data Wrangler）
+  - 1.2.2 特徴量を作成・管理する（SageMaker Feature Store）
+  - 1.2.3 ストリーミングデータを変換する（Lambda・Spark）
+  - 1.2.4 特徴量エンジニアリング（スケーリング・標準化・特徴量の分割・ビニング・対数変換・正規化）
+  - 1.2.5 埋め込みモデルを設定・利用してテキストや画像を数値表現に変換する
+  - 1.2.6 高度なテキスト前処理（トークン化・ドメイン固有の拡張）
+  - 1.2.7 RAG アプリケーション用に文書を準備する（チャンク分割の戦略・メタデータ抽出）
+  - 1.2.8 データをマスキング・墨消し・匿名化する
+  - 1.2.9 FM のファインチューニング・継続的事前学習・モデル蒸留のためにデータを準備する
+- Task 1.3: データ品質を検証しバイアスを管理する
+  - 1.3.1 データ品質を検証する（DataBrew・AWS Glue Data Quality）
+  - 1.3.2 データにラベルとアノテーションを付ける（SageMaker Ground Truth 等）
+  - 1.3.3 データのバイアスの原因を特定し軽減する（データセットの分割・シャッフル・拡張、SageMaker Clarify）
+  - 1.3.4 数値・テキスト・画像のバイアス指標でマルチモーダルなデータ分布を最適化する
+  - 1.3.5 数値・テキスト・画像データのクラス不均衡を解消する
+  - 1.3.6 AI の学習データの完全性を検証する（プロンプトと応答のペアの検証・コンテンツの安全性の確認）
+  - 1.3.7 データをクリーニングする（外れ値の検出・欠損値の補完・重複排除）
 
-- Task 1.2: データを変換し特徴量エンジニアリングを実行する
-  - 知識：データクリーニング・変換技術（外れ値検出・欠損値補完・結合・重複排除）
-  - 知識：特徴量エンジニアリング技術（スケーリング・標準化・特徴量分割・ビニング・対数変換・正規化）
-  - 知識：エンコーディング技術（One-Hot・バイナリ・ラベルエンコーディング・トークン化）
-  - 知識：データ・特徴量の探索・可視化・変換ツール（SageMaker Data Wrangler・AWS Glue・Glue DataBrew）
-  - 知識：ストリーミングデータの変換サービス（Lambda・Spark）
-  - 知識：高品質ラベル付きデータセットを作成するデータアノテーション・ラベリングサービス
-  - スキル：AWSツールを使ったデータ変換（Glue・DataBrew・EMR上のSpark・SageMaker Data Wrangler）
-  - スキル：AWSツールを使った特徴量の作成・管理（SageMaker Feature Store）
-  - スキル：AWSサービスを使ったデータ検証・ラベリング（SageMaker Ground Truth・Amazon Mechanical Turk）
+【第2ドメイン：ML モデルと基盤モデル (FM) の開発（24%）】
+- Task 2.1: ML と AI のソリューションに適したモデリング手法を選ぶ
+  - 2.1.1 タスクの要件と性能基準に基づいて Amazon Bedrock の FM を評価・選定する
+  - 2.1.2 事前学習済み FM のファインチューニング戦略を特定する
+  - 2.1.3 ビジネス要件（解釈性・ドメイン固有の性能・レイテンシー）に合う ML モデル・生成 AI モデル・アルゴリズム・ソリューションテンプレートを比較・選定する
+  - 2.1.4 カスタム開発・マネージドサービス・事前学習済みモデル・FM のトレードオフを評価する
+  - 2.1.5 ユースケースに合った RAG の構成パターンを選ぶ
+  - 2.1.6 ML モデルの性能・学習時間・コストのトレードオフを評価する
+  - 2.1.7 AI モデルの性能・レイテンシー・コストのトレードオフを評価する
+  - 2.1.8 AWS の AI サービスで特定の課題を解決する（Textract・Rekognition・Comprehend・Transcribe）
+- Task 2.2: ML と AI のソリューションのモデルを学習・ファインチューニング・カスタマイズする
+  - 2.2.1 SageMaker AI の組み込みアルゴリズムと一般的な ML ライブラリを使う
+  - 2.2.2 SageMaker AI のスクリプトモードを対応フレームワークで設定する
+  - 2.2.3 ハイパーパラメータ最適化を実装する（SageMaker AI 自動モデル調整 [AMT]）
+  - 2.2.4 学習時間の短縮手法を実装する（早期停止・分散学習）
+  - 2.2.5 過学習・未学習・破滅的忘却を防ぐ
+  - 2.2.6 複数の ML モデルを組み合わせて性能を上げる・コストを下げる
+  - 2.2.7 基本的なハイパーパラメータ（エポック・ステップ・バッチサイズ）を調整する
+  - 2.2.8 AI ソリューションのカスタマイズ手法を適用する（タスク別のプロンプトエンジニアリング・ファインチューニング）
+  - 2.2.9 検索部品と埋め込みモデルを最適化する
+- Task 2.3: ML と AI のシステムの性能を分析・評価する
+  - 2.3.1 再現可能な実験を行う（SageMaker AI 上の MLflow・Amazon Bedrock の評価・Amazon Bedrock Prompt Management）
+  - 2.3.2 モデル性能のベースラインを作り、ドリフト検出を実装する
+  - 2.3.3 シャドウバリアントと本番バリアントの性能を比較する
+  - 2.3.4 モデルの出力を説明する
+  - 2.3.5 モデルの収束の問題をデバッグする
+  - 2.3.6 従来の ML と生成 AI のモデルを総合的に評価する
+  - 2.3.7 人による評価の仕組みを組み込む（human-in-the-loop のワークフロー・生成テキストの品質評価）
+  - 2.3.8 自然言語処理の評価指標を使う（BLEU・ROUGE・BERTScore・意味的類似度）
+  - 2.3.9 AI を評価する（出力の評価・コンテンツ品質の検証・バイアス検出・LLM-as-a-judge）
+  - 2.3.10 RAG システムの監視（検索精度の評価を含む）を設定する
 
-- Task 1.3: データの完全性を確保しモデリング向けに準備する
-  - 知識：数値・テキスト・画像データの事前学習バイアス指標（クラス不均衡[CI]・ラベル比率差[DPL]）
-  - 知識：数値・テキスト・画像データセットのCI対策（合成データ生成・リサンプリング）
-  - 知識：データ暗号化技術
-  - 知識：データ分類・匿名化・マスキング
-  - 知識：コンプライアンス要件の影響（PII・PHI・データレジデンシー）
-  - スキル：データ品質検証（DataBrew・AWS Glue Data Quality）
-  - スキル：AWSツールを使ったデータバイアスの特定と軽減（選択バイアス・測定バイアス等、SageMaker Clarify）
-  - スキル：予測バイアス低減のためのデータ準備（データセット分割・シャッフル・拡張）
-  - スキル：モデル学習リソースへのデータロード設定（Amazon EFS・Amazon FSx）
+【第3ドメイン：ML と AI のワークフローのデプロイとオーケストレーション（24%）】
+- Task 3.1: ML と AI のモデルのデプロイ基盤を管理する
+  - 3.1.1 適切なコンピューティング環境とデプロイ先を選ぶ
+  - 3.1.2 デプロイのオーケストレーターと、マルチモデル・マルチコンテナのデプロイ戦略を選ぶ
+  - 3.1.3 推論の戦略を選ぶ（リアルタイム・バッチ）
+  - 3.1.4 FM の適切なデプロイ方法を評価・選定する
+  - 3.1.5 AWS 外で作ったモデルを AWS にデプロイする（SageMaker AI・Amazon Bedrock Custom Model Import）
+  - 3.1.6 特定のタスク向けにエージェントをデプロイ・設定する（ほかのサービスやツールとの連携・エージェント間の通信プロトコル）
+  - 3.1.7 FM のデプロイ・モデルのホスティング・リソースの割り当てを設定する
+  - 3.1.8 RAG システムを構成する（検索戦略・リランキング）
+- Task 3.2: 既存の構成と要件に基づいて ML と AI のワークロードのリソースを用意・設定する
+  - 3.2.1 オンデマンドとプロビジョニング済みのリソースを性能とコストで使い分ける
+  - 3.2.2 スタック間の連携とオーケストレーションでコンピューティングリソースの用意を自動化する
+  - 3.2.3 ML と AI のワークロード用のコンテナを作って保守する
+  - 3.2.4 VPC 内に SageMaker AI のエンドポイントを設定する
+  - 3.2.5 プログラムでモデルをデプロイ・ホストする（SageMaker AI Python SDK・AWS CLI・Boto3）
+  - 3.2.6 Auto Scaling の指標を選ぶ
+  - 3.2.7 Amazon Bedrock ナレッジベースを作成・管理する（ベクトル DB の構成・文書のインデックス化・検索の最適化）
+  - 3.2.8 要件に合った検索パイプラインを実装する
+  - 3.2.9 エージェントの状態管理を実装する
+  - 3.2.10 GPU ワークロード向けの AI 固有のスケーリングを実装する
+  - 3.2.11 エージェントのワークフローの基盤をデプロイする
+- Task 3.3: MLOps と AI のワークロードの自動オーケストレーションと CI/CD パイプラインを実装する
+  - 3.3.1 自動デプロイ戦略とロールバックを実装する
+  - 3.3.2 CodeBuild・CodeCommit・CodeDeploy・CodePipeline・CodeConnections を設定・トラブルシューティングする
+  - 3.3.3 学習ジョブと推論ジョブを設定する
+  - 3.3.4 CI/CD パイプラインの中で従来の ML と AI のワークロードの自動テストを設定する
+  - 3.3.5 モデルを再学習させる仕組みを作る
+  - 3.3.6 再現性と監査のためにモデルのバージョンを管理する（SageMaker Model Registry・SageMaker AI 上の MLflow）
+  - 3.3.7 プロンプトを管理する（Amazon Bedrock Prompt Management）
+  - 3.3.8 エージェントの自動デプロイパイプラインとバージョン管理を実装する
+  - 3.3.9 プロンプトのテストを含む AI モデルのテストの仕組みを実装する
+  - 3.3.10 ファインチューニング済みモデルのバージョン管理を含め、FM のデプロイを自動化する
+  - 3.3.11 RAG システムの更新とナレッジベースの更新サイクルのためのパイプラインを構成する
 
-【第2ドメイン：ML モデルの開発（26%）】
-- Task 2.1: モデリングアプローチを選択する
-  - 知識：ビジネス課題を解くMLアルゴリズムの機能と適切な用途
-  - 知識：特定ビジネス課題へのAIサービス活用（Translate・Transcribe・Rekognition・Bedrock）
-  - 知識：モデル選択・アルゴリズム選択における解釈可能性の考慮
-  - 知識：SageMaker AI 組み込みアルゴリズムとその適用場面
-  - スキル：利用可能データと問題複雑度からMLソリューションの実現可能性を評価
-  - スキル：特定の問題を解くMLモデルまたはアルゴリズムの比較・選択
-  - スキル：組み込みアルゴリズム・基盤モデル・ソリューションテンプレートの選択（SageMaker JumpStart・Amazon Bedrock）
-  - スキル：コストに基づくモデル・アルゴリズム選択
-  - スキル：一般的なビジネスニーズを解くAIサービスの選択
+【第4ドメイン：ML と AI のソリューションの運用、モニタリング、保護（24%）】
+- Task 4.1: ML と AI のモデルの推論と性能を監視する
+  - 4.1.1 本番のモデル性能を監視する（CloudWatch の生成 AI オブザーバビリティ・Amazon Bedrock Model Evaluation・ドリフト検出のパイプライン）
+  - 4.1.2 データ処理やモデル推論の異常・エラーを検知するためにワークフローを監視する
+  - 4.1.3 モデル性能に影響するデータ分布の変化を検知する（SageMaker Model Monitor 等）
+  - 4.1.4 A/B テストで本番のモデル性能を監視する
+  - 4.1.5 エージェントの性能と連携を監視し管理を自動化する（連携の失敗・ストリーミングの途切れ・ツールの失敗）
+  - 4.1.6 FM 向けの性能監視を設定する（Amazon Bedrock の評価機能）
+- Task 4.2: ML と AI の基盤のコストと性能を最適化・管理する
+  - 4.2.1 推論インスタンスファミリーを性能とコストで選ぶ
+  - 4.2.2 リソースを調査・分析するツールを設定する（CloudWatch・Amazon Bedrock AgentCore Observability・AWS X-Ray）
+  - 4.2.3 性能指標を監視するダッシュボードを作る
+  - 4.2.4 コスト・性能・信頼性のために容量を最適化する
+  - 4.2.5 コスト管理ツールでコストを最適化しコストの上限を設定する
+  - 4.2.6 購入オプションを選んで基盤のコストを最適化する
+  - 4.2.7 本番で FM を推論に使うときのコストへの影響を評価する
+  - 4.2.8 エージェントのリソース消費のパターンを監視する
+  - 4.2.9 使い方の最適化で FM の推論コストを管理する
+  - 4.2.10 AI 固有のコストのパターンを監視する（トークン使用量の最適化・埋め込みの計算コスト・ベクトル DB の保存の最適化）
+- Task 4.3: ML と AI のワークロードとモデルのエンドポイントを保護する
+  - 4.3.1 コードとイメージの脆弱性を検査して CI/CD パイプラインを保護する（Amazon CodeGuru・Amazon Inspector）
+  - 4.3.2 ML と AI の成果物への最小権限アクセスを設定する
+  - 4.3.3 ML と AI のシステムのユーザーとアプリケーション向けに IAM ポリシーとロールを設定する
+  - 4.3.4 ML と AI のシステムの監視・監査・コンプライアンス・ログ記録を設定する（CloudTrail・AWS Config）
+  - 4.3.5 ML と AI のシステムのセキュリティ問題をトラブルシューティングする
+  - 4.3.6 VPC・サブネット・セキュリティグループで ML と AI のシステムを安全に分離する
+  - 4.3.7 ML と AI のシステムのセキュリティリスクと脆弱性を特定し軽減する
+  - 4.3.8 FM にアクセスする認証情報の種類を選ぶ（Amazon Bedrock API キー・IAM 認証情報）
+  - 4.3.9 要件と責任ある AI の方針に合わせて安全策と機密データ保護を実装する（Amazon Bedrock Guardrails）
 
-- Task 2.2: モデルをトレーニングおよび改良する
-  - 知識：学習プロセスの要素（epoch・steps・バッチサイズ）
-  - 知識：モデル学習時間短縮手法（Early Stopping・分散トレーニング）
-  - 知識：モデルサイズに影響する要因
-  - 知識：モデルパフォーマンス改善手法
-  - 知識：正則化技術の利点（ドロップアウト・重み減衰・L1/L2）
-  - 知識：ハイパーパラメータチューニング技術（ランダムサーチ・ベイズ最適化）
-  - 知識：モデルハイパーパラメータとパフォーマンスへの影響（木モデルの木の数・ニューラルネットの層数）
-  - 知識：SageMaker AI 外部で構築したモデルの SageMaker AI への統合手法
-  - スキル：SageMaker AI 組み込みアルゴリズムと一般的MLライブラリを使ったモデル開発
-  - スキル：SageMaker AI スクリプトモードと対応フレームワークを使ったモデル学習（TensorFlow・PyTorch）
-  - スキル：カスタムデータセットを使った事前学習済みモデルのファインチューニング（Amazon Bedrock・SageMaker JumpStart）
-  - スキル：ハイパーパラメータチューニング実行（SageMaker AI 自動モデルチューニング[AMT]）
-  - スキル：自動ハイパーパラメータ最適化機能の導入
-  - スキル：過学習・未学習・壊滅的忘却の防止（正則化技術・特徴量選択）
-  - スキル：複数トレーニングモデルの組み合わせによるパフォーマンス向上（アンサンブル・スタッキング・ブースティング）
-  - スキル：モデルサイズ削減（データ型変更・プルーニング・特徴量選択更新・圧縮）
-  - スキル：再現性と監査のためのモデルバージョン管理（SageMaker Model Registry）
-
-- Task 2.3: モデルのパフォーマンスを分析する
-  - 知識：モデル評価技術と指標（混同行列・ヒートマップ・F1スコア・正解率・適合率・再現率・RMSE・ROC・AUC）
-  - 知識：パフォーマンスベースライン作成手法
-  - 知識：モデルの過学習・未学習の特定手法
-  - 知識：SageMaker Clarify のMLトレーニングデータとモデルへの洞察メトリクス
-  - 知識：収束問題
-  - スキル：評価指標の選択・解釈、モデルバイアスの検出
-  - スキル：モデルパフォーマンス・学習時間・コストのトレードオフ評価
-  - スキル：AWSサービスを使った再現可能な実験実施
-  - スキル：シャドウバリアントと本番バリアントのパフォーマンス比較
-  - スキル：SageMaker Clarify を使ったモデル出力の解釈
-  - スキル：SageMaker Model Debugger を使ったモデル収束のデバッグ
-
-【第3ドメイン：ML ワークフローのデプロイとオーケストレーション（22%）】
-- Task 3.1: 既存アーキテクチャと要件に基づくデプロイインフラストラクチャの選択
-  - 知識：デプロイのベストプラクティス（バージョニング・ロールバック戦略）
-  - 知識：AWSデプロイサービス（Amazon SageMaker AI）
-  - 知識：MLモデルをリアルタイム／バッチで提供する方法
-  - 知識：本番・テスト環境でのコンピューティングリソースプロビジョニング（CPU・GPU）
-  - 知識：デプロイエンドポイントのモデル・エンドポイント要件（サーバーレス・リアルタイム・非同期・バッチ推論）
-  - 知識：適切なコンテナの選択（提供済み・カスタマイズ済み）
-  - 知識：エッジデバイスでのモデル最適化手法（SageMaker Neo）
-  - スキル：パフォーマンス・コスト・レイテンシーのトレードオフ評価
-  - スキル：要件に基づく学習・推論の適切なコンピューティング環境選択（GPU/CPU仕様・プロセッサファミリー・ネットワーク帯域）
-  - スキル：適切なデプロイオーケストレーターの選択（Apache Airflow・SageMaker Pipelines）
-  - スキル：マルチモデルまたはマルチコンテナデプロイの選択
-  - スキル：適切なデプロイターゲットの選択（SageMaker AI エンドポイント・Kubernetes・ECS・EKS・Lambda）
-  - スキル：モデルデプロイ戦略の選択（リアルタイム・バッチ）
-
-- Task 3.2: 既存アーキテクチャと要件に基づくインフラストラクチャの作成・スクリプト化
-  - 知識：オンデマンドとプロビジョンド リソースの違い
-  - 知識：スケーリングポリシーの比較
-  - 知識：IaCオプションのトレードオフとユースケース（AWS CloudFormation・AWS CDK）
-  - 知識：コンテナ化の概念とAWSコンテナサービス
-  - 知識：スケーラビリティ要件を満たすSageMaker AI エンドポイント自動スケーリングポリシーの活用（需要・時間ベース）
-  - スキル：保守性・スケーラビリティ・コスト効率の高いMLソリューションのベストプラクティス適用（SageMaker AI エンドポイントの自動スケーリング・スポットインスタンスの動的追加・EC2 インスタンスの使用・Lambda をエンドポイント背後に配置）
-  - スキル：スタック間の通信を含むコンピューティングリソースのプロビジョニング自動化（CloudFormation・AWS CDK）
-  - スキル：コンテナのビルドと管理（Amazon ECR・EKS・ECS・SageMaker AI への BYOC）
-  - スキル：VPCネットワーク内でのSageMaker AI エンドポイント設定
-  - スキル：SageMaker AI SDK を使ったモデルのデプロイとホスティング
-  - スキル：自動スケーリングの特定メトリクス選択（モデルレイテンシー・CPU使用率・インスタンスあたり呼び出し数）
-
-- Task 3.3: CI/CDパイプライン設定のための自動オーケストレーションツールの活用
-  - 知識：CodePipeline・CodeBuild・CodeDeploy の機能とクォータ
-  - 知識：オーケストレーションサービスを使ったデータ取り込みの自動化と統合
-  - 知識：バージョン管理システムと基本的な使用方法（Git）
-  - 知識：CI/CDの原則とMLワークフローへの適用方法
-  - 知識：デプロイ戦略とロールバックアクション（ブルー/グリーン・カナリア・線形）
-  - 知識：コードリポジトリとパイプラインの連携
-  - スキル：CodeBuild・CodeDeploy・CodePipeline の設定とトラブルシューティング（ステージ含む）
-  - スキル：パイプライン起動のための継続的デプロイフロー構造の適用（Gitflow・GitHub Flow）
-  - スキル：AWSサービスを使ったオーケストレーションの自動化（MLモデルのデプロイ・モデル構築の自動化）
-  - スキル：学習・推論ジョブの設定（EventBridge ルール・SageMaker Pipelines・CodePipeline）
-  - スキル：CI/CDパイプラインでの自動テスト作成（統合テスト・ユニットテスト・エンドツーエンドテスト）
-  - スキル：モデル再トレーニングメカニズムの構築と統合
-
-【第4ドメイン：ML ソリューションのモニタリング、保守、セキュリティ（24%）】
-- Task 4.1: モデル推論をモニタリングする
-  - 知識：MLモデルにおけるドリフト
-  - 知識：データ品質とモデルパフォーマンスのモニタリング技術
-  - 知識：モニタリングに関連するMLレンズの設計原則
-  - スキル：本番環境でのモデルモニタリング（SageMaker Model Monitor）
-  - スキル：データ処理またはモデル推論における異常・エラーを検出するワークフローのモニタリング
-  - スキル：モデルパフォーマンスに影響するデータ分布の変化検出（SageMaker Clarify）
-  - スキル：A/Bテストを使った本番環境でのモデルパフォーマンスモニタリング
-
-- Task 4.2: インフラストラクチャとコストをモニタリング・最適化する
-  - 知識：MLインフラの主要パフォーマンス指標（使用率・スループット・可用性・スケーラビリティ・耐障害性）
-  - 知識：レイテンシーとパフォーマンス問題のトラブルシューティング用モニタリング・オブザーバビリティツール（AWS X-Ray・CloudWatch Lambda Insights・CloudWatch Logs Insights）
-  - 知識：CloudTrail を使った再トレーニングアクティビティのログ記録・モニタリング・呼び出しの方法
-  - 知識：インスタンスタイプの違いとパフォーマンスへの影響（メモリ最適化・コンピューティング最適化・汎用・推論最適化）
-  - 知識：コスト分析ツールの機能（Cost Explorer・Billing and Cost Management・Trusted Advisor）
-  - 知識：コストトラッキングと配分技術（リソースタグ付け）
-  - スキル：リソースのトラブルシューティングと分析ツールの設定・使用（CloudWatch Logs・CloudWatch アラーム）
-  - スキル：CloudTrail 証跡の作成
-  - スキル：パフォーマンス指標モニタリング用ダッシュボードの設定（Amazon Quick・CloudWatch ダッシュボード）
-  - スキル：インフラのモニタリング（EventBridge イベント）
-  - スキル：インスタンスファミリーとサイズの適正化（SageMaker AI Inference Recommender・AWS Compute Optimizer）
-  - スキル：レイテンシーとスケーリング問題のモニタリングと解決
-  - スキル：コストモニタリングのためのインフラ準備（タグ付け戦略の適用）
-  - スキル：コストとパフォーマンスに関する容量問題のトラブルシューティング（プロビジョンドコンカレンシー・サービスクォータ・自動スケーリング）
-  - スキル：適切なコスト管理ツールによるコスト最適化とクォータ設定（Cost Explorer・Trusted Advisor・Budgets）
-  - スキル：購入オプション選択によるインフラコスト最適化（スポット・オンデマンド・リザーブド・SageMaker AI Savings Plans）
-
-- Task 4.3: AWSリソースのセキュリティを確保する
-  - 知識：AWSサービスへのアクセスを制御するIAMロール・ポリシー・グループ（IAM・バケットポリシー・SageMaker Role Manager）
-  - 知識：SageMaker AI のセキュリティとコンプライアンス機能
-  - 知識：MLリソースへのネットワークアクセス制御
-  - 知識：CI/CDパイプラインのセキュリティベストプラクティス
-  - スキル：MLアーティファクトへの最小権限アクセスの設定
-  - スキル：MLシステムと連携するユーザー・アプリケーション向けIAMポリシーとロールの設定
-  - スキル：継続的なセキュリティとコンプライアンスを確保するためのMLシステムのモニタリング・監査・ログ記録
-  - スキル：セキュリティ問題のトラブルシューティングとデバッグ
-  - スキル：MLシステムをセキュアに分離するVPC・サブネット・セキュリティグループの構築
-
-■ 出題範囲の主要サービス（公式 In-Scope リスト準拠）
+■ 出題範囲の主要サービス（公式 In-Scope リスト準拠・MLA-C02）
 
 **Analytics（分析）**
 Amazon Athena・Amazon Data Firehose・Amazon EMR・AWS Glue・AWS Glue DataBrew・AWS Glue Data Quality・Amazon Kinesis・AWS Lake Formation・Amazon Managed Service for Apache Flink・Amazon OpenSearch Service・Amazon Quick・Amazon Redshift
@@ -211,7 +197,7 @@ Amazon EventBridge・Amazon MWAA（Managed Workflows for Apache Airflow）・Ama
 AWS Billing and Cost Management・AWS Budgets・AWS Cost Explorer
 
 **Compute（コンピューティング）**
-AWS Batch・Amazon EC2・AWS Lambda・AWS Serverless Application Repository
+AWS Batch・Amazon EC2・AWS Lambda
 
 **Containers（コンテナ）**
 Amazon ECR・Amazon ECS・Amazon EKS
@@ -220,13 +206,13 @@ Amazon ECR・Amazon ECS・Amazon EKS
 Amazon DocumentDB・Amazon DynamoDB・Amazon ElastiCache・Amazon Neptune・Amazon RDS
 
 **Developer Tools（開発者ツール）**
-AWS CDK・AWS CodeArtifact・AWS CodeBuild・AWS CodeDeploy・AWS CodePipeline・AWS X-Ray
+AWS CDK・AWS CodeArtifact・AWS CodeBuild・AWS CodeCommit・AWS CodeConnections・AWS CodeDeploy・AWS CodePipeline・AWS X-Ray
 
-**Machine Learning（機械学習）**
-Amazon Augmented AI (A2I)・Amazon Bedrock・Amazon CodeGuru・Amazon Comprehend・Amazon Comprehend Medical・Amazon DevOps Guru・Amazon Fraud Detector・AWS HealthLake・Amazon Kendra・Amazon Lex・Amazon Lookout for Equipment・Amazon Lookout for Metrics・Amazon Lookout for Vision・Amazon Mechanical Turk・Amazon Personalize・Amazon Polly・Amazon Q・Amazon Rekognition・Amazon SageMaker（Studio・Autopilot・Ground Truth・Processing・Training・Debugger・Experiments・Model Monitor・Feature Store・Pipelines・JumpStart・Clarify・Model Registry・Inference Recommender・Neo・Role Manager）・Amazon Textract・Amazon Transcribe・Amazon Translate
+**Machine Learning and Artificial Intelligence（機械学習・AI）**
+Amazon Bedrock・Amazon Bedrock AgentCore・Amazon CodeGuru・Amazon Comprehend・Amazon Comprehend Medical・Amazon DevOps Guru・AWS HealthLake・Amazon Lex・Amazon Personalize・Amazon Polly・Amazon Rekognition・Amazon SageMaker AI・Amazon Textract・Amazon Transcribe・Amazon Translate
 
 **Management and Governance（管理・ガバナンス）**
-AWS Auto Scaling・AWS Chatbot・AWS CloudFormation・AWS CloudTrail・Amazon CloudWatch・Amazon CloudWatch Logs・AWS Compute Optimizer・AWS Config・AWS Organizations・AWS Service Catalog・AWS Systems Manager・AWS Trusted Advisor
+AWS Auto Scaling・AWS CloudFormation・AWS CloudTrail・Amazon CloudWatch・AWS Compute Optimizer・AWS Config・AWS Organizations・AWS Service Catalog・AWS Systems Manager・AWS Trusted Advisor
 
 **Media（メディア）**
 Amazon Kinesis Video Streams
@@ -238,7 +224,10 @@ AWS DataSync
 Amazon API Gateway・Amazon CloudFront・AWS Direct Connect・Amazon VPC
 
 **Security, Identity, and Compliance（セキュリティ）**
-AWS KMS・Amazon Macie・AWS Secrets Manager・AWS IAM
+IAM・Amazon Inspector・AWS KMS・Amazon Macie・AWS Secrets Manager
 
 **Storage（ストレージ）**
 Amazon EBS・Amazon EFS・Amazon FSx・Amazon S3・Amazon S3 Glacier・AWS Storage Gateway
+
+■ 範囲外の主なサービス（公式 Out-of-Scope リストから、ML の問題に紛れ込みやすいもの）
+AWS IoT Greengrass などの IoT サービス全般・Amazon Route 53・AWS Global Accelerator・Amazon Cognito・Amazon GuardDuty・AWS Security Hub・AWS Shield・AWS Fault Injection Service・AWS App Runner・AWS Elastic Beanstalk・AWS Outposts・Amazon AppFlow・AWS Clean Rooms・Amazon DataZone・AWS HealthImaging・AWS HealthOmics・Amazon Managed Grafana
