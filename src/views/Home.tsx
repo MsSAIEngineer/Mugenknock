@@ -526,12 +526,13 @@ function CombinedDetailModal({ targetExam, domainAccList, estimatedScore, passSc
                   }
                 `}</style>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* key は順位込みで一意にする。日付だけだと同じ日の記録で重複し、データの切り替え時に古い行が残って一覧が二重になる */}
                 {top5.map((entry, rank) => {
                   const medalColor = rank === 0 ? '#F59E0B' : rank === 1 ? '#9CA3AF' : rank === 2 ? '#B45309' : 'var(--color-text-light)';
                   const isPass = passScore !== null && entry.score >= passScore;
                   const delay = (top5.length - 1 - rank) * 0.08;
                   return (
-                    <div key={entry.date} style={{
+                    <div key={`${rank}-${entry.date}-${entry.score}`} style={{
                       display: 'flex', alignItems: 'center', gap: 12,
                       padding: '10px 12px',
                       background: rank === 0 ? 'rgba(245,158,11,0.06)' : 'var(--color-bg-main)',
